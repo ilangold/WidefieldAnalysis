@@ -1,16 +1,18 @@
 %Add paths
-addpath(genpath('C:\Users\behavior\Desktop\Ilan\Behavior_SourceTree'))
+addpath(genpath('C:\WidefieldAnalysis'))
 
 animal = input('Mouse data to be used: ', 's');
 expCount = input('Number of experiments: ');
 
 for i = 1:expCount
     expDate = input('Experiment date: ', 's');
-    formatSpec = 'E:%s%s%s%s%s';
-    root = '\Data\NAF\WF_Behavior\';
-    slash = '\';
+    %formatSpec = 'E:%s%s%s%s%s';
+    %root = '\Data\NAF\WF_Behavior\';
+    %slash = '\';
+    root = 'C:\Users\PsiDev\Desktop\WF_data\WF_Behavior';
     %%%%%%%% Load Psignal data and extract parameters %%%%%%%%
-    SavePath = sprintf(formatSpec,root,animal,slash,expDate,slash);
+    %SavePath = sprintf(formatSpec,root,animal,slash,expDate,slash);
+    SavePath = fullfile(root,animal,expDate);
     PsignalMatrix = GeneratePsignalMatrix(SavePath);
 
     %Find All hit trials (rewarded or early)

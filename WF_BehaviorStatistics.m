@@ -1,5 +1,5 @@
 function WF_BehaviorStatistics()
-addpath(genpath('C:\Users\behavior\Desktop\Ilan\Behavior_SourceTree'))
+addpath(genpath('C:\WidefieldAnalysis'))
 numAnimals = input('Number of animals to be used in analysis: ');
 alpha = 0.05;
 NearFarExps = [];
@@ -22,7 +22,7 @@ popNonTraces = [];
 %Combine exp data across animals into singular matrices%
 for j = 1:numAnimals
     animal = input('Animal to add to analysis: ','s');
-    file_loc = 'E:\Data\NAF\WF_Behavior';
+    file_loc = 'C:\Users\PsiDev\Desktop\WF_data\WF_Behavior';
     data_file = 'mouseData.mat';
     file_name = fullfile(file_loc,animal,data_file);
     load(file_name);
@@ -408,6 +408,7 @@ adjNearFarErr = [2*adjNearHitSE 2*adjFarHitSE 2*adjNearMissSE 2*adjFarMissSE 2*a
 %significance%
 if isnan(nanmean(adjNearFarHit(:,1))) || isnan(nanmean(adjNearFarHit(:,2)))
     pAdjHit = 1;
+    pAdjHitZero = 1;
 else
     [hAdjHit pAdjHit] = kstest2(adjNearFarHit(:,1),adjNearFarHit(:,2),alpha);
     [hAdjHitZero pAdjHitZero] = kstest2(nanmean(adjNearFarHit,2),zeros(size(adjNearFarHit,1),1),alpha);
@@ -434,6 +435,7 @@ else
 end
 if isnan(nanmean(adjNearFarCorrej(:,1))) || isnan(nanmean(adjNearFarCorrej(:,2)))
     pAdjCorrej = 1;
+    pAdjCorrejZero = 1;
 else
     [hAdjCorrej pAdjCorrej] = kstest2(adjNearFarCorrej(:,1),adjNearFarCorrej(:,2),alpha);
     [hAdjCorrejZero pAdjCorrejZero] = kstest2(nanmean(adjNearFarCorrej,2),zeros(size(adjNearFarCorrej,1),1),alpha);

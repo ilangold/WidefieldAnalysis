@@ -1,11 +1,11 @@
 function WF_AROIstatistics
-addpath(genpath('C:\Users\behavior\Desktop\Ilan\Behavior_SourceTree'))
+addpath(genpath('C:\WidefieldAnalysis'))
 numAnimals = input('Number of animals to be used in analysis: ');
 alpha = 0.05;
 
 for f = 1:numAnimals
     animal = input('Animal to add to analysis: ','s');
-    file_loc = 'E:\Data\NAF\WF_Behavior';
+    file_loc = 'C:\Users\PsiDev\Desktop\WF_data\WF_Behavior';
     data_file = 'mouseData.mat';
     file_name = fullfile(file_loc,animal,data_file);
     load(file_name);
@@ -14,7 +14,7 @@ for f = 1:numAnimals
     %Calculate ROI statistics for each experiment in mouseData for an animal%
     for j = 1:(numExp)
         %load autoencoder output file for experiment%
-        AEroot = 'G:\WF_Behavior';
+        AEroot = 'D:\WF_Behavior';
         expDate = mouseData{1,j+1};
         AEfileroot = 'Analysis_%s_AE_fullT_level5';
         AEfile = sprintf(AEfileroot,expDate);

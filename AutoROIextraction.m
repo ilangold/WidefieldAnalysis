@@ -4,7 +4,7 @@ function [ROItraces muROItraces] = AutoROIextraction(animal, expDate)
 %The extracted traces are then grouped by passive responses and active
 %response categories
 %Ilan Goldstein, 2019
-file_loc = 'G:\WF_Behavior';
+file_loc = 'D:\WF_Behavior';
 encoderFile = sprintf('Analysis_%s_AE_fullT_level5', expDate);
 autoencoder = fullfile(file_loc,animal,expDate,encoderFile);
 load(autoencoder, 'trace');

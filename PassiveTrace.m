@@ -3,10 +3,12 @@ function [mutarTrace munonTrace] = PassiveTrace(SavePath, pixCoords, expDate, an
 %passive traces after tone onset
 
 %%%%%%%% Load Psignal data and extract parameters %%%%%%%%
-formatSpec = 'E:%s%s%s%s%s';
-root = '\Data\NAF\WF_Behavior\';
-slash = '\';
-SavePath = sprintf(formatSpec,root,animal,slash,expDate,slash);
+%formatSpec = 'E:%s%s%s%s%s';
+%root = '\Data\NAF\WF_Behavior\';
+%slash = '\';
+%SavePath = sprintf(formatSpec,root,animal,slash,expDate,slash);
+root = 'C:\WidefieldAnalysis';
+SavePath = fullfile(root,animal,expDate);
 PsignalMatrix = GeneratePsignalMatrix(SavePath,rawFile);
 
 %Frequency and Level order
@@ -43,9 +45,10 @@ framespertrial = pfs*(handles.PreStimSilence+handles.PrimaryDuration+handles.Pos
 NumTrials=size(PsignalMatrix.Tags,2);
 
 %%%%%%%% Load flourescence data %%%%%%%%
-formSpec2 = 'E:%s%s%s%s%s%s';
+%formSpec2 = 'E:%s%s%s%s%s%s';
 fileType = 'tones.tif'
-handles.deltaFfile = sprintf(formSpec2,root,animal,slash,expDate,slash,fileType);
+%handles.deltaFfile = sprintf(formSpec2,root,animal,slash,expDate,slash,fileType);
+handles.deltaFfile = fullfile(root,animal,expDate,fileType);
 DSFact=0.5;
 
 disp(' ')

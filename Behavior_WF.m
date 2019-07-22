@@ -4,17 +4,17 @@
 %activity captured by widefield imaging. Figures and data are output to the
 %mouse folder located in widefield_behavior.
 %Ilan Goldstein (Nik Francis, Ji Liu) Jan, 2019
-
+ 
 %Add paths
-addpath(genpath('C:\Users\behavior\Desktop\Ilan\Behavior_SourceTree'))
-animal = input('Mouse data to be used: ', 's');
-expCount = input('Number of experiments: ');
-root = 'E:\Data\NAF\WF_Behavior';
+addpath(genpath('C:\WidefieldAnalysis'))
+animal = input('Mouse data to be used: ', 's');                        %user input mouse name matching data folder
+expCount = input('Number of experiments: ');                            %user input number of experiments to be analyzed (from mouse folder)
+root = 'C:\Users\PsiDev\Desktop\WF_data\WF_Behavior';                   %location of data storage (all mouse folders in "WF_Behavior")
 figures = 'figures';
-mouseData = {};
-expDates = {};
+mouseData = {};                                                         %data output cell
+expDates = {};                                                          
 
-%Setting variable names
+%Setting figure names
 fig1 = '%s_passive_active_images';
 fig2 = '%s_passive_active_traces';
 fig3 = '%s_adjusted_images';
@@ -31,16 +31,16 @@ fig13 = '%s_AROI_correctReject_traces';
 fig14 = '%s_AROI_postOnset_DeltaF_Avgs';
 
 %Calculate percentage of pixels tuned to each frequency played during passive pre-training presentation%
-PTroot = 'E:\Data\NAF\WF_passive\4Hz';
-PTdate = input('Date of pre-training tonotopy: ', 's');
+PTroot = 'C:\Users\PsiDev\Desktop\WF_data\WF_passive\4Hz';                 %location of passive WF imaging
+PTdate = input('Date of pre-training tonotopy: ', 's');                     %date of novice passive WF imaging for selected mouse
 PTtntOpt = 'TonotopyOutput.mat';
 PTload = fullfile(PTroot,animal,PTdate,PTtntOpt);
-load(PTload);
-for i = 1:length(Freqidx)
-    [r c] = find(DSTP == Freqidx(i));
+load(PTload);                                                              %load output data from novice passive imaging
+for i = 1:length(Freqidx)                                                  %Freqidx is a vector containing 1 - total number of tones presented during passive imaging                                             
+    [r c] = find(DSTP == Freqidx(i));                                      %DSTP is a 128x128 image containing Freqidx values corresponding to pixel BF
     PTfreqCoords{i,1}(:,1) = r;
     PTfreqCoords{i,1}(:,2) = c;
-    PTfreqCoords{i,2} = Freqidx(i);
+    PTfreqCoords{i,2} = Freqidx(i);                                        %PTfreqCoords contains the pixel coordinates of all BF pixels for each tone presented in passive imaging
 end
 for i = 1:length(outputFreqs)
     PTfreqCoords{i,2} = outputFreqs(i);
@@ -52,19 +52,19 @@ for i = 1:length(PTfreqCoords)
 end    
 for i = 1:length(PTfreqCoords)
     [PTnumPix coord] = size(PTfreqCoords{i,1});
-    pixPercent(1,i) = PTnumPix/PTtotPix;
+    pixPercent(1,i) = PTnumPix/PTtotPix;                                    %calculating percent of tonotopy representation of each frequency
 end
 for i = 1:expCount
-    expDates{i} = input('expDate: ','s');
+    expDates{i} = input('expDate: ','s');                                  %input dates of all experiments to be run through analysis
 end
 for j = 1:expCount
     expDate = expDates{j};
-    %%%%%%%% Load Psignal data and extract parameters %%%%%%%%
+    %%%%%%%% Load Psignal data and extract parameters %%%%%%%%              %start raw data extraction and organization (From Nik's WidefieldPsignalysis) 
     SavePath = fullfile(root,animal,expDate);
     expFolder = strcat(SavePath,['\']);
     cd(expFolder)
     fileStr = dir('*ART*.mat')
-    cd('C:\Users\behavior\Desktop\Ilan\Behavior_SourceTree')
+    cd('C:\WidefieldAnalysis')
     rawFile = strcat(fileStr.folder,['\'],fileStr.name)
     PsignalMatrix = GeneratePsignalMatrix(SavePath,rawFile);
 
@@ -151,18 +151,18 @@ for j = 1:expCount
         framespertrial ...
         NumTrials]);
     framepix = 64*DSFact;
-    I = I(framepix:end-framepix-1,:,:,:);
+    I = I(framepix:end-framepix-1,:,:,:);                                  %end of imaging raw data extraction and organization into "I" movie matrix (from Nik's WidefieldPsignalysis)
 
 
     %%%%%%%% Plotting Data %%%%%%%%
-    [baseline DeltaFF] = DeltF(I);
+    [baseline DeltaFF] = DeltF(I);                                         %calculating DF/F for each pixel
     cd(expFolder)
     fileStr = dir('*RND*.mat')
-    cd('C:\Users\behavior\Desktop\Ilan\Behavior_SourceTree')
+    cd('C:\WidefieldAnalysis')
     rawFile = strcat(fileStr.folder,['\'],fileStr.name)
     [target nontarget tarTrace nonTrace PassiveFreqOrder Freqind] = PassiveResponse(SavePath,expDate,animal,rawFile);
     DeltaFFds= imresize(DeltaFF,DSFact);
-    %DeltaFFds = abs(DeltaFFds); %made absolute value
+    %DeltaFFds = abs(DeltaFFds);                                           %absolute value filter 
 
     %create window mask for all images%
     figure
@@ -171,12 +171,12 @@ for j = 1:expCount
     windowEdge = imellipse(m, [2, 2, 125, 125]);
     mask = createMask(windowEdge);
     [maskX maskY] = find(mask == 1);
-    close(gcf)
+    close(gcf)                                                             %create standard mask around cranial window
 
-    %Show passive and active deltaF images%
+    %Show passive and behavioral deltaF average images with mask%
     target = target.*mask;
     nontarget = nontarget.*mask;
-    hitImg = nanmean(nanmean(DeltaFFds(:,:,:,H),3),4);
+    hitImg = nanmean(nanmean(DeltaFFds(:,:,:,H),3),4);                     %images are averaged first across frames (3), then across trials (4) according to behavioral response category
     hitImg = hitImg.*mask;
     falseAlarmImg = nanmean(nanmean(DeltaFFds(:,:,:,F),3),4);
     falseAlarmImg = falseAlarmImg.*mask;
@@ -184,7 +184,7 @@ for j = 1:expCount
     missImg = missImg.*mask;
     correctRejectImg = nanmean(nanmean(DeltaFFds(:,:,:,CR),3),4);
     correctRejectImg = correctRejectImg.*mask;
-    %normalize images%
+    %normalize images within an experiment based on absolute max of average images%
     imgMax = [max(max(abs(target)));max(max(abs(nontarget)));max(max(abs(hitImg)));max(max(abs(falseAlarmImg)));max(max(abs(missImg)));max(max(abs(correctRejectImg)))];
     expMax = max(imgMax);
     NormTargetImg = target/expMax;
@@ -216,12 +216,12 @@ for j = 1:expCount
     figSave = fullfile(root,animal,expDate,figures,figname);
     savefig(figSave);
 
-    %Plot passive and active deltaF trace%
-    HitTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,H),1),2),4));
+    %Plot average passive and behavioral deltaF trace%
+    HitTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,H),1),2),4));          %traces averaged across pixels (rows-1,columns-2) and then across trials (4)
     FalseAlarmTrace =  squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,F),1),2),4));
     MissTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,M),1),2),4));
     CorrectRejectTrace =  squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,CR),1),2),4));
-    %normalize trace%
+    %normalize traces based on absolute max of average traces%
     TraceVals = [max(abs(tarTrace));max(abs(nonTrace));max(abs(HitTrace));max(abs(FalseAlarmTrace));max(abs(MissTrace));max(abs(CorrectRejectTrace))];
     TraceValMax = max(TraceVals);
     NormTargetTrace = tarTrace/TraceValMax;
@@ -272,7 +272,7 @@ for j = 1:expCount
     figSave = fullfile(root,animal,expDate,figures,figname);
     savefig(figSave);
     
-    %Show active DeltaF images adjusted by passive images%
+    %Show average behavioral DeltaF images adjusted by average passive images at each pixel (includes mask)%
     adjHit = nanmean(nanmean(DeltaFFds(:,:,:,H),3),4) - target;
     adjHit = adjHit.*mask;
     adjFalseAlarm = nanmean(nanmean(DeltaFFds(:,:,:,F),3),4) - nontarget;
@@ -281,7 +281,7 @@ for j = 1:expCount
     adjMiss = adjMiss.*mask;
     adjCorrectReject = nanmean(nanmean(DeltaFFds(:,:,:,CR),3),4) - nontarget;
     adjCorrectReject = adjCorrectReject.*mask;
-    %normalize adjusted images%
+    %normalize adjusted images based on absolute max%
     adjVals = [max(max(abs(adjHit)));max(max(abs(adjMiss)));max(max(abs(adjFalseAlarm)));max(max(abs(adjCorrectReject)))];
     MaxAdjVals = max(adjVals);
     NormAdjHitImg = adjHit/MaxAdjVals;
@@ -306,12 +306,12 @@ for j = 1:expCount
     figSave = fullfile(root,animal,expDate,figures,figname);
     savefig(figSave);
 
-    %Plot active deltaF traces adjusted by passive traces%
+    %Plot average behavioral deltaF traces adjusted by average passive traces at each pixel%
     adjHitTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,H),1),2),4)) - tarTrace;
     adjFalseAlarmTrace =  squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,F),1),2),4)) - nonTrace;
     adjMissTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,M),1),2),4)) - tarTrace;
     adjCorrectRejectTrace =  squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,CR),1),2),4)) - nonTrace;
-    %normalize adjusted traces%
+    %normalize adjusted traces based on absolute max%
     adjTraceVals = [max(abs(adjHitTrace));max(abs(adjFalseAlarmTrace));max(abs(adjMissTrace));max(abs(adjCorrectRejectTrace))];
     adjTraceMax = max(adjTraceVals);
     NormAdjHitTrace = adjHitTrace/adjTraceMax;
@@ -348,46 +348,28 @@ for j = 1:expCount
     figSave = fullfile(root,animal,expDate,figures,figname);
     savefig(figSave);
 
-    %Create ROI's based on threshold response values from tones presented during passive imaging%
+    %Create ROI's based on threshold response values from tones presented during passive imaging prior to behavioral imaging (experiment-specific, not from novice imaging)%
     ResponseCat = {adjHit, "Hit", H; adjFalseAlarm, "False Alarm", F; adjMiss, "Miss", M; adjCorrectReject, "Correct Reject", CR};
-    tntOpt = 'TonotopyOutput.mat';
+    tntOpt = 'TonotopyOutput.mat';                                         %experiment-specific passive imaging output file
     tntLoad = fullfile(SavePath,tntOpt);
     load(tntLoad);
-    analysisCoords={};
+    analysisCoords = {};
     pixCoords = {};
-    for i = 1:length(Freqidx)
+    for i = 1:length(Freqidx)                                              %separating pixels into cells based on BF tuning from passive imaging
         [r c] = find(DSTP == Freqidx(i));
-        analysisCoords{i,1}(:,1) = r;
-        analysisCoords{i,1}(:,2) = c;
-        analysisCoords{i,2} = Freqidx(i);
+        pixCoords{i,1}(:,1) = r;
+        pixCoords{i,1}(:,2) = c;
     end
     
-    for i = 1:length(outputFreqs)
+    for i = 1:length(outputFreqs)                                          %setting corresponding frequencies to pixel BF tuning cells
         pixCoords{i,2} = outputFreqs(i);
     end
-    [ACRows ACColumns] = size(analysisCoords);
-    for i = 1:ACRows
-        if floor(analysisCoords{i,2}) ~= ceil(analysisCoords{i,2})
-            upper = analysisCoords{i,2} + 0.5;
-            lower = analysisCoords{i,2} - 0.5;
-            if upper > 8
-                pixCoords{lower,1} = [pixCoords{lower,1};analysisCoords{i,1}];
-            elseif lower < 1
-                pixCoords{upper,1} = [pixCoords{upper,1};analysisCoords{i,1}];
-            else
-                pixCoords{lower,1} = [pixCoords{lower,1};analysisCoords{i,1}];
-                pixCoords{upper,1} = [pixCoords{upper,1};analysisCoords{i,1}];
-            end
-        else 
-            pixCoords{analysisCoords{i,2},1} = [pixCoords{analysisCoords{i,2},1};analysisCoords{i,1}];
-        end
-    end
     
-    for i = 1:length(outputFreqs)             
+    for i = 1:length(outputFreqs)                                          %creating masks for each set of pixels in BF tuning cells
         blank(:,:,i) = zeros(128);
         [pr pc] = size(pixCoords{i,1});
         for ii = 1:pr
-            blank(pixCoords{i,1}(ii,1),pixCoords{i,1}(ii,2),i) = 1;
+            blank(pixCoords{i,1}(ii,1),pixCoords{i,1}(ii,2),i) = 1;        %"blank" is the 3D matrix containing the BF ROI masks (pixel x pixel x 8 frequencies)
         end
     end
     
@@ -406,7 +388,7 @@ for j = 1:expCount
     pixTrace = {};
     mupixTrace = {};
     [mutarTrace munonTrace] = PassiveTrace(SavePath, pixCoords, expDate, animal, rawFile);
-    %%%%%%%% Behavior response analysis across passive response tonotopic ROIs %%%%%%%%
+    %%%%%%%% Behavioral response analysis across passive imaging BF ROIs %%%%%%%%
     for f = 1:length(pixCoords)
         %Show only ROI of adjusted behavior DeltaF images%
         hitROI = adjHit.*blank(:,:,f);
@@ -420,6 +402,12 @@ for j = 1:expCount
         NormMissROI = missROI/ROImaxVal;
         NormFalarmROI = falseAlarmROI/ROImaxVal;
         NormCorrejROI = correctRejectROI/ROImaxVal;
+        
+        NormHitROI1a = NormAdjHitImg.*blank(:,:,f);
+        NormMissROI1a = NormAdjMissImg.*blank(:,:,f);
+        NormFalarmROI1a = NormAdjFalarmImg.*blank(:,:,f);
+        NormCorrejROI1a = NormAdjCorrejImg.*blank(:,:,f);
+        %
         FreqROIimgs(:,:,1,f) = NormHitROI; 
         FreqROIimgs(:,:,2,f) = NormMissROI;
         FreqROIimgs(:,:,3,f) = NormFalarmROI; 

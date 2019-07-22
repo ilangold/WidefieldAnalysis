@@ -1,9 +1,9 @@
 %This code calculates averages of data output by WF_Behavior%
 
 %retrieve mouseData file from user-specified mouse%
-addpath(genpath('C:\Users\behavior\Desktop\Ilan\Behavior_SourceTree'))
+addpath(genpath('C:\WidefieldAnalysis'))
 animal = input('Mouse data to be used: ', 's');
-file_loc = 'E:\Data\NAF\WF_Behavior';
+file_loc = 'C:\Users\PsiDev\Desktop\WF_data\WF_Behavior';
 data_file = 'comp_data.mat';
 file_name = fullfile(file_loc,animal,data_file);
 load(file_name);
