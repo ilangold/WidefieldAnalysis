@@ -8,8 +8,6 @@ addpath(genpath('C:\WidefieldAnalysis'));
 peakTrace = [zeros(1,3), 0:0.2:1 0.9:-0.1:0.1];
 shell = zeros(128,128,18,40);
 %creating tonotopy parameters and movie%
-fps = 4;
-idx = [1:1/fps:4.5]*fps;
 Freqidx = [1:8];
 outputFreqs = 4000.*2.^[0:.5:3.5];
 DSTP = zeros(128,128);
@@ -59,13 +57,7 @@ for i = 1:length(Freqidx)
     pixCoords{i,1}(:,1) = r;
     pixCoords{i,1}(:,2) = c;
 end
-for i = 1:length(pixCoords)
-    [pr pc] = size(pixCoords{i,1});
-    for ii = 1:pr
-        mutarTrace{i,1}(ii,1) = abs(nanmean(nanmean(squeeze(PassMat(pixCoords{i,1}(ii,1),pixCoords{i,1}(ii,2),idx,Freqind(:,2,3))),2)));
-        munonTrace{i,1}(ii,1) = abs(nanmean(nanmean(squeeze(PassMat(pixCoords{i,1}(ii,1),pixCoords{i,1}(ii,2),idx,Freqind(:,2,6))),2)));
-    end
-end
+
 for i = 1:size(pixCoords{1},1)
     for ii = 1:size(shell,4)
         if ii <= 10
@@ -108,6 +100,4 @@ for i = 1:size(pixCoords{1},1)
     end
 end
 
-save('C:\Users\PsiDev\Desktop\WF_data\WF_Behavior\test\testData','CR','DeltaFFds','DSTP',...
-    'F','Freqidx','Freqind','H','M','outputFreqs','pixCoords','target','nontarget',...
-    'tarTrace','nonTrace','mutarTrace','munonTrace')
+save('C:\Users\PsiDev\Desktop\WF_data\WF_Behavior\test','CR','DeltaFFds','DSTP','F','Freqidx','Freqind','H','M','outputFreqs','pixCoords'
