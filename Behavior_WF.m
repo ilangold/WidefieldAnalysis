@@ -155,7 +155,7 @@ for j = 1:expCount
 
 
     %%%%%%%% Plotting Data %%%%%%%%
-    [baseline DeltaFF] = DeltF(I);                                         %calculating DF/F for each pixel
+    [baseline DeltaFF] = DeltF(I);                                         %calculating DeltaF/F for each pixel
     cd(expFolder)
     fileStr = dir('*RND*.mat')
     cd('C:\WidefieldAnalysis')
@@ -390,24 +390,23 @@ for j = 1:expCount
     [mutarTrace munonTrace] = PassiveTrace(SavePath, pixCoords, expDate, animal, rawFile);
     %%%%%%%% Behavioral response analysis across passive imaging BF ROIs %%%%%%%%
     for f = 1:length(pixCoords)
-        %Show only ROI of adjusted behavior DeltaF images%
-        hitROI = adjHit.*blank(:,:,f);
-        missROI = adjMiss.*blank(:,:,f);
-        falseAlarmROI = adjFalseAlarm.*blank(:,:,f);
-        correctRejectROI = adjCorrectReject.*blank(:,:,f);
-        %normalize image values%
-        ROIvals = [max(max(abs(hitROI)));max(max(abs(missROI)));max(max(abs(falseAlarmROI)));max(max(abs(correctRejectROI)))];
-        ROImaxVal = max(ROIvals);
-        NormHitROI = hitROI/ROImaxVal;
-        NormMissROI = missROI/ROImaxVal;
-        NormFalarmROI = falseAlarmROI/ROImaxVal;
-        NormCorrejROI = correctRejectROI/ROImaxVal;
-        
-        NormHitROI1a = NormAdjHitImg.*blank(:,:,f);
-        NormMissROI1a = NormAdjMissImg.*blank(:,:,f);
-        NormFalarmROI1a = NormAdjFalarmImg.*blank(:,:,f);
-        NormCorrejROI1a = NormAdjCorrejImg.*blank(:,:,f);
-        %
+%       %Show only ROI of adjusted behavior DeltaF images%
+%         hitROI = adjHit.*blank(:,:,f);
+%         missROI = adjMiss.*blank(:,:,f);
+%         falseAlarmROI = adjFalseAlarm.*blank(:,:,f);
+%         correctRejectROI = adjCorrectReject.*blank(:,:,f);
+%       %normalize image values%
+%         ROIvals = [max(max(abs(hitROI)));max(max(abs(missROI)));max(max(abs(falseAlarmROI)));max(max(abs(correctRejectROI)))];
+%         ROImaxVal = max(ROIvals);
+%         NormHitROI = hitROI/ROImaxVal;
+%         NormMissROI = missROI/ROImaxVal;
+%         NormFalarmROI = falseAlarmROI/ROImaxVal;
+%         NormCorrejROI = correctRejectROI/ROImaxVal;
+        NormHitROI = NormAdjHitImg.*blank(:,:,f);
+        NormMissROI = NormAdjMissImg.*blank(:,:,f);
+        NormFalarmROI = NormAdjFalarmImg.*blank(:,:,f);
+        NormCorrejROI = NormAdjCorrejImg.*blank(:,:,f);
+        %Move behavioral-choice-dependent average response images into frequency-specific ROI matrix (FreqROIimgs)%
         FreqROIimgs(:,:,1,f) = NormHitROI; 
         FreqROIimgs(:,:,2,f) = NormMissROI;
         FreqROIimgs(:,:,3,f) = NormFalarmROI; 
@@ -431,21 +430,22 @@ for j = 1:expCount
         figSave = fullfile(root,animal,expDate,figures,figname);
         savefig(figSave);
 
-        %Plot ROI traces%
+        %Plot BF ROI average traces and calculate average post-onset DeltaF/F%
         fps = 4;
-        idx = [1:1/fps:4.5]*fps;
+        idx = [1:1/fps:4.5]*fps;                                           %"idx" used to specify frames captured after tone-onset
         [pr pc] = size(pixCoords{f,1});
-        if isempty(pixCoords{f,1})
+        if isempty(pixCoords{f,1})                                         %fills trace and onset value with NaNs for frequencies not represented in passive-generated tonotopic map
             pixTrace{f,1}(:,:,:) = NaN(18,length(FreqLevelOrder),2);
             mupixTrace{f,1}(:,:) = NaN(length(FreqLevelOrder),2);
         else
             for i = 1:pr
-                pixTrace{f,1}(:,:,i) = [squeeze(DeltaFFds(pixCoords{f,1}(i,1),pixCoords{f,1}(i,2),1:18,:))];     %DeltaF for each pixel, at each frame, for every trial, for each pixel in ROI
-                mupixTrace{f,1}(:,i) = abs(nanmean(squeeze(DeltaFFds(pixCoords{f,1}(i,1),pixCoords{f,1}(i,2),idx,:))))';  %avg DeltaF after tone onset for every trial, for each pixel in ROI 
+                pixTrace{f,1}(:,:,i) = [squeeze(DeltaFFds(pixCoords{f,1}(i,1),pixCoords{f,1}(i,2),1:18,:))];     %DeltaF/F for each pixel, at each frame, for every trial, for each pixel in BF ROI (f) - dimensions: frequencies - subdimensions: frame x trial x pixel
+                mupixTrace{f,1}(:,i) = abs(nanmean(squeeze(DeltaFFds(pixCoords{f,1}(i,1),pixCoords{f,1}(i,2),idx,:))))';  %avg DeltaF/F after tone onset for every trial, for each pixel in ROI - dimensions: frequencies - subdimensions: trial x pixel
             end
         end
-        ROIhitTrace = nanmean(nanmean(pixTrace{f,1}(:,H,:),2),3);
-        adjROIhitTrace = ROIhitTrace - tarTrace;
+        %average trace across trials within behavioral response categories%
+        ROIhitTrace = nanmean(nanmean(pixTrace{f,1}(:,H,:),2),3);          %trace obtained by averaging first across behavioral response category trials, then pixels within ROI
+        adjROIhitTrace = ROIhitTrace - tarTrace;                           %traces adjusted by average passive traces
         ROImissTrace = nanmean(nanmean(pixTrace{f,1}(:,M,:),2),3);
         adjROImissTrace = ROImissTrace - tarTrace;
         ROIfalseAlarmTrace = nanmean(nanmean(pixTrace{f,1}(:,F,:),2),3);
@@ -456,14 +456,15 @@ for j = 1:expCount
         ROItraceVals = [max(abs(ROIhitTrace));max(abs(ROImissTrace));max(abs(ROIfalseAlarmTrace));max(abs(ROIcorrectRejectTrace))];
         adjROItraceVals = [max(abs(adjROIhitTrace));max(abs(adjROImissTrace));max(abs(adjROIfalseAlarmTrace));max(abs(adjROIcorrectRejectTrace))];
         adjROItraceMax = max(adjROItraceVals);
-        NormAdjROIhitTrace = adjROIhitTrace/adjROItraceMax;
+        NormAdjROIhitTrace = adjROIhitTrace/adjROItraceMax;                %%%which max value should be used for normalization here?
         NormAdjROImissTrace = adjROImissTrace/adjROItraceMax;
         NormAdjROIFalarmTrace = adjROIfalseAlarmTrace/adjROItraceMax;
         NormAdjROICorrejTrace = adjROIcorrectRejectTrace/adjROItraceMax;
-        FreqROItraces(:,1:4,f) = [ROIhitTrace ROImissTrace ROIfalseAlarmTrace ROIcorrectRejectTrace];
+        FreqROItraces(:,1:4,f) = [ROIhitTrace ROImissTrace ROIfalseAlarmTrace ROIcorrectRejectTrace];               %"FreqROItraces" contains average, adjusted average, and normalized adjusted average traces for each behavioral category and separated by BF ROIs
         FreqROItraces(:,5:8,f) = [adjROIhitTrace adjROImissTrace adjROIfalseAlarmTrace adjROIcorrectRejectTrace];
         FreqROItraces(:,9:12,f) = [NormAdjROIhitTrace NormAdjROImissTrace NormAdjROIFalarmTrace NormAdjROICorrejTrace];
         traceLim = max(ROItraceVals);
+        %Plotting unadjusted trace averages for each response category (still in frequency loop)
         if ~isnan(traceLim)
             figure
             suptitle(num2str(pixCoords{f,2}))
@@ -523,13 +524,13 @@ for j = 1:expCount
             figSave = fullfile(root,animal,expDate,figures,figname);
             savefig(figSave);
         end
-        %post-tone-onset averages by trial for passive and active response categories%
-        HresAvg = nanmean(mupixTrace{f,1}(H,:),2);
+        %post-tone-onset average DeltaF/F by BF ROI for passive and active response categories%
+        HresAvg = nanmean(mupixTrace{f,1}(H,:),2);                         %averages taken across all pixels (2) on specified trials
         MresAvg = nanmean(mupixTrace{f,1}(M,:),2);
         FresAvg = nanmean(mupixTrace{f,1}(F,:),2);
         CRresAvg = nanmean(mupixTrace{f,1}(CR,:),2);
         FreqPostMeans(:,f) = [nanmean(mutarTrace{f,1}) nanmean(munonTrace{f,1}) nanmean(HresAvg) nanmean(MresAvg) nanmean(FresAvg) nanmean(CRresAvg)];
-        figure
+        figure                                                             %"FreqPostMeans" contains the average passive and behavioral (rows) post onset DeltaF/F of pixels in each BF ROI (columns)
         bar(FreqPostMeans(:,f))
         xticklabels({'target','nontarget','hit','miss','false alarm','correct reject'})
         title(['Average DeltaF after tone onset:',num2str(pixCoords{f,2})])
@@ -542,22 +543,22 @@ for j = 1:expCount
     for i = 1:length(pixTrace)
         normTracemax(i) = max(max(max(abs(pixTrace{i}))));
     end
-    normTracemax(9) = max(abs(tarTrace));
+    normTracemax(9) = max(abs(tarTrace));                                  %NEED TO FIX TARTRACE AND NONTAR TRACE
     normTracemax(10) = max(abs(nonTrace));
-    for i = 1:length(pixTrace)
-        allROIhitTrace(:,i) = nanmean(nanmean(pixTrace{i,1}(:,H,:),2),3);
+    for i = 1:length(pixTrace)                                             %creating average traces for each response category across all BF ROIs (redundant to earlier, now kept more neatly)
+        allROIhitTrace(:,i) = nanmean(nanmean(pixTrace{i,1}(:,H,:),2),3);  
         allROImissTrace(:,i) = nanmean(nanmean(pixTrace{i,1}(:,M,:),2),3);
         allROIfalarmTrace(:,i) = nanmean(nanmean(pixTrace{i,1}(:,F,:),2),3);
         allROIcorrejTrace(:,i) = nanmean(nanmean(pixTrace{i,1}(:,CR,:),2),3);
     end
-    normTracemax = max(normTracemax);
+    normTracemax = max(normTracemax);                                      %normalizing all traces within an experiment by the absolut maximum pixel value for any pixel within and BF ROI
     normTarTrace = tarTrace/normTracemax;
     normNonTrace = nonTrace/normTracemax;
     normHitTrace = allROIhitTrace/normTracemax;
     normMissTrace = allROImissTrace/normTracemax;
     normFalarmTrace = allROIfalarmTrace/normTracemax;
     normCorrejTrace = allROIcorrejTrace/normTracemax;
-    for i = 1:length(outputFreqs)
+    for i = 1:length(outputFreqs)                                          %"normFreqROItraces" contains all normalized average traces for each response category and passive and separated by BF ROI
         normFreqROItraces(:,1,i) = normHitTrace(:,i);
         normFreqROItraces(:,2,i) = normMissTrace(:,i);
         normFreqROItraces(:,3,i) = normFalarmTrace(:,i);
@@ -567,18 +568,19 @@ for j = 1:expCount
     end
     %%%%%%%% Plotting traces obtained from autoencoder (autoencoder ROIs = AROI) %%%%%%%%
     [AROItraces muAROItraces] = AutoROIextraction(animal,expDate);
-    %normalize traces and postOnset avgs%
+    %normalize traces and postOnset avgs to maximum value across all AROIs%
     maxAROItraceVal =  max(max(max(AROItraces)));
     normAROItraces = AROItraces/maxAROItraceVal;
     maxmuAROItraceVal = max(max(muAROItraces));
     normuAROItraces = muAROItraces/maxmuAROItraceVal;
-    %avg and plot AROI traces%
+    %separate AROI traces by passive and behavioral categories%
     tarAROItraces = normAROItraces(:,Freqind(:,2,3),:);
     nonAROItraces = normAROItraces(:,Freqind(:,2,6),:);
     hitAROItraces = normAROItraces(:,H+40,:);
     missAROItraces = normAROItraces(:,M+40,:);
     falarmAROItraces = normAROItraces(:,F+40,:);
     correjAROItraces = normAROItraces(:,CR+40,:);
+    %average AROI traces across trials within passive and behavioral response categories%
     meanTarAROI = squeeze(nanmean(tarAROItraces,2));
     meanNonAROI = squeeze(nanmean(nonAROItraces,2));
     meanHitAROI = squeeze(nanmean(hitAROItraces,2));
@@ -627,7 +629,7 @@ for j = 1:expCount
     figname = sprintf(fig13,expDate);
     figSave = fullfile(root,animal,expDate,figures,figname);
     savefig(figSave);
-    %plotting average deltaF after tone onset for all 6 passive + behavior categories%
+    %average post tone-onset for DeltaF/F passive and behavior categories%
     muTarAROI = nanmean(normuAROItraces(:,Freqind(:,2,3)),2);
     muNonAROI = nanmean(normuAROItraces(:,Freqind(:,2,6)),2);
     muHitAROI = nanmean(normuAROItraces(:,H+40),2);
@@ -644,7 +646,7 @@ for j = 1:expCount
     savefig(figSave);
     
     %%% assembling matrices for statistical analysis %%%
-    %tones near and far for target and nontarget%
+    %establishing "near" and "far" tones (within/without 0.5 octave) for target (8000Hz) and nontarget (22627Hz)%
     Freqs = 4000.*2.^[0:.5:3.5];
     tarNeighbors = 8000.*2.^[-.5 .5];
     nonNeighbors = round(22627.*2.^[-.5 .5], -3);
@@ -653,7 +655,7 @@ for j = 1:expCount
     tarFar = [Freqs(find(Freqs<tarNeighbors(1))) Freqs(find(Freqs>tarNeighbors(2)))];
     nonFar = [Freqs(find(Freqs<nonNeighbors(1))) Freqs(find(Freqs>nonNeighbors(2)))];
 
-    %adjusting avg post onset DeltaF to max=1 for passive and behavior together%
+    %finding maximum value of post-onset DeltaF/F across all BF ROIs for passive and behavioral categories%
     for i = 1:length(mupixTrace)
         mupixTrace{i,2} = Freqs(i);
         mupixMax(i) = max(max(abs(mupixTrace{i,1})));
@@ -662,61 +664,63 @@ for j = 1:expCount
         tarnonMax(i,1) = max(max(abs(mutarTrace{i})));
         tarnonMax(i,2) = max(max(abs(munonTrace{i})));
     end
+    %normalizing passive and behavioral post-onset DeltaF/F by maximum value%
     NormVals = [mupixMax(:);tarnonMax(:)];
     MaxNormVal = max(NormVals);
     NormupixTrace = cellfun(@(x) x*(1/MaxNormVal),mupixTrace,'un',0);
     NormuTarTrace = cellfun(@(x) x*(1/MaxNormVal),mutarTrace,'un',0);
     NormuNonTrace = cellfun(@(x) x*(1/MaxNormVal),munonTrace,'un',0);
+    %adding corresponding frequency tags%
     for i = 1:length(Freqs)
         NormuTarTrace{i,2} = Freqs(i);
         NormuNonTrace{i,2} = Freqs(i);
         NormupixTrace{i,2} = Freqs(i);
     end
+    %separating post-tone-onset DeltaF/F by "near" and "far" tones and averaging across pixels, within trials, within tones%
     NormuPasstarNear = [];
     NormuPasstarFar = [];
     NormuPassnonNear = [];
     NormuPassnonFar = [];
-    %arranging trial x postonset near and far matrix%
-    %behavior%
+    %behavioral imaging%
     for i = 1:length(Freqs)
         for ii = 1:length(tarNear)
             if mupixTrace{i,2} == tarNear(ii)
-                muFreqtarNear(:,ii) = nanmean(NormupixTrace{i,1},2);
-            else
+                muFreqtarNear(:,ii) = nanmean(NormupixTrace{i,1},2);       %"muFreqtarNear" contains average post-tone-onset DeltaF/F of all pixels
+            else                                                            %within BF ROIs of tones near the target (5657Hz, 8000Hz, 11314Hz) (trials x tones)
             end
         end
         for jj = 1:length(nonNear)
             if mupixTrace{i,2} == nonNear(jj)
-                muFreqnonNear(:,jj) = nanmean(NormupixTrace{i,1},2);
+                muFreqnonNear(:,jj) = nanmean(NormupixTrace{i,1},2);       %same as "muFreqtarNear" but for tones near non-target (16000Hz, 22627Hz, 32000Hz)
             else
             end
         end
         for uu = 1:length(tarFar)
             if mupixTrace{i,2} == tarFar(uu)
-                muFreqtarFar(:,uu) = nanmean(NormupixTrace{i,1},2);
+                muFreqtarFar(:,uu) = nanmean(NormupixTrace{i,1},2);        %average post-tone-onset DeltaF/F of each BF ROI of tones far from target
             else
             end
         end
         for yy = 1:length(nonFar)
             if mupixTrace{i,2} == nonFar(yy)
-                muFreqnonFar(:,yy) = nanmean(NormupixTrace{i,1},2);
+                muFreqnonFar(:,yy) = nanmean(NormupixTrace{i,1},2);        %average post-tone-onset DeltaF/F of each BF ROI of tones far from non-target
             else
             end
         end
     end
-    %passive%
+    %passive imaging%
     for i = 1:length(tarNear)
         for ii = 1:length(NormuTarTrace)
             if NormuTarTrace{ii,2} == tarNear(i)
-                NormuPasstarNear = [NormuPasstarNear; NormuTarTrace{ii,1}];
-            else
-            end
+                NormuPasstarNear = [NormuPasstarNear; NormuTarTrace{ii,1}];%"NormuPasstarNear" contains the average post-tone-onset DeltaF/F of each pixel
+            else                                                            %in any BF ROIs from tones near the target, each value is the average of that pixel
+            end                                                              %across all 5 target tone representations during passive imaging
         end
     end
     for i = 1:length(tarFar)
         for ii = 1:length(NormuTarTrace)
             if NormuTarTrace{ii,2} == tarFar(i)
-                NormuPasstarFar = [NormuPasstarFar; NormuTarTrace{ii,1}];
+                NormuPasstarFar = [NormuPasstarFar; NormuTarTrace{ii,1}];  %average post-tone-onset DeltaF/F of each pixel in BF ROIs far from the target 
             else
             end
         end
@@ -724,7 +728,7 @@ for j = 1:expCount
     for i = 1:length(nonNear)
         for ii = 1:length(NormuTarTrace)
             if NormuNonTrace{ii,2} == nonNear(i)
-                NormuPassnonNear = [NormuPassnonNear; NormuNonTrace{ii,1}];
+                NormuPassnonNear = [NormuPassnonNear; NormuNonTrace{ii,1}];%same as "NormuPasstarNear" but for the non-target tone
             else
             end
         end
@@ -732,16 +736,17 @@ for j = 1:expCount
     for i = 1:length(nonFar)
         for ii = 1:length(NormuTarTrace)
             if NormuNonTrace{ii,2} == nonFar(i)
-                NormuPassnonFar = [NormuPassnonFar; NormuNonTrace{ii,1}];
+                NormuPassnonFar = [NormuPassnonFar; NormuNonTrace{ii,1}];  %same as "NormuPasstarFar" but for the non-target tone
             else
             end
         end
     end
-    mutarNear = nanmean(muFreqtarNear,2);
-    mutarFar = nanmean(muFreqtarFar,2);
+    %averaging across near and far tones within trials%
+    mutarNear = nanmean(muFreqtarNear,2);                                  %each of these 4 variables contains an array with the average post-tone-onset DeltaF/F
+    mutarFar = nanmean(muFreqtarFar,2);                                     %of all pixels near or far from the target or non-target tone for each trial in the experiment
     munonNear = nanmean(muFreqnonNear,2);
     munonFar = nanmean(muFreqnonFar,2);
-    
+    %averaging across trials within behavioral response categories%
     muNearHit = nanmean(mutarNear(H));
     muFarHit = nanmean(mutarFar(H));
     muNearMiss = nanmean(mutarNear(M));
@@ -754,8 +759,8 @@ for j = 1:expCount
     muFarCorrej = nanmean(munonFar(CR));
     muNearNontarget = nanmean(NormuPassnonNear);
     muFarNontarget = nanmean(NormuPassnonFar);
-    
-    muNearFar(j,1) = muNearHit;
+    %creating an output matrix to be used in statistical analysis, each row represents one experiment, each column is a different average post-tone-onset DeltaF/F%
+    muNearFar(j,1) = muNearHit;                                            %averages include near and far tuned pixels for passive and behavioral response categories
     muNearFar(j,2) = muFarHit;
     muNearFar(j,3) = muNearMiss;
     muNearFar(j,4) = muFarMiss;
@@ -768,7 +773,7 @@ for j = 1:expCount
     muNearFar(j,11) = muNearNontarget;
     muNearFar(j,12) = muFarNontarget;
     
-    %average post onset DF from tonotopic regions adjusted by post onset mu from same pixels during passive presentation%
+    %average post-tone-onset DeltaF/F from BF ROI pixels adjusted by post-tone-onset DeltaF/F from the same pixels during passive presentation%
     for i = 1:length(mupixTrace)
         [pix num] = size(mutarTrace{i,1});
         for ii = 1:pix
@@ -780,46 +785,48 @@ for j = 1:expCount
     tarAdjmuFar = [];
     nonAdjmuNear = [];
     nonAdjmuFar = [];
+    %separating adjusted post-tone-onset DeltaF/F averages by near and far tuning from target and non-target tones%
     for i = 1:length(Freqs)
         tarAdjmuPix{i,2} = Freqs(i);
         nonAdjmuPix{i,2} = Freqs(i);
         for ii = 1:length(tarNear)
             if tarAdjmuPix{i,2} == tarNear(ii)
-                tarAdjmuNear(:,ii) = nanmean(tarAdjmuPix{i,1},2);
+                tarAdjmuNear(:,ii) = nanmean(tarAdjmuPix{i,1},2);          %adjusted averages from BF ROIs of tones near target
             else
             end
         end
         for jj = 1:length(nonNear)
             if nonAdjmuPix{i,2} == nonNear(jj)
-                nonAdjmuNear(:,jj) = nanmean(nonAdjmuPix{i,1},2);
+                nonAdjmuNear(:,jj) = nanmean(nonAdjmuPix{i,1},2);          %adjusted averages from BF ROIs of tones near non-target
             else
             end
         end
         for uu = 1:length(tarFar)
             if tarAdjmuPix{i,2} == tarFar(uu)
-                tarAdjmuFar(:,uu) = nanmean(tarAdjmuPix{i,1},2);
+                tarAdjmuFar(:,uu) = nanmean(tarAdjmuPix{i,1},2);           %adjusted averages from BF ROIs of tones far from target
             else
             end
         end
         for yy = 1:length(nonFar)
             if nonAdjmuPix{i,2} == nonFar(yy)
-                nonAdjmuFar(:,yy) = nanmean(nonAdjmuPix{i,1},2);
+                nonAdjmuFar(:,yy) = nanmean(nonAdjmuPix{i,1},2);           %adjusted averages from BF ROIs of tones far from non-target
             else
             end
         end
     end
-    %normalize post onset DF avgs for this experiment%
+    %finding maximum post-tone-onset DeltaF/F averages of each matrix created above%
     TAMNmax = max(max(abs(tarAdjmuNear)));
     TAMFmax = max(max(abs(tarAdjmuFar)));
     NAMNmax = max(max(abs(nonAdjmuNear)));
     NAMFmax = max(max(abs(nonAdjmuFar)));
     AdjmuNFvals = [TAMNmax;TAMFmax;NAMNmax;NAMFmax];
     NormAdjNFmax = max(AdjmuNFvals);
+    %normalizing all adjusted post-tone-onset DeltaF/F averages by the maximum value within the experiment%
     NormtarAdjmuNear = tarAdjmuNear/NormAdjNFmax;
     NormtarAdjmuFar = tarAdjmuFar/NormAdjNFmax;
     NormnonAdjmuNear = nonAdjmuNear/NormAdjNFmax;
     NormnonAdjmuFar = nonAdjmuFar/NormAdjNFmax;
-    %Experiment matrix containing response categories normalized Near/Far post onsetavg per trial%
+    %averaging normalized post-tone-onset DeltaF/F average values across tones near and far tones but within behavioral response category trials%
     NormtarAdjmuNearHit = nanmean(NormtarAdjmuNear(H,:),2);
     NormtarAdjmuFarHit = nanmean(NormtarAdjmuFar(H,:),2);
     NormtarAdjmuNearMiss = nanmean(NormtarAdjmuNear(M,:),2);
@@ -828,8 +835,9 @@ for j = 1:expCount
     NormnonAdjmuFarFalarm = nanmean(NormnonAdjmuFar(F,:),2);
     NormnonAdjmuNearCorrej = nanmean(NormnonAdjmuNear(CR,:),2);
     NormnonAdjmuFarCorrej = nanmean(NormnonAdjmuFar(CR,:),2);
-    NormRespCatNearFar{j,1} = [NormtarAdjmuNearHit NormtarAdjmuFarHit]; 
-    NormRespCatNearFar{j,2} = [NormtarAdjmuNearMiss NormtarAdjmuFarMiss];
+    %organizing behavioral response category near and far trial averages into a cell matrix for statistical analysis%
+    NormRespCatNearFar{j,1} = [NormtarAdjmuNearHit NormtarAdjmuFarHit];     %each row is one experiment, each column is one behavioral response category
+    NormRespCatNearFar{j,2} = [NormtarAdjmuNearMiss NormtarAdjmuFarMiss];   %with both near and far trial averages
     NormRespCatNearFar{j,3} = [NormnonAdjmuNearFalarm NormnonAdjmuFarFalarm]; 
     NormRespCatNearFar{j,4} = [NormnonAdjmuNearCorrej NormnonAdjmuFarCorrej];
     

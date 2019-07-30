@@ -7,7 +7,7 @@ function [target, nontarget, tarTrace, nonTrace, PassiveFreqOrder, Freqind] = Pa
 %root = '\Data\NAF\WF_Behavior\';
 %slash = '\';
 %SavePath = sprintf(formatSpec,root,animal,slash,expDate,slash);
-root = 'C:\WidefieldAnalysis';
+root = 'C:\Users\PsiDev\Desktop\WF_data\WF_Behavior';
 SavePath = fullfile(root,animal,expDate);
 PsignalMatrix = GeneratePsignalMatrix(SavePath,rawFile);
 

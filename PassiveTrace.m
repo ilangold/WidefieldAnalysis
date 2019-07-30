@@ -7,7 +7,7 @@ function [mutarTrace munonTrace] = PassiveTrace(SavePath, pixCoords, expDate, an
 %root = '\Data\NAF\WF_Behavior\';
 %slash = '\';
 %SavePath = sprintf(formatSpec,root,animal,slash,expDate,slash);
-root = 'C:\WidefieldAnalysis';
+root = 'C:\Users\PsiDev\Desktop\WF_data\WF_Behavior';
 SavePath = fullfile(root,animal,expDate);
 PsignalMatrix = GeneratePsignalMatrix(SavePath,rawFile);
 
