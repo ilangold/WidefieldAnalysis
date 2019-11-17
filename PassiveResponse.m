@@ -1,8 +1,8 @@
-function [target, nontarget, tarTrace, nonTrace, PassiveFreqOrder, Freqind] = PassiveResponse(SavePath,expDate,animal,rawFile)
+function [PassiveFreqOrder, Freqind, pDeltaFFds] = PassiveResponse(SavePath,expDate,animal,rawFile)
 %This script is for analyzing RND files from passive WF imaging during behavior sessions to be
 %used in calculating deltaF for behavior experiment
 
-%%%%%%%% Load Psignal data and extract parameters %%%%%%%%
+%%%%%%%% Load Psignal data and extract parameters %%%%%%%% 
 %formatSpec = 'E:%s%s%s%s%s';
 %root = '\Data\NAF\WF_Behavior\';
 %slash = '\';
@@ -77,6 +77,7 @@ I = I(framepix:end-framepix-1,:,:,:);
 %Find DeltaF, downsize matrix, and identify target and nontarget trials%
 [baseline DeltaFF] = DeltF(I);
 DeltaFFds= imresize(DeltaFF,DSFact);
+pDeltaFFds = DeltaFFds;
 %DeltaFFds = abs(DeltaFFds);  %absolute value
 
 UniqFreq = unique(FreqLevelOrder(:,1));
@@ -87,10 +88,12 @@ for i=1:length(UniqFreq)
 end
 
 %%%%%%%% Plot DeltaF %%%%%%%%
+fps = 4;
+idx = [1:1/fps:4.5]*fps;   
 tarTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,Freqind(:,2,3)),1),2),4));
 nonTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,Freqind(:,2,6)),1),2),4));
-target = (nanmean(nanmean(DeltaFFds(:,:,:,Freqind(:,2,3)),3),4));
-nontarget = (nanmean(nanmean(DeltaFFds(:,:,:,Freqind(:,2,6)),3),4));
+target = (nanmean(nanmean(DeltaFFds(:,:,idx,Freqind(:,2,3)),3),4));
+nontarget = (nanmean(nanmean(DeltaFFds(:,:,idx,Freqind(:,2,6)),3),4));
 PassiveFreqOrder = FreqLevelOrder;
 
 

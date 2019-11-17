@@ -9,7 +9,9 @@
 addpath(genpath('C:\WidefieldAnalysis'))
 animal = input('Mouse data to be used: ', 's');                        %user input mouse name matching data folder
 %For running test data, use animal name and expDate "test"
-if animal == 'test'
+test = 'test';
+tf = strcmp(animal,test);                                               %if tf == 1, test is running, if tf == 0, animal is running
+if tf == 1
     expCount = 1;
 else
     expCount = input('Number of experiments: ');                            %user input number of experiments to be analyzed (from mouse folder)
@@ -35,7 +37,7 @@ fig12 = '%s_AROI_falseAlarm_traces';
 fig13 = '%s_AROI_correctReject_traces';
 fig14 = '%s_AROI_postOnset_DeltaF_Avgs';
 
-if animal == 'test'
+if tf == 1
     testLoad = fullfile(root,animal,'testData.mat');
     load(testLoad)
 else
@@ -70,8 +72,10 @@ end
 for j = 1:expCount
     expDate = expDates{j};
     %%%%%%%% Load Psignal data and extract parameters %%%%%%%%              %start raw data extraction and organization (From Nik's WidefieldPsignalysis) 
-    if animal == 'test'
+    if tf == 1
         SavePath = fullfile(root,animal,expDate);
+        testLoad = fullfile(root,animal,'testData.mat');
+        load(testLoad)
     else
         SavePath = fullfile(root,animal,expDate);
         expFolder = strcat(SavePath,['\']);
@@ -364,7 +368,7 @@ for j = 1:expCount
 
     %Create ROI's based on threshold response values from tones presented during passive imaging prior to behavioral imaging (experiment-specific, not from novice imaging)%
     ResponseCat = {adjHit, "Hit", H; adjFalseAlarm, "False Alarm", F; adjMiss, "Miss", M; adjCorrectReject, "Correct Reject", CR};
-    if animal == 'test'
+    if tf == 1
     else
         tntOpt = 'TonotopyOutput.mat';                                         %experiment-specific passive imaging output file
         tntLoad = fullfile(SavePath,tntOpt);
@@ -404,7 +408,7 @@ for j = 1:expCount
     
     pixTrace = {};
     mupixTrace = {};
-    if animal == 'test'
+    if tf == 1
     else
         [mutarTrace munonTrace] = PassiveTrace(SavePath, pixCoords, expDate, animal, rawFile);
     end
@@ -587,7 +591,7 @@ for j = 1:expCount
         normFreqROItraces(:,6,i) = normNonTrace;
     end
     
-    if animal == 'test'
+    if tf == 1
     else
         %%%%%%%% Plotting traces obtained from autoencoder (autoencoder ROIs = AROI) %%%%%%%%
         [AROItraces muAROItraces] = AutoROIextraction(animal,expDate);
@@ -866,7 +870,7 @@ for j = 1:expCount
     NormRespCatNearFar{j,4} = [NormnonAdjmuNearCorrej NormnonAdjmuFarCorrej];
     
     %Saving all data%
-    if animal == 'test'
+    if tf == 1
         mouseData(:,1) = {'date';'target_img';'nontarget_img';'hit_img';'falseAlarm_img';'miss_img';'correctReject_img';...
             'target_trace';'nontarget_trace';'hit_trace';'falseAlarm_trace';'miss_trace';'correctReject_trace';...
             'adj_hit_img';'adj_falseAlarm_img';'adj_miss_img';'adj_correctReject_img';...
@@ -886,8 +890,8 @@ for j = 1:expCount
             Freqind;H;M;F;CR;...
             pixPercent;normFreqROItraces};
     else
-        mouseData(:,1) = {'date';'target_img';'nontarget_img';'hit_img';'falseAlarm_img';'miss_img';'correctReject_img';...
-            'target_trace';'nontarget_trace';'hit_trace';'falseAlarm_trace';'miss_trace';'correctReject_trace';...
+        mouseData(:,1) = {'date';'norm_target_img';'norm_nontarget_img';'norm_hit_img';'norm_falseAlarm_img';'norm_miss_img';'norm_correctReject_img';...
+            'norm_target_trace';'norm_nontarget_trace';'norm_hit_trace';'norm_falseAlarm_trace';'norm_miss_trace';'norm_correctReject_trace';...
             'adj_hit_img';'adj_falseAlarm_img';'adj_miss_img';'adj_correctReject_img';...
             'adj_hit_trace';'adj_falseAlarm_trace';'adj_miss_trace';'adj_correctReject_trace';...
             'tonotopy_specific_ROI_imgs';'tonotopy_specific_ROI_traces';'tonotopy_specific_postOnset_avgs';'AROI_target_traces';'AROI_nontarget_traces';...
@@ -909,7 +913,7 @@ for j = 1:expCount
     end
     disp(['Completed experiment ',expDate])
     clearvars -except animal expCount j mouseData root figures fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9 fig10...
-        fig11 fig12 fig13 fig14 pixPercent expDates
+        fig11 fig12 fig13 fig14 pixPercent expDates tf test
     close all
 end
 

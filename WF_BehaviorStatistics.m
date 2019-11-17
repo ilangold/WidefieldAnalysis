@@ -1,24 +1,11 @@
-function WF_BehaviorStatistics()
+% WF_BehaviorStatistics
 addpath(genpath('C:\WidefieldAnalysis'))
 numAnimals = input('Number of animals to be used in analysis: ');
 alpha = 0.05;
-NearFarExps = [];
-adjNearFarHit = [];
-adjNearFarMiss = [];
-adjNearFarFalarm = [];
-adjNearFarCorrej = [];
 totalFreqDist = [];
 fig1 = 'frequency-tuning_distribution';
-fig2 = 'target_frequency_traces';
-fig3 = 'nontarget_frequency_traces';
-fig4 = 'passive_behaviorStats';
-fig5 = 'adjBehaviorStats';
-popHitTraces = [];
-popMissTraces = [];
-popFalarmTraces = [];
-popCorrejTraces = [];
-popTarTraces = [];
-popNonTraces = [];
+fig2 = 'passive_behavior_frequency_traces';
+fig3 = 'adjusted_unadjusted_post-onset_DF';
 %Combine exp data across animals into singular matrices%
 for j = 1:numAnimals
     animal = input('Animal to add to analysis: ','s');
@@ -26,21 +13,23 @@ for j = 1:numAnimals
     data_file = 'mouseData.mat';
     file_name = fullfile(file_loc,animal,data_file);
     load(file_name);
-    animalExps = size(mouseData,2);
-    for i = 1:(animalExps-1)
-        NearFarExps = [NearFarExps; mouseData{36,i+1}(i,:)];
-        adjNearFarHit = [adjNearFarHit; cell2mat(mouseData{37,i+1}(i,1))];
-        adjNearFarMiss = [adjNearFarMiss; cell2mat(mouseData{37,i+1}(i,2))];
-        adjNearFarFalarm = [adjNearFarFalarm; cell2mat(mouseData{37,i+1}(i,3))];
-        adjNearFarCorrej = [adjNearFarCorrej; cell2mat(mouseData{37,i+1}(i,4))];
-        normROItraces(:,:,:,i) = mouseData{46,i+1};
+    animalExps(j) = size(mouseData,2) - 1;
+    for i = 1:(animalExps(j))
+        winTraces(:,:,i,j) = mouseData{3,i+1}(:,:,end);
+        winMu(:,i,j) = mouseData{4,i+1}(end,:);
+        adjWinTraces(:,:,i,j) = mouseData{6,i+1}(:,:,end);
+        adjWinMu(:,i,j) = mouseData{7,i+1}(end,:);
+        ROItraces(:,:,:,i,j) = mouseData{10,i+1}(:,:,:,end);
+        ROImu(:,:,i,j) = mouseData{11,i+1}(:,:,end);
+        adjROItraces(:,:,:,i,j) = mouseData{13,i+1}(:,:,:,end); 
+        adjROImu(:,:,i,j) = mouseData{14,i+1}(:,:,end);
     end
-    %plot animal frequency distribution plots%
+    %%% animal tonotopy frequency-distribution plots %%%
     dateIDX{1,1} = ['initial tonotopy'];
     for i = 1:(size(mouseData,2)-1)
         dateIDX{i+1,1} = mouseData{1,i+1};
     end
-    freqDistrib = mouseData{45,end};
+    freqDistrib = mouseData{8,end};
     compFreqDist(1,:) = freqDistrib(1,:);
     compFreqDist(2,:) = mean(freqDistrib(2:end,:),1);
     barFreqDist = compFreqDist';
@@ -50,106 +39,157 @@ for j = 1:numAnimals
     ax1 = subplot(1,2,1);
     bar(totalFreqDist(:,:,j), 'stacked');
     legend('4kHz','5.6kHz','8kHz','11.3kHz','16kHz','22.6kHz','32kHz','45.2kHz')
-    title(['Best-Frequency-Tuning Distribution'],'FontSize',48)
-    ax = gca;
-    ax.FontSize = 28;
+    title(['Best-Frequency-Tuning Distribution'])
     xticklabels({'Novice','Expert'})
-    ylabel('Percent of Pixels','FontSize',36)
+    ylabel('Percent of Pixels')
     ylim([0 1])
     subplot(1,2,2)
     bar(barFreqDist)
     legend('Novice','Expert','AutoUpdate','off')
     hold on
-    title({'Novice vs. Expert', 'Best Frequency-Tuning Distribution'},'FontSize',48)
+    title({'Novice vs. Expert', 'Best Frequency-Tuning Distribution'})
     xticks([1:8])
     xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
-    ax = gca;
-    ax.FontSize = 28;
-    xlabel('Frequency (kHz)','FontSize',36)
-    ylabel('Percent of Pixels','FontSize',36)
+    xlabel('Frequency (kHz)')
+    ylabel('Percent of Pixels')
     set(gcf, 'WindowStyle', 'Docked')
     figSave1 = fullfile(file_loc,animal,fig1);
     savefig(figSave1);
-    %%% plot animal average trace comparisons %%%
-    normHitTraces = squeeze(normROItraces(:,1,:,:));
-    normMissTraces = squeeze(normROItraces(:,2,:,:));
-    normFalarmTraces = squeeze(normROItraces(:,3,:,:));
-    normCorrejTraces = squeeze(normROItraces(:,4,:,:));
-    normTarTraces = squeeze(normROItraces(:,5,:,:));
-    normNonTraces = squeeze(normROItraces(:,6,:,:));
-    normTraceMax(j) = max(max(max(max(abs(normROItraces)))));
-    %average across frequency ROIs%
-    expHitTraces = squeeze(nanmean(normHitTraces,2))';
-    expMissTraces = squeeze(nanmean(normMissTraces,2))';
-    expFalarmTraces = squeeze(nanmean(normFalarmTraces,2))';
-    expCorrejTraces = squeeze(nanmean(normCorrejTraces,2))';
-    expTarTraces = squeeze(nanmean(normTarTraces,2))';
-    expNonTraces = squeeze(nanmean(normNonTraces,2))';
-    %avg across experiments%
-    %standard error%
-    if animalExps > 2
-        expHitTraceSE = nanstd(expHitTraces)/sqrt(animalExps-1);
-        expMissTraceSE = nanstd(expMissTraces)/sqrt(animalExps-1);
-        expFalarmTraceSE = nanstd(expFalarmTraces)/sqrt(animalExps-1);
-        expCorrejTraceSE = nanstd(expCorrejTraces)/sqrt(animalExps-1);
-        expTarTraceSE = nanstd(expTarTraces)/sqrt(animalExps-1);
-        expNonTraceSE = nanstd(expNonTraces)/sqrt(animalExps-1);
+    %%% animal average whole-window traces and post-onset DeltaF/F %%%
+    %separate traces by response category%
+    winTarTraces = squeeze(winTraces(:,1,1:animalExps(j),j))';
+    winHitTraces = squeeze(winTraces(:,2,1:animalExps(j),j))';
+    winMissTraces = squeeze(winTraces(:,3,1:animalExps(j),j))';
+    winNonTraces = squeeze(winTraces(:,4,1:animalExps(j),j))';
+    winFalarmTraces = squeeze(winTraces(:,5,1:animalExps(j),j))';
+    winCorrejTraces = squeeze(winTraces(:,6,1:animalExps(j),j))';
+    %average across response categories%
+    winTarTrace = nanmean(winTarTraces,1);
+    winHitTrace = nanmean(winHitTraces,1);
+    winMissTrace = nanmean(winMissTraces,1);
+    winNonTrace = nanmean(winNonTraces,1);
+    winFalarmTrace = nanmean(winFalarmTraces,1);
+    winCorrejTrace = nanmean(winCorrejTraces,1);
+    traceMax(j,:) = [max(winTarTrace) max(winHitTrace) max(winMissTrace) max(winNonTrace) max(winFalarmTrace) max(winCorrejTrace)];
+    traceMin(j,:) = [min(winTarTrace) min(winHitTrace) min(winMissTrace) min(winNonTrace) min(winFalarmTrace) min(winCorrejTrace)];
+    %standard error of response category traces%
+    if animalExps(j) > 2
+        tarTraceSE = nanstd(winTarTraces)/sqrt(animalExps(j));
+        hitTraceSE = nanstd(winHitTraces)/sqrt(animalExps(j));
+        missTraceSE = nanstd(winMissTraces)/sqrt(animalExps(j));
+        nonTraceSE = nanstd(winNonTraces)/sqrt(animalExps(j));
+        falarmTraceSE = nanstd(winFalarmTraces)/sqrt(animalExps(j));
+        correjTraceSE = nanstd(winCorrejTraces)/sqrt(animalExps(j));
     else
-        expHitTraceSE = zeros(1,18);
-        expMissTraceSE = zeros(1,18);
-        expFalarmTraceSE = zeros(1,18);
-        expCorrejTraceSE = zeros(1,18);
-        expTarTraceSE = zeros(1,18);
-        expNonTraceSE = zeros(1,18);
+        hitTraceSE = zeros(1,18);
+        missTraceSE = zeros(1,18);
+        falarmTraceSE = zeros(1,18);
+        correjTraceSE = zeros(1,18);
+        tarTraceSE = zeros(1,18);
+        nonTraceSE = zeros(1,18);
     end
     %plot target tone w/ behavior%
     figure
-    shadedErrorBar([1:18],nanmean(expTarTraces,1),2*expTarTraceSE,'-g',1);
+    subplot(1,2,1)
+    suptitle([animal])
+    shadedErrorBar([1:18],winTarTrace,2*tarTraceSE,'-g',1);
     hold on
-    shadedErrorBar([1:18],nanmean(expHitTraces,1),2*expHitTraceSE,'-b',1);
-    shadedErrorBar([1:18],nanmean(expMissTraces,1),2*expMissTraceSE,'-r',1);
+    shadedErrorBar([1:18],winHitTrace,2*hitTraceSE,'-b',1);
+    shadedErrorBar([1:18],winMissTrace,2*missTraceSE,'-r',1);
     hold off
-    title([animal,' {\color{blue}Hit} vs. {\color{red}Miss} vs. {\color{green}Passive '...
-        '\color{green}Target} Fluorescence Traces'],'FontSize',48)
+    title({'{\color{blue}Hit} vs. {\color{red}Miss} vs. {\color{green}Passive} ',...
+        '{\color{green}Target} Fluorescence Traces'})
     xticks([4, 8, 12, 16])
     xticklabels({'1', '2', '3', '4'})
-    xlabel('Time (s)','FontSize',36)
-    ylabel('DeltaF/F','FontSize',36)
-    ax = gca;
-    ax.FontSize = 28;
-    ylim([-0.1 normTraceMax(j)])
+    xlabel('Time (s)')
+    ylabel('DeltaF/F')
+    ylim([min(traceMin(j,:))-0.1 max(traceMax(j,:))+0.2])
+    %plot nontarget tone w/ behavior%
+    subplot(1,2,2)
+    shadedErrorBar([1:18],winNonTrace,2*nonTraceSE,'-g',1);
+    hold on
+    shadedErrorBar([1:18],winFalarmTrace,2*falarmTraceSE,'-r',1);
+    shadedErrorBar([1:18],winCorrejTrace,2*correjTraceSE,'-b',1);
+    hold off
+    title({'{\color{red}False \color{red}Alarm} vs. {\color{blue}Correct} '... 
+        '{\color{blue}Reject} vs. {\color{green}Passive}', '{\color{green}Nontarget} Fluorescence Traces'})
+    xticks([4, 8, 12, 16])
+    xticklabels({'1', '2', '3', '4'})
+    xlabel('Time (s)')
+    ylabel('DeltaF/F')
+    ylim([min(traceMin(j,:))-0.1 max(traceMax(j,:))+0.2])
     set(gcf, 'WindowStyle', 'Docked')
     figSave2 = fullfile(file_loc,animal,fig2);
     savefig(figSave2);
-    %plot nontarget tone w/ behavior%
+    %separate mouse average post-onset DeltaF/F by response categories and average across experiments%
+    tarPODF = squeeze(winMu(1,1:animalExps(j),j));
+    hitPODF = squeeze(winMu(2,1:animalExps(j),j));
+    missPODF = squeeze(winMu(3,1:animalExps(j),j));
+    nonPODF = squeeze(winMu(4,1:animalExps(j),j));
+    falarmPODF = squeeze(winMu(5,1:animalExps(j),j));
+    correjPODF = squeeze(winMu(6,1:animalExps(j),j));
+    adjHitPODF = squeeze(adjWinMu(1,1:animalExps(j),j));
+    adjMissPODF = squeeze(adjWinMu(2,1:animalExps(j),j));
+    adjFalarmPODF = squeeze(adjWinMu(3,1:animalExps(j),j));
+    adjCorrejPODF = squeeze(adjWinMu(4,1:animalExps(j),j));
+    avgWinMu(j,:) = nanmean(winMu(:,1:animalExps(j),j),2);
+    avgAdjWinMu(j,:) = nanmean(adjWinMu(:,1:animalExps(j),j),2);
+    %calculate statistically significant differences between categorical post-onset DeltaF/F%
+    [Hth Pth] = kstest2(tarPODF,hitPODF,alpha);
+    [Htm Ptm] = kstest2(tarPODF,missPODF,alpha);
+    [Hnf Pnf] = kstest2(nonPODF,falarmPODF,alpha);
+    [Hnc Pnc] = kstest2(nonPODF,correjPODF,alpha);
+    [Hahm Pahm] = kstest2(adjHitPODF,adjMissPODF,alpha);
+    [Hafc Pafc] = kstest2(adjFalarmPODF,adjCorrejPODF,alpha);
+    %calculate standard error for post-onset DeltaF/F%
+    tarMuSE = nanstd(tarPODF)/sqrt(animalExps(j));
+    hitMuSE = nanstd(hitPODF)/sqrt(animalExps(j));
+    missMuSE = nanstd(missPODF)/sqrt(animalExps(j));
+    nonMuSE = nanstd(nonPODF)/sqrt(animalExps(j));
+    falarmMuSE = nanstd(falarmPODF)/sqrt(animalExps(j));
+    correjMuSE = nanstd(correjPODF)/sqrt(animalExps(j));
+    muSEs(j,:) = [tarMuSE hitMuSE missMuSE nonMuSE falarmMuSE correjMuSE];
+    adjHitMuSE = nanstd(adjHitPODF)/sqrt(animalExps(j));
+    adjMissMuSE = nanstd(adjMissPODF)/sqrt(animalExps(j));
+    adjFalarmMuSE = nanstd(adjFalarmPODF)/sqrt(animalExps(j));
+    adjCorrejMuSE = nanstd(adjCorrejPODF)/sqrt(animalExps(j));
+    adjMuSEs(j,:) = [adjHitMuSE adjMissMuSE adjFalarmMuSE adjCorrejMuSE];
+    %plot adjusted and unadjusted post-onset DeltaF/F with significance%
     figure
-    shadedErrorBar([1:18],nanmean(expNonTraces,1),2*expNonTraceSE,'-g',1);
+    suptitle([animal])
+    subplot(1,2,1)
     hold on
-    shadedErrorBar([1:18],nanmean(expFalarmTraces,1),2*expFalarmTraceSE,'-r',1);
-    shadedErrorBar([1:18],nanmean(expCorrejTraces,1),2*expCorrejTraceSE,'-b',1);
+    bar(avgWinMu(j,:))
+    title({'Unadjusted Passive and Behavior','Post-onset DeltaF/F'})
+    err = errorbar(avgWinMu(j,:),muSEs(j,:))
+    err.Color = [0 0 0];
+    err.LineStyle = 'None';
+    sigstar({[1 2],[1 3],[4 5],[4 6]},[Pth,Ptm,Pnf,Pnc])
+    xticks([1:6])
+    xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
+    xtickangle(-15)
     hold off
-    title([animal,' {\color{red}False \color{red}Alarm} vs. {\color{blue}Correct '... 
-        '\color{blue}Reject} vs. {\color{green}Passive \color{green}Nontarget} Fluorescence Traces'],'FontSize',48)
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    xlabel('Time (s)','FontSize',36)
-    ylabel('DeltaF/F','FontSize',36)
-    ax = gca;
-    ax.FontSize = 28;
-    ylim([-0.1 normTraceMax(j)])
-    set(gcf, 'WindowStyle', 'Docked')
+    subplot(1,2,2)
+    hold on
+    bar(avgAdjWinMu(j,:))
+    title({'Passive-adjusted Behavior','Post-onset DeltaF/F'})
+    err = errorbar(avgAdjWinMu(j,:),adjMuSEs(j,:))
+    err.Color = [0 0 0];
+    err.LineStyle = 'None';
+    sigstar({[1 2],[3 4]},[Pahm,Pafc])
+    xticks([1:4])
+    xticklabels({'hit','miss','false alarm','correct reject'})
+    xtickangle(-15)
+    hold off
     figSave3 = fullfile(file_loc,animal,fig3);
     savefig(figSave3);
-    %add traces to population matrix (for analysis of more than one animal)%
-    popHitTraces = [popHitTraces; expHitTraces];
-    popMissTraces = [popMissTraces; expMissTraces];
-    popFalarmTraces = [popFalarmTraces; expFalarmTraces];
-    popCorrejTraces = [popCorrejTraces; expCorrejTraces];
-    popTarTraces = [popTarTraces; expTarTraces];
-    popNonTraces = [popNonTraces; expNonTraces];
-    clearvars -except numAnimals alpha NearFarExps adjNearFarHit adjNearFarMiss adjNearFarFalarm adjNearFarCorrej...
-        totalFreqDist fig1 fig2 fig3 fig4 fig5 animal file_loc popHitTraces popMissTraces popFalarmTraces...
-        popCorrejTraces popTarTraces popNonTraces normTraceMax 
+    set(gcf, 'WindowStyle', 'Docked')
+    %save statistical significance values into whole analysis matrix%
+    statTable(:,j) = [Pth; Ptm; Pnf; Pnc; Pahm; Pafc];
+    clearvars -except numAnimals alpha winTraces winMu adjWinTraces adjWinMu ROItraces ROImu...
+        adjROItraces adjROImu totalFreqDist avgWinMu avgAdjWinMu muSEs adjMuSEs... 
+        animalExps statTable traceMax traceMin...
+        fig1 fig2 fig3 fig4 fig5 animal file_loc
 end
 
 %plot population frequency-tuning distribution, target, and nontarget traces if doing whole population%
@@ -208,13 +248,11 @@ if numAnimals ~= 1
     bar(popFreqDist)
     legend('Novice','Expert','AutoUpdate','off')
     hold on
-    title({'Population Novice vs. Expert', 'Best Frequency-Tuning Distribution'},'FontSize',48)
+    title({'Population Novice vs. Expert', 'Best Frequency-Tuning Distribution'})
     xticks([1:8])
     xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
-    ax = gca;
-    ax.FontSize = 28;
-    xlabel('Frequency (kHz)','FontSize',36)
-    ylabel('Percent of Pixels','FontSize',36)
+    xlabel('Frequency (kHz)')
+    ylabel('Percent of Pixels')
     err = errorbar(xTFreq,popFreqVals,popFreqErr);
     err.Color = [0 0 0];
     err.LineStyle = 'None';
@@ -224,274 +262,148 @@ if numAnimals ~= 1
     figSave1 = fullfile(file_loc,fig1);
     savefig(figSave1);
     %target/behavior and nontarget/behavior trace avgs%
-    popHitTrace = nanmean(popHitTraces,1);
-    popMissTrace = nanmean(popMissTraces,1);
-    popFalarmTrace = nanmean(popFalarmTraces,1);
-    popCorrejTrace = nanmean(popCorrejTraces,1);
-    popTarTrace = nanmean(popTarTraces,1);
-    popNonTrace = nanmean(popNonTraces,1);
-    normTraceMax = max(normTraceMax);
+    popTarTraces = [];
+    popHitTraces = [];
+    popMissTraces = [];
+    popNonTraces = [];
+    popFalarmTraces = [];
+    popCorrejTraces = [];
+    for i = 1:numAnimals
+        popTarTraces = [popTarTraces squeeze(winTraces(:,1,1:animalExps(i),i))];
+        popHitTraces = [popHitTraces squeeze(winTraces(:,2,1:animalExps(i),i))];
+        popMissTraces = [popMissTraces squeeze(winTraces(:,3,1:animalExps(i),i))];
+        popNonTraces = [popNonTraces squeeze(winTraces(:,4,1:animalExps(i),i))];
+        popFalarmTraces = [popFalarmTraces squeeze(winTraces(:,5,1:animalExps(i),i))];
+        popCorrejTraces = [popCorrejTraces squeeze(winTraces(:,6,1:animalExps(i),i))];
+    end
+    popHitTrace = nanmean(popHitTraces,2);
+    popMissTrace = nanmean(popMissTraces,2);
+    popFalarmTrace = nanmean(popFalarmTraces,2);
+    popCorrejTrace = nanmean(popCorrejTraces,2);
+    popTarTrace = nanmean(popTarTraces,2);
+    popNonTrace = nanmean(popNonTraces,2);
     %standard error%
-    popHitTraceSE = nanstd(popHitTraces)/sqrt(56);
-    popMissTraceSE = nanstd(popMissTraces)/sqrt(56);
-    popFalarmTraceSE = nanstd(popFalarmTraces)/sqrt(56);
-    popCorrejTraceSE = nanstd(popCorrejTraces)/sqrt(56);
-    popTarTraceSE = nanstd(popTarTraces)/sqrt(56);
-    popNonTraceSE = nanstd(popNonTraces)/sqrt(56);
+    popHitTraceSE = nanstd(popHitTraces')/sqrt(56);
+    popMissTraceSE = nanstd(popMissTraces')/sqrt(56);
+    popFalarmTraceSE = nanstd(popFalarmTraces')/sqrt(56);
+    popCorrejTraceSE = nanstd(popCorrejTraces')/sqrt(56);
+    popTarTraceSE = nanstd(popTarTraces')/sqrt(56);
+    popNonTraceSE = nanstd(popNonTraces')/sqrt(56);
     %plot figure%
     figure
+    subplot(1,2,1)
     shadedErrorBar([1:18],popHitTrace,2*popHitTraceSE,'-b',1);
     hold on
     shadedErrorBar([1:18],popMissTrace,2*popMissTraceSE,'-r',1);
     shadedErrorBar([1:18],popTarTrace,2*popTarTraceSE,'-g',1);
     hold off
     title({'Population {\color{blue}Hit} vs. {\color{red}Miss} vs.', '{\color{green}Passive \color{green}Target} '...
-        'Fluorescence Traces'},'FontSize',48)
+        'Fluorescence Traces'})
     xticks([4, 8, 12, 16])
     xticklabels({'1', '2', '3', '4'})
-    xlabel('Time (s)','FontSize',36)
-    ylabel('DeltaF/F','FontSize',36)
-    ax = gca;
-    ax.FontSize = 28;
-    ylim([-0.1 0.3])
-    set(gcf, 'WindowStyle', 'Docked')
-    figSave2 = fullfile(file_loc,fig2);
-    savefig(figSave2);
-    figure
+    xlabel('Time (s)')
+    ylabel('DeltaF/F')
+    ylim([min(min(traceMin)) max(max(traceMax))])
+    subplot(1,2,2)
     shadedErrorBar([1:18],popFalarmTrace,2*popFalarmTraceSE,'-r',1);
     hold on
     shadedErrorBar([1:18],popCorrejTrace,2*popCorrejTraceSE,'-b',1);
     shadedErrorBar([1:18],popNonTrace,2*popNonTraceSE,'-g',1);
     hold off
     title({'Population {\color{red}False \color{red}Alarm} vs.', '{\color{blue}Correct \color{blue}Reject} vs. ',...
-        '{\color{green}Passive \color{green}Nontarget} Fluorescence Traces'},'FontSize',48)
+        '{\color{green}Passive \color{green}Nontarget} Fluorescence Traces'})
     xticks([4, 8, 12, 16])
     xticklabels({'1', '2', '3', '4'})
-    xlabel('Time (s)','FontSize',36)
-    ylabel('DeltaF/F','FontSize',36)
-    ax = gca;
-    ax.FontSize = 28;
-    ylim([-0.1 0.3])
+    xlabel('Time (s)')
+    ylabel('DeltaF/F')
+    ylim([min(min(traceMin)) max(max(traceMax))])
     set(gcf, 'WindowStyle', 'Docked')
+    figSave2 = fullfile(file_loc,fig2);
+    savefig(figSave2);
+    %calculate population post-onset DeltaF/F averages%
+    popTarPODF = [];
+    popHitPODF = [];
+    popMissPODF = [];
+    popNonPODF = [];
+    popFalarmPODF = [];
+    popCorrejPODF = [];
+    adjPopHitPODF = [];
+    adjPopMissPODF = [];
+    adjPopFalarmPODF = [];
+    adjPopCorrejPODF = [];
+    for i = 1:numAnimals
+        popTarPODF = [popTarPODF winMu(1,1:animalExps(i),i)];
+        popHitPODF = [popHitPODF winMu(2,1:animalExps(i),i)];
+        popMissPODF = [popMissPODF winMu(3,1:animalExps(i),i)];
+        popNonPODF = [popNonPODF winMu(4,1:animalExps(i),i)];
+        popFalarmPODF = [popFalarmPODF winMu(5,1:animalExps(i),i)];
+        popCorrejPODF = [popCorrejPODF winMu(6,1:animalExps(i),i)];
+        adjPopHitPODF = [adjPopHitPODF adjWinMu(1,1:animalExps(i),i)];
+        adjPopMissPODF = [adjPopMissPODF adjWinMu(2,1:animalExps(i),i)];
+        adjPopFalarmPODF = [adjPopFalarmPODF adjWinMu(3,1:animalExps(i),i)];
+        adjPopCorrejPODF = [adjPopCorrejPODF adjWinMu(4,1:animalExps(i),i)];
+    end
+    avgPopMu = [nanmean(popTarPODF) nanmean(popHitPODF) nanmean(popMissPODF) nanmean(popNonPODF) nanmean(popFalarmPODF) nanmean(popCorrejPODF)];
+    avgAdjPopMu = [nanmean(adjPopHitPODF) nanmean(adjPopMissPODF) nanmean(adjPopFalarmPODF) nanmean(adjPopCorrejPODF)];
+    %standard error%
+    popTarMuSE = nanstd(popTarPODF);
+    popHitMuSE = nanstd(popHitPODF);
+    popMissMuSE = nanstd(popMissPODF);
+    popNonMuSE = nanstd(popNonPODF);
+    popFalarmMuSE = nanstd(popFalarmPODF);
+    popCorrejMuSE = nanstd(popCorrejPODF);
+    popAdjHitSE = nanstd(adjPopHitPODF);
+    popAdjMissSE = nanstd(adjPopMissPODF);
+    popAdjFalarmSE = nanstd(adjPopFalarmPODF);
+    popAdjCorrejSE = nanstd(adjPopCorrejPODF);
+    avgPopMuSE = [popTarMuSE popHitMuSE popMissMuSE popNonMuSE popFalarmMuSE popCorrejMuSE];
+    avgAdjPopMuSE = [popAdjHitSE popAdjMissSE popAdjFalarmSE popAdjCorrejSE];
+    %test for statistical significance between response categories%
+    [Hth Pth] = kstest2(popTarPODF,popHitPODF,alpha);
+    [Htm Ptm] = kstest2(popTarPODF,popMissPODF,alpha);
+    [Hnf Pnf] = kstest2(popNonPODF,popFalarmPODF,alpha);
+    [Hnc Pnc] = kstest2(popNonPODF,popCorrejPODF,alpha);
+    [Hahm Pahm] = kstest2(adjPopHitPODF,adjPopMissPODF,alpha);
+    [Hafc Pafc] = kstest2(adjPopFalarmPODF,adjPopCorrejPODF,alpha);
+    %save statistical significance values to table%
+    statTable(:,numAnimals+1) = [Pth; Ptm; Pnf; Pnc; Pahm; Pafc];
+    %plot adjusted and unadjusted population post-onset DeltaF/F with error bars and statistics%
+    figure
+    subplot(1,2,1)
+    hold on
+    bar(avgPopMu)
+    title({'Population Unadjusted Passive and Behavior','Post-onset DeltaF/F'})
+    err = errorbar(avgPopMu,avgPopMuSE)
+    err.Color = [0 0 0];
+    err.LineStyle = 'None';
+    sigstar({[1 2],[1 3],[4 5],[4 6]},[Pth,Ptm,Pnf,Pnc])
+    xticks([1:6])
+    xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
+    xtickangle(-15)
+    hold off
+    subplot(1,2,2)
+    hold on
+    bar(avgAdjPopMu)
+    title({'Population Passive-adjusted Behavior','Post-onset DeltaF/F'})
+    err = errorbar(avgAdjPopMu,avgAdjPopMuSE)
+    err.Color = [0 0 0];
+    err.LineStyle = 'None';
+    sigstar({[1 2],[3 4]},[Pahm,Pafc])
+    xticks([1:4])
+    xticklabels({'hit','miss','false alarm','correct reject'})
+    xtickangle(-15)
+    hold off
     figSave3 = fullfile(file_loc,fig3);
     savefig(figSave3);
+    set(gcf, 'WindowStyle', 'Docked')
 end
-%Find category averages and significance for non-adjusted data and plot%
-AvgNearHit = nanmean(NearFarExps(:,1));
-AvgFarHit = nanmean(NearFarExps(:,2));
-AvgNearMiss = nanmean(NearFarExps(:,3));
-AvgFarMiss = nanmean(NearFarExps(:,4));
-AvgNearTarget = nanmean(NearFarExps(:,5));
-AvgFarTarget = nanmean(NearFarExps(:,6));
-AvgNearFalarm = nanmean(NearFarExps(:,7));
-AvgFarFalarm = nanmean(NearFarExps(:,8));
-AvgNearCorrej = nanmean(NearFarExps(:,9));
-AvgFarCorrej = nanmean(NearFarExps(:,10));
-AvgNearNontarget = nanmean(NearFarExps(:,11));
-AvgFarNontarget = nanmean(NearFarExps(:,12));
-%significance, check for all nan values and correct%
-if isnan(AvgNearHit || AvgFarHit)
-    pHit = 1;
-else
-    [hHit pHit] = kstest2(NearFarExps(:,1),NearFarExps(:,2),alpha);
-end
-if isnan(AvgNearMiss) || isnan(AvgFarMiss)
-    pMiss = 1;
-else
-    [hMiss pMiss] = kstest2(NearFarExps(:,3),NearFarExps(:,4),alpha);
-end
-if isnan(AvgNearTarget) || isnan(AvgFarTarget)
-    pTarget = 1;
-else
-    [hTarget pTarget] = kstest2(NearFarExps(:,5),NearFarExps(:,6),alpha);
-end
-if isnan(AvgNearFalarm) || isnan(AvgFarFalarm)
-    pFalarm = 1;
-else
-    [hFalarm pFalarm] = kstest2(NearFarExps(:,7),NearFarExps(:,8),alpha);
-end
-if isnan(AvgNearCorrej) || isnan(AvgFarCorrej)
-    pCorrej = 1;
-else
-    [hCorrej pCorrej] = kstest2(NearFarExps(:,9),NearFarExps(:,10),alpha);
-end
-if isnan(AvgNearNontarget) || isnan(AvgFarNontarget)
-    pNontarget = 1;
-else
-    [hNontarget pNontarget] = kstest2(NearFarExps(:,11),NearFarExps(:,12),alpha);
-end
-if isnan(AvgNearTarget) || isnan(AvgNearNontarget)
-    pTarNon = 1;
-else
-    [hTarNon pTarNon] = kstest2(NearFarExps(:,5),NearFarExps(:,11),alpha);
-end
-pNonAdjusted = [pHit pMiss pTarget pFalarm pCorrej pNontarget pTarNon];
-%standard error%
-AvgNearHitSE = nanstd(NearFarExps(:,1))/sqrt(56);
-AvgFarHitSE = nanstd(NearFarExps(:,2))/sqrt(56);
-AvgNearMissSE = nanstd(NearFarExps(:,3))/sqrt(56);
-AvgFarMissSE = nanstd(NearFarExps(:,4))/sqrt(56);
-AvgNearTargetSE = nanstd(NearFarExps(:,5))/sqrt(56);
-AvgFarTargetSE = nanstd(NearFarExps(:,6))/sqrt(56);
-AvgNearFalarmSE = nanstd(NearFarExps(:,7))/sqrt(56);
-AvgFarFalarmSE = nanstd(NearFarExps(:,8))/sqrt(56);
-AvgNearCorrejSE = nanstd(NearFarExps(:,9))/sqrt(56);
-AvgFarCorrejSE = nanstd(NearFarExps(:,10))/sqrt(56);
-AvgNearNontargetSE = nanstd(NearFarExps(:,11))/sqrt(56);
-AvgFarNontargetSE = nanstd(NearFarExps(:,12))/sqrt(56);
-NFAvgErr = [2*AvgNearHitSE 2*AvgFarHitSE 2*AvgNearMissSE 2*AvgFarMissSE 2*AvgNearTargetSE 2*AvgFarTargetSE 2*AvgNearFalarmSE 2*AvgFarFalarmSE...
-    2*AvgNearCorrejSE 2*AvgFarCorrejSE 2*AvgNearNontargetSE 2*AvgFarNontargetSE];
-NearFarAvgBars = [AvgNearHit, AvgFarHit, AvgNearMiss, AvgFarMiss, AvgNearTarget, AvgFarTarget,...
-    AvgNearFalarm, AvgFarFalarm, AvgNearCorrej, AvgFarCorrej, AvgNearNontarget, AvgFarNontarget]';
-%plot%
-xNF = [0.6, 1, 1.6, 2, 2.6, 3, 3.6, 4, 4.6, 5, 5.6, 6];
-figure
-NFAB = bar(xNF,NearFarAvgBars);
-hold on
+%saving results%
 if numAnimals == 1
-    title([animal,' Near vs. Far Avg Post-Onset DeltaF/F'],'FontSize',48)
-else
-    title({'Population Near vs. Far', 'Post-Onset Mean DeltaF/F'},'FontSize',48)
-end
-xticklabels({'Hits','Misses','Passive Target','False Alarms','Correct Rejects','Passive Nontarget',})
-xticks([.8, 1.8, 2.8, 3.8, 4.8, 5.8])
-xtickangle(-15)
-ax = gca;
-ax.FontSize = 28;
-xlabel('Behavior and Passive Responses','FontSize',36)
-ylabel('DeltaF/F','FontSize',36)
-%legend('Near','Far')
-NFAB.FaceColor = 'Flat';
-NFAB.CData(2,:) = [1 1 0];
-NFAB.CData(4,:) = [1 1 0];
-NFAB.CData(6,:) = [1 1 0];
-NFAB.CData(8,:) = [1 1 0];
-NFAB.CData(10,:) = [1 1 0];
-NFAB.CData(12,:) = [1 1 0];
-error = errorbar(xNF,NearFarAvgBars,NFAvgErr);
-error.Color = [0 0 0];
-error.LineStyle = 'None';
-sigstar({[0.6,1],[1.6,2],[2.6,3],[3.6,4],[4.6,5],[5.6,6],[2.6,5.6]},[pHit,pMiss,pTarget,pFalarm,pCorrej,pNontarget,pTarNon]);
-set(gcf, 'WindowStyle', 'Docked')
-hold off
-if numAnimals == 1
-    figSave4 = fullfile(file_loc,animal,fig4);
-    savefig(figSave4);
-else
-    figSave4 = fullfile(file_loc,fig4);
-    savefig(figSave4);
-end
-%Find category averages and significance for passive-adjusted data and plot%
-adjNearHitAvg = nanmean(adjNearFarHit(:,1));
-adjFarHitAvg = nanmean(adjNearFarHit(:,2));
-adjNearMissAvg = nanmean(adjNearFarMiss(:,1));
-adjFarMissAvg = nanmean(adjNearFarMiss(:,2));
-adjNearFalarmAvg = nanmean(adjNearFarFalarm(:,1));
-adjFarFalarmAvg = nanmean(adjNearFarFalarm(:,2));
-adjNearCorrejAvg = nanmean(adjNearFarCorrej(:,1));
-adjFarCorrejAvg = nanmean(adjNearFarCorrej(:,2));
-[numHit nf] = size(adjNearFarHit);
-[numMiss nf] = size(adjNearFarMiss);
-[numFalarm nf] = size(adjNearFarFalarm);
-[numCorrej nf] = size(adjNearFarCorrej);
-%standard error%
-adjNearHitSE = nanstd(adjNearFarHit(:,1))/sqrt(numHit);
-adjFarHitSE = nanstd(adjNearFarHit(:,2))/sqrt(numHit);
-adjNearMissSE = nanstd(adjNearFarMiss(:,1))/sqrt(numMiss);
-adjFarMissSE = nanstd(adjNearFarMiss(:,2))/sqrt(numMiss);
-adjNearFalarmSE = nanstd(adjNearFarFalarm(:,1))/sqrt(numFalarm);
-adjFarFalarmSE = nanstd(adjNearFarFalarm(:,2))/sqrt(numFalarm);
-adjNearCorrejSE = nanstd(adjNearFarCorrej(:,1))/sqrt(numCorrej);
-adjFarCorrejSE = nanstd(adjNearFarCorrej(:,2))/sqrt(numCorrej);
-adjNearFarAvgBars = [adjNearHitAvg, adjFarHitAvg, adjNearMissAvg, adjFarMissAvg, adjNearFalarmAvg, adjFarFalarmAvg, adjNearCorrejAvg, adjFarCorrejAvg]';
-adjNearFarErr = [2*adjNearHitSE 2*adjFarHitSE 2*adjNearMissSE 2*adjFarMissSE 2*adjNearFalarmSE 2*adjFarFalarmSE 2*adjNearCorrejSE 2*adjFarCorrejSE];
-%significance%
-if isnan(nanmean(adjNearFarHit(:,1))) || isnan(nanmean(adjNearFarHit(:,2)))
-    pAdjHit = 1;
-    pAdjHitZero = 1;
-else
-    [hAdjHit pAdjHit] = kstest2(adjNearFarHit(:,1),adjNearFarHit(:,2),alpha);
-    [hAdjHitZero pAdjHitZero] = kstest2(nanmean(adjNearFarHit,2),zeros(size(adjNearFarHit,1),1),alpha);
-end
-if isnan(nanmean(adjNearFarMiss(:,1))) || isnan(nanmean(adjNearFarMiss(:,2)))
-    pAdjMiss = 1;
-else
-    [hAdjMiss pAdjMiss] = kstest2(adjNearFarMiss(:,1),adjNearFarMiss(:,2),alpha);
-end
-if isnan(nanmean(adjNearFarHit(:,1))) || isnan(nanmean(adjNearFarMiss(:,1)))
-    pNearTar = 1;
-else
-    [hNearTar pNearTar] = kstest2(adjNearFarHit(:,1),adjNearFarMiss(:,1),alpha);
-end
-if isnan(nanmean(adjNearFarHit(:,2))) || isnan(nanmean(adjNearFarMiss(:,2)))
-    pFarTar = 1;
-else
-    [hFarTar pFarTar] = kstest2(adjNearFarHit(:,2),adjNearFarMiss(:,2),alpha);
-end
-if isnan(nanmean(adjNearFarFalarm(:,1))) || isnan(nanmean(adjNearFarFalarm(:,2)))
-    pAdjFalarm = 1;
-else
-    [hAdjFalarm pAdjFalarm] = kstest2(adjNearFarFalarm(:,1),adjNearFarFalarm(:,2),alpha);
-end
-if isnan(nanmean(adjNearFarCorrej(:,1))) || isnan(nanmean(adjNearFarCorrej(:,2)))
-    pAdjCorrej = 1;
-    pAdjCorrejZero = 1;
-else
-    [hAdjCorrej pAdjCorrej] = kstest2(adjNearFarCorrej(:,1),adjNearFarCorrej(:,2),alpha);
-    [hAdjCorrejZero pAdjCorrejZero] = kstest2(nanmean(adjNearFarCorrej,2),zeros(size(adjNearFarCorrej,1),1),alpha);
-end
-if isnan(nanmean(adjNearFarFalarm(:,1))) || isnan(nanmean(adjNearFarCorrej(:,1)))
-    pNearNon = 1;
-else
-    [hNearNon pNearNon] = kstest2(adjNearFarFalarm(:,1),adjNearFarCorrej(:,1),alpha);
-end
-if isnan(nanmean(adjNearFarFalarm(:,2))) || isnan(nanmean(adjNearFarCorrej(:,2)))
-    pFarNon = 1;
-else
-    [hFarNon pFarNon] = kstest2(adjNearFarFalarm(:,2),adjNearFarCorrej(:,2),alpha);
-end
-%plot%
-figure
-hold on
-axNF = [0.6, 1, 1.6, 2, 2.6, 3, 3.6, 4];
-aNFAB = bar(axNF,adjNearFarAvgBars);
-if numAnimals == 1
-    title({animal,' Passive-Adjusted', 'Near vs. Far Post-Onset Mean DeltaF/F'},'FontSize',48)
-else
-    title({'Population Passive-Pdjusted', 'Near vs. Far Post-Onset Mean DeltaF/F'},'FontSize',48)
-end
-xticklabels({'Hits','Misses','False Alarms','CorrectRejects'})
-xticks([0.8, 1.8, 2.8, 3.8])
-xtickangle(-15)
-ax = gca;
-ax.FontSize = 28;
-%legend('Near','Far')
-xlabel('Behavior and Passive Responses','FontSize',36)
-ylabel('DeltaF/F','FontSize',36)
-aNFAB.FaceColor = 'Flat';
-aNFAB.CData(2,:) = [1 1 0];
-aNFAB.CData(4,:) = [1 1 0];
-aNFAB.CData(6,:) = [1 1 0];
-aNFAB.CData(8,:) = [1 1 0];
-adjError = errorbar(axNF,adjNearFarAvgBars,adjNearFarErr);
-adjError.Color = [0 0 0];
-adjError.LineStyle = 'None';
-sigstar({[0.2,0.8],[0.6,1],[1.6,2],[0.6,1.6],[1,2],[2.6,3],[3.6,4],[2.6,3.6],[3,4],[3.8,4.4]},...
-    [pAdjHitZero,pAdjHit,pAdjMiss,pNearTar,pFarTar,pAdjFalarm,pAdjCorrej,pNearNon,pFarNon,pAdjCorrejZero]);
-set(gcf, 'WindowStyle', 'Docked')
-hold off
-if numAnimals == 1
-    figSave5 = fullfile(file_loc,animal,fig5);
-    savefig(figSave5);
     saveName = 'mouseStats.mat';
     saveFile = fullfile(file_loc,animal,saveName);
     save(saveFile);
 else
-    figSave5 = fullfile(file_loc,fig5);
-    savefig(figSave5);
     saveName = 'popStats.mat';
     saveFile = fullfile(file_loc,saveName);
     save(saveFile);
 end
-end
-
