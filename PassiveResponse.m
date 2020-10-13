@@ -1,4 +1,4 @@
-function [PassiveFreqOrder, Freqind, pDeltaFFds] = PassiveResponse(SavePath,expDate,animal,rawFile)
+function [PassiveFreqOrder, Freqind, pDeltaFFds] = PassiveResponse(SavePath,expDate,animal,rawFile)%,PT)
 %This script is for analyzing RND files from passive WF imaging during behavior sessions to be
 %used in calculating deltaF for behavior experiment
 
@@ -7,7 +7,7 @@ function [PassiveFreqOrder, Freqind, pDeltaFFds] = PassiveResponse(SavePath,expD
 %root = '\Data\NAF\WF_Behavior\';
 %slash = '\';
 %SavePath = sprintf(formatSpec,root,animal,slash,expDate,slash);
-root = 'C:\Users\PsiDev\Desktop\WF_data\WF_Behavior';
+root = 'C:\Users\Aging Toneboxes\Desktop\WF_data\WF_Behavior';
 SavePath = fullfile(root,animal,expDate);
 PsignalMatrix = GeneratePsignalMatrix(SavePath,rawFile);
 
@@ -87,13 +87,17 @@ for i=1:length(UniqFreq)
     Freqind(:,:,i) = [repmat(UniqFreq(i),length(trial),1) trial];
 end
 
-%%%%%%%% Plot DeltaF %%%%%%%%
-fps = 4;
-idx = [1:1/fps:4.5]*fps;   
-tarTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,Freqind(:,2,3)),1),2),4));
-nonTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,Freqind(:,2,6)),1),2),4));
-target = (nanmean(nanmean(DeltaFFds(:,:,idx,Freqind(:,2,3)),3),4));
-nontarget = (nanmean(nanmean(DeltaFFds(:,:,idx,Freqind(:,2,6)),3),4));
+% %%%%%%%% Plot DeltaF %%%%%%%%
+% if ~PT
+%     fps = 4;
+%     idx = [1:1/fps:4.5]*fps;
+%     T = Freqind(:,2,3);                                                    %%VERY IMPORTANT: setting target and non-target tone frequencies:    
+%     N = Freqind(:,2,6);                                                    %%Third dimension of Freqind determines tone selection (3 = 8kHz, 6 = 22.6kHz)
+%     tarTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,T),1),2),4));
+%     nonTrace = squeeze(nanmean(nanmean(nanmean(DeltaFFds(:,:,:,N),1),2),4));
+%     target = (nanmean(nanmean(DeltaFFds(:,:,idx,T),3),4));
+%     nontarget = (nanmean(nanmean(DeltaFFds(:,:,idx,N),3),4));
+% end
 PassiveFreqOrder = FreqLevelOrder;
 
 
