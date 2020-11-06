@@ -1,6 +1,6 @@
 function [freqWinMovs, freqWinTraces, freqWinMus, freqWinMusON, freqWinMusOFF, freqROImovs,...
     freqROItraces, freqROImus, freqROImusON, freqROImusOFF, AEROImovs, AEROItraces,... 
-    AEROImusON, AEROImusOFF, AEROImus] = ControlPassiveResponse(FreqROI,AEROIidx,Freqind,pDeltaFFds)%,PTdate,animal,rawFile)
+    AEROImusON, AEROImusOFF, AEROImus] = ControlPassiveResponse(FreqROI,AEROIidx,Freqind,pDeltaFFds,surfaceImg,surfaceMask)%,PTdate,animal,rawFile)
 %This script is for analyzing RND files from passive WF imaging of control
 %animals and outputs data to be used in statistical analysis
 
@@ -92,36 +92,37 @@ idxEND = size(pDeltaFFds,3)/4;
 idx = [1:1/fps:idxEND]*fps;                                                %"idx" used to specify frames captured after tone-onset
 ONidx = [1:1/fps:2]*fps;
 OFFidx = [2.25:1/fps:3]*fps;
-%create window mask for all images%
+%show window mask%
 figure
-imshow(pDeltaFFds(:,:,1,1))
-m = hggroup(gca);
-windowEdge = imellipse(m, [2, 2, 125, 125]);
-mask = createMask(windowEdge);
-[maskX maskY] = find(mask == 0);
+imshow(surfaceImg.*surfaceMask)
+% m = hggroup(gca);
+% windowEdge = imellipse(m, [2, 2, 125, 125]);
+% mask = createMask(windowEdge);
+% [maskX maskY] = find(mask == 0);
+pause(0.1)
 close(gcf)                                         
-mask = double(mask);                                                       %create standard mask around cranial window
-for i = 1:length(maskX)
-    mask(maskX(i),maskY(i)) = NaN;
-end
+% mask = double(mask);                                                       %create standard mask around cranial window
+% for i = 1:length(maskX)
+%     mask(maskX(i),maskY(i)) = NaN;
+% end
 
 %average across frequency responses and normalize to maximum fluorescence%
 mov1 = nanmean(pDeltaFFds(:,:,:,Freqind(:,2,1)),4);
-mov1 = mov1.*mask;
+mov1 = mov1.*surfaceMask;
 mov2 = nanmean(pDeltaFFds(:,:,:,Freqind(:,2,2)),4);
-mov2 = mov2.*mask;
+mov2 = mov2.*surfaceMask;
 mov3 = nanmean(pDeltaFFds(:,:,:,Freqind(:,2,3)),4);
-mov3 = mov3.*mask;
+mov3 = mov3.*surfaceMask;
 mov4 = nanmean(pDeltaFFds(:,:,:,Freqind(:,2,4)),4);
-mov4 = mov4.*mask;
+mov4 = mov4.*surfaceMask;
 mov5 = nanmean(pDeltaFFds(:,:,:,Freqind(:,2,5)),4);
-mov5 = mov5.*mask;
+mov5 = mov5.*surfaceMask;
 mov6 = nanmean(pDeltaFFds(:,:,:,Freqind(:,2,6)),4);
-mov6 = mov6.*mask;
+mov6 = mov6.*surfaceMask;
 mov7 = nanmean(pDeltaFFds(:,:,:,Freqind(:,2,7)),4);
-mov7 = mov7.*mask;
+mov7 = mov7.*surfaceMask;
 mov8 = nanmean(pDeltaFFds(:,:,:,Freqind(:,2,8)),4);
-mov8 = mov8.*mask;
+mov8 = mov8.*surfaceMask;
 movMax = [max(max(max(abs(mov1)))) max(max(max(abs(mov2)))) max(max(max(abs(mov3)))) max(max(max(abs(mov4))))... 
     max(max(max(abs(mov5)))) max(max(max(abs(mov6)))) max(max(max(abs(mov7)))) max(max(max(abs(mov8))))];
 norm1 = mov1/max(movMax);
@@ -325,7 +326,7 @@ freqROImus(:,8) = mu45ROI;
 
 %%% Autoencoder ROIs %%%
 
-ACregs = {'A1','A2','AAF','non'};                                          %AC regions used for spatial parecellation of AE ROIs
+ACregs = {'A1','A2','AAF','ACnon'};%'VP','DAF','UF','DP'};                                          %AC regions used for spatial parecellation of AE ROIs
 %creating masks for each set of pixels in AE ROI cells%
 % for i = 1:length(AEcoords)                                               
 %     AEblank(:,:,i) = NaN(128);
@@ -335,12 +336,12 @@ ACregs = {'A1','A2','AAF','non'};                                          %AC r
 %     end
 % end
 
-%masking each average frequency movie by each separate BF ROI%
+%masking each average frequency movie by each separate AE ROI and grouping by AC region%
 for j = 1:length(ACregs)
     regCount = 1;
-    for i = 1:size(AEROIidx,1)
-        if AEROIidx{i,5} == j
-            AEblank = AEROIidx{i,6};
+    for i = 1:size(AEROIidx,2)
+        if AEROIidx(i).ACregionIdx == j
+            AEblank = AEROIidx(i).maskImg;
             AEROImov1(:,:,:,regCount) = norm1.*AEblank;
             AEROImov2(:,:,:,regCount) = norm2.*AEblank;
             AEROImov3(:,:,:,regCount) = norm3.*AEblank;
@@ -352,28 +353,35 @@ for j = 1:length(ACregs)
             regCount = regCount + 1;
         end
     end
+    if regCount == 1
+        AEROImovs{j} = nan;
+        AEROItraces{j} = nan;
+        AEROImusON{j} = nan;
+        AEROImusOFF{j} = nan;
+        AEROImus{j} = nan;
+    else
+        %normalizing across average frequency ROI movies by maximum value across ROIs and frequency presentation%
+        AEROImovMax = [max(max(max(max(abs(AEROImov1))))) max(max(max(max(abs(AEROImov2))))) max(max(max(max(abs(AEROImov3))))) max(max(max(max(abs(AEROImov4)))))...
+            max(max(max(max(abs(AEROImov5))))) max(max(max(max(abs(AEROImov6))))) max(max(max(max(abs(AEROImov7))))) max(max(max(max(abs(AEROImov8)))))];
+        norm1AEROI = AEROImov1/max(AEROImovMax);
+        norm2AEROI = AEROImov2/max(AEROImovMax);
+        norm3AEROI = AEROImov3/max(AEROImovMax);
+        norm4AEROI = AEROImov4/max(AEROImovMax);
+        norm5AEROI = AEROImov5/max(AEROImovMax);
+        norm6AEROI = AEROImov6/max(AEROImovMax);
+        norm7AEROI = AEROImov7/max(AEROImovMax);
+        norm8AEROI = AEROImov8/max(AEROImovMax);
 
-    %normalizing across average frequency ROI movies by maximum value across ROIs and frequency presentation%
-    AEROImovMax = [max(max(max(max(abs(AEROImov1))))) max(max(max(max(abs(AEROImov2))))) max(max(max(max(abs(AEROImov3))))) max(max(max(max(abs(AEROImov4)))))...
-        max(max(max(max(abs(AEROImov5))))) max(max(max(max(abs(AEROImov6))))) max(max(max(max(abs(AEROImov7))))) max(max(max(max(abs(AEROImov8)))))];
-    norm1AEROI = AEROImov1/max(AEROImovMax);
-    norm2AEROI = AEROImov2/max(AEROImovMax);
-    norm3AEROI = AEROImov3/max(AEROImovMax);
-    norm4AEROI = AEROImov4/max(AEROImovMax);
-    norm5AEROI = AEROImov5/max(AEROImovMax);
-    norm6AEROI = AEROImov6/max(AEROImovMax);
-    norm7AEROI = AEROImov7/max(AEROImovMax);
-    norm8AEROI = AEROImov8/max(AEROImovMax);
-
-    %combined frequency BF ROI movies in one matrix%
-    AEROImovs{j}(:,:,:,:,1) = norm1AEROI;
-    AEROImovs{j}(:,:,:,:,2) = norm2AEROI;
-    AEROImovs{j}(:,:,:,:,3) = norm3AEROI;
-    AEROImovs{j}(:,:,:,:,4) = norm4AEROI;
-    AEROImovs{j}(:,:,:,:,5) = norm5AEROI;
-    AEROImovs{j}(:,:,:,:,6) = norm6AEROI;
-    AEROImovs{j}(:,:,:,:,7) = norm7AEROI;
-    AEROImovs{j}(:,:,:,:,8) = norm8AEROI;
+        %combined frequency BF ROI movies in one matrix%
+        AEROImovs{j}(:,:,:,:,1) = norm1AEROI;
+        AEROImovs{j}(:,:,:,:,2) = norm2AEROI;
+        AEROImovs{j}(:,:,:,:,3) = norm3AEROI;
+        AEROImovs{j}(:,:,:,:,4) = norm4AEROI;
+        AEROImovs{j}(:,:,:,:,5) = norm5AEROI;
+        AEROImovs{j}(:,:,:,:,6) = norm6AEROI;
+        AEROImovs{j}(:,:,:,:,7) = norm7AEROI;
+        AEROImovs{j}(:,:,:,:,8) = norm8AEROI;
+    end
 
     for i = 1:(regCount - 1)
         %average ROI traces%
@@ -415,45 +423,47 @@ for j = 1:length(ACregs)
         mu32AEROI(i) = nanmean(nanmean(nanmean(norm7AEROI(:,:,idx,i),1),2),3);
         mu45AEROI(i) = nanmean(nanmean(nanmean(norm8AEROI(:,:,idx,i),1),2),3);
     end
+    
+    if regCount > 1
+        %combined frequency BF ROI traces%
+        AEROItraces{j}(:,:,1) = trace4AEROI;
+        AEROItraces{j}(:,:,2) = trace5AEROI;
+        AEROItraces{j}(:,:,3) = trace8AEROI;
+        AEROItraces{j}(:,:,4) = trace11AEROI;
+        AEROItraces{j}(:,:,5) = trace16AEROI;
+        AEROItraces{j}(:,:,6) = trace22AEROI;
+        AEROItraces{j}(:,:,7) = trace32AEROI;
+        AEROItraces{j}(:,:,8) = trace45AEROI;
 
-    %combined frequency BF ROI traces%
-    AEROItraces{j}(:,:,1) = trace4AEROI;
-    AEROItraces{j}(:,:,2) = trace5AEROI;
-    AEROItraces{j}(:,:,3) = trace8AEROI;
-    AEROItraces{j}(:,:,4) = trace11AEROI;
-    AEROItraces{j}(:,:,5) = trace16AEROI;
-    AEROItraces{j}(:,:,6) = trace22AEROI;
-    AEROItraces{j}(:,:,7) = trace32AEROI;
-    AEROItraces{j}(:,:,8) = trace45AEROI;
-
-    %combined frequency BF ROI post-onset deltaF/F%
-    %tone onset
-    AEROImusON{j}(:,1) = mu4AEROIon;
-    AEROImusON{j}(:,2) = mu5AEROIon;
-    AEROImusON{j}(:,3) = mu8AEROIon;
-    AEROImusON{j}(:,4) = mu11AEROIon;
-    AEROImusON{j}(:,5) = mu16AEROIon;
-    AEROImusON{j}(:,6) = mu22AEROIon;
-    AEROImusON{j}(:,7) = mu32AEROIon;
-    AEROImusON{j}(:,8) = mu45AEROIon;
-    %tone offset
-    AEROImusOFF{j}(:,1) = mu4AEROIoff;
-    AEROImusOFF{j}(:,2) = mu5AEROIoff;
-    AEROImusOFF{j}(:,3) = mu8AEROIoff;
-    AEROImusOFF{j}(:,4) = mu11AEROIoff;
-    AEROImusOFF{j}(:,5) = mu16AEROIoff;
-    AEROImusOFF{j}(:,6) = mu22AEROIoff;
-    AEROImusOFF{j}(:,7) = mu32AEROIoff;
-    AEROImusOFF{j}(:,8) = mu45AEROIoff;
-    %tone onset all
-    AEROImus{j}(:,1) = mu4AEROI;
-    AEROImus{j}(:,2) = mu5AEROI;
-    AEROImus{j}(:,3) = mu8AEROI;
-    AEROImus{j}(:,4) = mu11AEROI;
-    AEROImus{j}(:,5) = mu16AEROI;
-    AEROImus{j}(:,6) = mu22AEROI;
-    AEROImus{j}(:,7) = mu32AEROI;
-    AEROImus{j}(:,8) = mu45AEROI;
+        %combined frequency BF ROI post-onset deltaF/F%
+        %tone onset
+        AEROImusON{j}(:,1) = mu4AEROIon;
+        AEROImusON{j}(:,2) = mu5AEROIon;
+        AEROImusON{j}(:,3) = mu8AEROIon;
+        AEROImusON{j}(:,4) = mu11AEROIon;
+        AEROImusON{j}(:,5) = mu16AEROIon;
+        AEROImusON{j}(:,6) = mu22AEROIon;
+        AEROImusON{j}(:,7) = mu32AEROIon;
+        AEROImusON{j}(:,8) = mu45AEROIon;
+        %tone offset
+        AEROImusOFF{j}(:,1) = mu4AEROIoff;
+        AEROImusOFF{j}(:,2) = mu5AEROIoff;
+        AEROImusOFF{j}(:,3) = mu8AEROIoff;
+        AEROImusOFF{j}(:,4) = mu11AEROIoff;
+        AEROImusOFF{j}(:,5) = mu16AEROIoff;
+        AEROImusOFF{j}(:,6) = mu22AEROIoff;
+        AEROImusOFF{j}(:,7) = mu32AEROIoff;
+        AEROImusOFF{j}(:,8) = mu45AEROIoff;
+        %tone onset all
+        AEROImus{j}(:,1) = mu4AEROI;
+        AEROImus{j}(:,2) = mu5AEROI;
+        AEROImus{j}(:,3) = mu8AEROI;
+        AEROImus{j}(:,4) = mu11AEROI;
+        AEROImus{j}(:,5) = mu16AEROI;
+        AEROImus{j}(:,6) = mu22AEROI;
+        AEROImus{j}(:,7) = mu32AEROI;
+        AEROImus{j}(:,8) = mu45AEROI;
+    end
     clearvars -except freqWinMovs freqWinTraces freqWinMus freqWinMusON freqWinMusOFF... 
         freqROImovs freqROItraces freqROImus freqROImusON freqROImusOFF AEROImovs... 
         AEROItraces AEROImusON AEROImusOFF AEROImus ACregs AEROIidx fps Freqind...

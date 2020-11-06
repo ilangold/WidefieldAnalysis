@@ -7,7 +7,7 @@
 
 %%IMPORTANT!!%%
 %Before running analysis, make sure the correct target and non-target
-%frequencies are selected in "WF_mouse" (lines 296,297) and
+%frequencies are selected in "WF_mouse" (lines 333,334) and
 %"PassiveResponse" (lines 94,95)
 
 %Add paths
@@ -15,6 +15,7 @@ addpath(genpath('C:\Ilan_Psignal\WidefieldAnalysis'))
 animal = input('Mouse data to be used: ', 's');                            %user input mouse name matching data folder
 %For running test data, use animal name and expDate "test"
 test = 'test';
+figON = input('Would you like to show and save figures?(0,1) ');
 tf = strcmp(animal,test);                                                  %if tf == 1, test is running, if tf == 0, animal is running
 if tf == 1
     expCount = 1;
@@ -24,7 +25,7 @@ else
 end
 root = 'C:\Users\Aging Toneboxes\Desktop\WF_data\WF_Behavior';             %location of data storage (all mouse folders in "WF_Behavior")
 figures = 'figures';
-ACregs = {'A1','A2','AAF','non'};                                          %AC regions used for spatial parecellation of AE ROIs
+ACregs = {'A1','A2','AAF','ACnon'};%,'VP','DAF','UF','DP'};                                          %AC regions used for spatial parecellation of AE ROIs
 expDates = {};
 mouseBehavior = struct([]);                                                %behavior data output structure
 mousePassive = struct([]);                                                 %passive data output structure
@@ -60,9 +61,6 @@ else
     PTtntOpt = 'TonotopyOutput.mat';
     PTcount = input('Number of pre-trained imaging sessions: ');
 end
-%load AC region data%
-ACRload = fullfile(root,animal,'ACregions.mat');
-load(ACRload)                                                              %loads pixel coordinates as "ACRcoords" for AC regions delineated in "AC_parecellation"
 
 %% Load passive experiment files and store tonotopy data %%
 for j = 1:PTcount
@@ -71,6 +69,28 @@ for j = 1:PTcount
     mousePassive(j).date = PTdate;
     PTload = fullfile(root,animal,PTdate,PTtntOpt);
     load(PTload);                                                          %load output data from novice passive imaging
+    DSTP = round(DSTP);
+    %load AC region data%
+    ACRload = fullfile(root,animal,PTdate,'ACregions.mat');
+    load(ACRload)                                                          %loads pixel coordinates as "ACRcoords" for AC regions delineated in "AC_parecellation"
+    
+    %Calculate relative frequency distribution for each cortical region%
+    mousePassive(j).ACregions = ACRcoords;
+    for i = 1:size(ACRcoords,2)
+        pixVal = [];
+        tntVals = zeros(1,8);
+        for f = 1:size(ACRcoords(i).coordinates,1)
+            pixVal = [pixVal; DSTP(ACRcoords(i).coordinates(f,1),ACRcoords(i).coordinates(f,2))];
+        end
+        pixVals = unique(pixVal(~isnan(pixVal)));
+        numVals = length(pixVal(~isnan(pixVal)));
+        for f = 1:length(pixVals)
+            BFpix = length(find(pixVal == pixVals(f)));
+            tntVals(pixVals(f)) = BFpix/numVals;
+        end
+        mousePassive(j).ACregions(i).tonotopicDist = tntVals;
+    end
+    
     for i = 1:length(Freqidx)                                              %Freqidx is a vector containing 1 - total number of tones presented during passive imaging                                             
         [r c] = find(DSTP == Freqidx(i));                                  %DSTP is a 128x128 image containing Freqidx values corresponding to pixel BF
         PTfreqCoords{Freqidx(i),1}(:,1) = r;
@@ -102,16 +122,16 @@ for j = 1:PTcount
     AEoutput = 'AEroiOutput.mat';
     AEload = fullfile(root,animal,PTdate,AEoutput);
     load(AEload)
-    for i = 1:size(AEroiCoords,1)                                          %creating masks for each set of pixels in AEroiCoords
-        AEblank(:,:,i) = NaN(128);
-        [pr pc] = size(AEroiCoords{i,1});
-        for ii = 1:pr
-            AEblank(AEroiCoords{i,1}(ii,1),AEroiCoords{i,1}(ii,2),i) = 1;  %"AEblank" is the 3D matrix containing the autoencoder ROI masks (pixel x pixel x AE ROIs)
-        end
-    end
+%     for i = 1:length(AEroiData)                                          %creating masks for each set of pixels in AEroiCoords
+%         AEblank(:,:,i) = NaN(128);
+%         [pr pc] = size(AEroiCoords{i,1});
+%         for ii = 1:pr
+%             AEblank(AEroiCoords{i,1}(ii,1),AEroiCoords{i,1}(ii,2),i) = 1;  %"AEblank" is the 3D matrix containing the autoencoder ROI masks (pixel x pixel x AE ROIs)
+%         end
+%     end
     SavePath = fullfile(root,animal,PTdate);
     cd(SavePath)
-    fileStr = dir('*RND*.mat')
+    fileStr = dir('*RND*.mat');
     if isempty(fileStr)
         fileStr = dir('*AHL*.mat');
     end
@@ -130,48 +150,95 @@ for j = 1:PTcount
             passivePixels(j).pixROIdeltaFF{i,1}(:,:,n) = squeeze(pDeltaFFds(PTfreqCoords{Freqidx(i),1}(n,1),PTfreqCoords{Freqidx(i),1}(n,2),:,:));
         end
     end
-    for i = 1:length(AEroiCoords)
-        mousePassive(j).AEROIidx{i,1} = AEroiCoords{i,2};
+    for i = 1:size(AEroiData,2)
+        mousePassive(j).AEROI(i).componentIDX = AEroiData(i).componentIDX;
         for ii = 1:size(pDeltaFFds,4)
             for iii = 1:size(pDeltaFFds,3)
-                AEROIframe = pDeltaFFds(:,:,iii,ii).*AEblank(:,:,i);
+                AEROIframe = pDeltaFFds(:,:,iii,ii).*AEroiData(i).maskImg;
                 mousePassive(j).AEROIdeltaFF(iii,ii,i) = nanmean(nanmean(AEROIframe,1),2);
             end
         end
-        for n = 1:size(AEroiCoords{i,1},1)
-            passivePixels(j).pixAEROIdeltaFF{i,1}(:,:,n) = squeeze(pDeltaFFds(AEroiCoords{i,1}(n,1),AEroiCoords{i,1}(n,2),:,:));
+        for n = 1:size(AEroiData(i).coordinates,1)
+            passivePixels(j).pixAEROIdeltaFF{i,1}(:,:,n) = squeeze(pDeltaFFds(AEroiData(i).coordinates(n,1),AEroiData(i).coordinates(n,2),:,:));
         end
-    end
-    for i = 1:length(AEroiCoords)
-        for ii = 1:size(Freqind,3)
-            passFreqResps = mousePassive(j).AEROIdeltaFF(:,Freqind(:,2,ii),i);
-            avgPassResp(ii) = nanmean(nanmean(passFreqResps,1),2);
-        end
-        AEROImaxResp = max(avgPassResp);
-        AEROImaxIDX = find(avgPassResp == AEROImaxResp);
-        if isempty(AEROImaxIDX)
-            msg = 'No BF tuning found';
-            error(msg)
-        end
-        mousePassive(j).AEROIidx{i,2} = AEroiCoords{i,1};
-        mousePassive(j).AEROIidx{i,3} = outputFreqs(AEROImaxIDX);
-        [srt sidx] = sort(avgPassResp, 'descend');
-        mousePassive(j).AEROIidx{i,4} = outputFreqs(sidx);
+%     end
+%     for i = 1:length(AEroiCoords)
+%         for ii = 1:size(Freqind,3)
+%             passFreqResps = mousePassive(j).AEROIdeltaFF(:,Freqind(:,2,ii),i);
+%             avgPassResp(ii) = nanmean(nanmean(passFreqResps,1),2);
+%         end
+%         AEROImaxResp = max(avgPassResp);
+%         AEROImaxIDX = find(avgPassResp == AEROImaxResp);
+%         if isempty(AEROImaxIDX)
+%             msg = 'No BF tuning found';
+%             error(msg)
+%         end
+        mousePassive(j).AEROI(i).coordinates = AEroiData(i).coordinates;
+%         mousePassive(j).AEROIidx{i,2} = AEroiCoords{i,1};
+%         mousePassive(j).AEROIidx{i,3} = outputFreqs(AEROImaxIDX);
+        mousePassive(j).AEROI(i).maskImg = AEroiData(i).maskImg;
+        AEboundImg = zeros(128,128);
+        AEboundImg(AEroiData(i).maskImg == 1) = 1;
+        AEb = bwboundaries(AEboundImg);
+        mousePassive(j).AEROI(i).boundary = AEb{1};
+        mousePassive(j).AEROI(i).BFtuning = AEroiData(i).BF;
+        mousePassive(j).AEROI(i).BFnumPix = AEroiData(i).BFnumPix;
+%         [srt sidx] = sort(avgPassResp, 'descend');
+%         mousePassive(j).AEROIidx{i,4} = outputFreqs(sidx);
         for ii = 1:size(ACRcoords,2)
-            x(ii) = length(find(ismember(ACRcoords{1,ii},AEroiCoords{i,1},'rows')));
+            x(ii) = length(find(ismember(ACRcoords(ii).coordinates,AEroiData(i).coordinates,'rows')));
         end
-        if max(x) >= size(AEroiCoords{i,1},1)*0.6
+        if max(x) >= size(AEroiData(i).coordinates,1)*0.3
             ACregIDX = find(x == max(x));
         else
             ACregIDX = 4;
         end
-        mousePassive(j).AEROIidx{i,5} = ACregIDX;
-        mousePassive(j).AEROIidx{i,6} = AEblank(:,:,i);
+        mousePassive(j).AEROI(i).ACregionIdx = ACregIDX;
     end
+    %
+    for i = 1:4
+        regCount = 1;
+        AEmasks = [];
+        for ii = 1:size(AEroiData,2)
+            if mousePassive(j).AEROI(ii).ACregionIdx == i
+                AEmasks(:,:,regCount) = mousePassive(j).AEROI(ii).maskImg;
+                regCount = regCount + 1;
+            end
+        end
+        if isempty(AEmasks)
+            AEmasks = nan(128,128);
+        end
+        avgAEmask(:,:,i) = nanmean(AEmasks,3);
+        figure
+        set(gcf,'WindowStyle','Docked')
+        imagesc(avgAEmask(:,:,i))
+        title([animal,': AE ROIs located in ',ACregs{i}])
+        if i < 4
+            hold on
+            plot(ACRcoords(i).boundary(:,2),ACRcoords(i).boundary(:,1),'w','LineWidth',2)
+            hold off
+        end
+    end
+%     bColor = {'b','g','y'};
+%     allAEmask = nanmean(avgAEmask,3);
+%     figure
+%     set(gcf,'WindowStyle','Docked')
+%     imagesc()
+    tntImg = fullfile(root,animal,PTdate,'ACregionsImg.fig');
+    open(tntImg)
+    hold on
+    for i = 1:size(mousePassive(j).AEROI,2)
+        plot(mousePassive(j).AEROI(i).boundary(:,2),mousePassive(j).AEROI(i).boundary(:,1),'w','LineWidth',2)
+    end
+    hold off
+    title([animal,': AE ROIs located in window with AC region boundaries'])
+    figSave = fullfile(SavePath,'AEROItonotopy.fig');
+    savefig(figSave)
+    %
     [freqWinMovs, freqWinTraces, freqWinMus, freqWinMusON, freqWinMusOFF, freqROImovs,...
         freqROItraces, freqROImus, freqROImusON, freqROImusOFF, AEROImovs, AEROItraces,... 
         AEROImusON, AEROImusOFF, AEROImus] = ControlPassiveResponse(mousePassive(j).FreqROI,...
-        mousePassive(j).AEROIidx,Freqind,pDeltaFFds);%,mousePassive(i).date,animal,rawFile);
+        mousePassive(j).AEROI,Freqind,pDeltaFFds,surfaceImg,surfaceMask);%,mousePassive(i).date,animal,rawFile);
     mousePassive(j).avgWindowMovies = freqWinMovs;
     mousePassive(j).avgWindowTraces = freqWinTraces;
     mousePassive(j).WindowMuON = freqWinMusON;
@@ -293,7 +360,7 @@ for j = 1:expCount
         disp(' ')
         disp('Loading Flourescence')
         I=[];
-        %Data came from .tiff stack, usutall from ThorCam in the Kanold Lab
+        %Data came from .tiff stack, usually from ThorCam in the Kanold Lab
         I=[];
         framecount=0;
         InfoImage=imfinfo([handles.deltaFfile]);
@@ -333,36 +400,60 @@ for j = 1:expCount
     T = Freqind(:,2,6);                                                
     N = Freqind(:,2,3);
     
-    %create window mask for all images%
+    %load pre-behavior tonotopy data for window mask%
+    if tf == 1                                                             %checking for test case
+    else
+        tntOpt = 'TonotopyOutput.mat';                                     %experiment-specific passive imaging output file
+        tntLoad = fullfile(SavePath,tntOpt);
+        load(tntLoad);
+        analysisCoords = {};
+        pixCoords = {};
+         %load AC region data%
+        ACRload = fullfile(SavePath,'ACregions.mat');
+        load(ACRload)                                                          %loads pixel coordinates as "ACRcoords" for AC regions delineated in "AC_parecellation"
+    end
+    DSTP = round(DSTP);
+    %show window mask%
     figure
-    imshow(DeltaFFds(:,:,1,1))
-    m = hggroup(gca);
-    windowEdge = imellipse(m, [2, 2, 125, 125]);
-    mask = createMask(windowEdge);
-    [maskX maskY] = find(mask == 0);
-    close(gcf)                                                             %create standard mask around cranial window
+    imshow(surfaceImg.*surfaceMask)
+    pause(0.1)
+    close(gcf) 
+    %setting frame rate and frame index values%
     fps = 4;
     idx = [1:1/fps:4.5]*fps;                                               %"idx" used to specify frames captured after tone-onset
     ONidx = [1:1/fps:2]*fps;                                               %tone onset frames
     OFFidx = [2.25:1/fps:3]*fps;                                           %tone offset frames
-    mask = double(mask);
-    for i = 1:length(maskX)
-        mask(maskX(i),maskY(i)) = NaN;
+    
+    %Calculate relative frequency distribution for each cortical region%
+    mouseBehavior(j).ACregions = ACRcoords;
+    for i = 1:size(ACRcoords,2)
+        pixVal = [];
+        tntVals = zeros(1,8);
+        for f = 1:size(ACRcoords(i).coordinates,1)
+            pixVal = [pixVal; DSTP(ACRcoords(i).coordinates(f,1),ACRcoords(i).coordinates(f,2))];
+        end
+        pixVals = unique(pixVal(~isnan(pixVal)));
+        numVals = length(pixVal(~isnan(pixVal)));
+        for f = 1:length(pixVals)
+            BFpix = length(find(pixVal == pixVals(f)));
+            tntVals(pixVals(f)) = BFpix/numVals;
+        end
+        mouseBehavior(j).ACregions(i).tonotopicDist = tntVals;
     end
     
     %Create average trial movies for each group of behavioral category trials as well as target and non-target trials and apply window mask%
     avgHit = squeeze(nanmean(DeltaFFds(:,:,:,H),4));
-    avgHit = avgHit.*mask;
+    avgHit = avgHit.*surfaceMask;
     avgMiss = squeeze(nanmean(DeltaFFds(:,:,:,M),4));
-    avgMiss = avgMiss.*mask;
+    avgMiss = avgMiss.*surfaceMask;
     avgFalarm = squeeze(nanmean(DeltaFFds(:,:,:,F),4));
-    avgFalarm = avgFalarm.*mask;
+    avgFalarm = avgFalarm.*surfaceMask;
     avgCorrej = squeeze(nanmean(DeltaFFds(:,:,:,CR),4));
-    avgCorrej = avgCorrej.*mask;
+    avgCorrej = avgCorrej.*surfaceMask;
     avgTar = squeeze(nanmean(pDeltaFFds(:,:,:,T),4));
-    avgTar = avgTar.*mask;
+    avgTar = avgTar.*surfaceMask;
     avgNon = squeeze(nanmean(pDeltaFFds(:,:,:,N),4));
-    avgNon = avgNon.*mask;
+    avgNon = avgNon.*surfaceMask;
     %Create adjusted average trial movies for each behavioral category using the corresponding passive frequency average trial movie%
     adjHit = avgHit - avgTar;
     adjMiss = avgMiss - avgTar;
@@ -402,28 +493,30 @@ for j = 1:expCount
     mouseBehavior(j).avgWindowImgs(:,:,5) = falarmImg;
     mouseBehavior(j).avgWindowImgs(:,:,6) = correjImg;
     %plotting average images%
-    subplot(2,3,1)
-    imshow(tarImg, [-1 1])
-    title(['target'])
-    subplot(2,3,4)
-    imshow(nonImg, [-1 1])
-    title(['nontarget'])
-    subplot(2,3,2)
-    imshow(hitImg, [-1 1])
-    title(['hit'])
-    subplot(2,3,5)
-    imshow(falarmImg, [-1 1])
-    title(['false alarm'])
-    subplot(2,3,3)
-    imshow(missImg, [-1 1])
-    title(['miss'])
-    subplot(2,3,6)
-    imshow(correjImg, [-1 1])
-    title(['correct reject'])
-    set(gcf, 'WindowStyle', 'Docked')
-    figname = sprintf(fig1,expDate);
-    figSave = fullfile(root,animal,expDate,figures,figname);
-    savefig(figSave);
+    if figON
+        subplot(2,3,1)
+        imshow(tarImg, [-1 1])
+        title(['target'])
+        subplot(2,3,4)
+        imshow(nonImg, [-1 1])
+        title(['nontarget'])
+        subplot(2,3,2)
+        imshow(hitImg, [-1 1])
+        title(['hit'])
+        subplot(2,3,5)
+        imshow(falarmImg, [-1 1])
+        title(['false alarm'])
+        subplot(2,3,3)
+        imshow(missImg, [-1 1])
+        title(['miss'])
+        subplot(2,3,6)
+        imshow(correjImg, [-1 1])
+        title(['correct reject'])
+        set(gcf, 'WindowStyle', 'Docked')
+        figname = sprintf(fig1,expDate);
+        figSave = fullfile(root,animal,expDate,figures,figname);
+        savefig(figSave);
+    end
 
     %Calculate average passive and unadjusted behavioral deltaF/F trace%
     tarTrace = squeeze(nanmean(nanmean(normTar,1),2));                     %traces averaged across pixels (rows-1,columns-2) and then across trials (4)
@@ -435,53 +528,55 @@ for j = 1:expCount
     %move average traces into matrix%
     mouseBehavior(j).avgWindowTraces(:,1:6) = [tarTrace hitTrace missTrace nonTrace falarmTrace correjTrace]; 
     %plotting average traces%
-    figure
-    subplot(2,3,1)
-    plot(tarTrace)
-    title(['target trace'])
-    ylim([-1 1])
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    set(gca, 'Box', 'off')
-    subplot(2,3,4)
-    plot(nonTrace)
-    title(['nontarget trace'])
-    ylim([-1 1])
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    set(gca, 'Box', 'off')
-    subplot(2,3,2)
-    plot(hitTrace)
-    title(['hit trace'])
-    ylim([-1 1])
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    set(gca, 'Box', 'off')
-    subplot(2,3,5)
-    plot(falarmTrace)
-    title(['false alarm trace'])
-    ylim([-1 1])
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    set(gca, 'Box', 'off')
-    subplot(2,3,3)
-    plot(missTrace)
-    title(['misss trace'])
-    ylim([-1 1])
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    set(gca, 'Box', 'off')
-    subplot(2,3,6)
-    plot(correjTrace)
-    title(['correct reject trace'])
-    ylim([-1 1])
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    set(gca, 'Box', 'off')
-    set(gcf, 'WindowStyle', 'Docked')
-    figname = sprintf(fig2,expDate);
-    figSave = fullfile(root,animal,expDate,figures,figname);
-    savefig(figSave);
+    if figON
+        figure
+        subplot(2,3,1)
+        plot(tarTrace)
+        title(['target trace'])
+        ylim([-1 1])
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        set(gca, 'Box', 'off')
+        subplot(2,3,4)
+        plot(nonTrace)
+        title(['nontarget trace'])
+        ylim([-1 1])
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        set(gca, 'Box', 'off')
+        subplot(2,3,2)
+        plot(hitTrace)
+        title(['hit trace'])
+        ylim([-1 1])
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        set(gca, 'Box', 'off')
+        subplot(2,3,5)
+        plot(falarmTrace)
+        title(['false alarm trace'])
+        ylim([-1 1])
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        set(gca, 'Box', 'off')
+        subplot(2,3,3)
+        plot(missTrace)
+        title(['misss trace'])
+        ylim([-1 1])
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        set(gca, 'Box', 'off')
+        subplot(2,3,6)
+        plot(correjTrace)
+        title(['correct reject trace'])
+        ylim([-1 1])
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        set(gca, 'Box', 'off')
+        set(gcf, 'WindowStyle', 'Docked')
+        figname = sprintf(fig2,expDate);
+        figSave = fullfile(root,animal,expDate,figures,figname);
+        savefig(figSave);
+    end
     
     %Calculate average post-tone-onset DeltaF/F for each passive and behavioral response category%
     %tone onset
@@ -510,24 +605,26 @@ for j = 1:expCount
     %move average PTO DeltaF/F values into matrix%
     mouseBehavior(j).WindowMuALL = [muTar muHit muMiss muNon muFalarm muCorrej];
     %Plot average PTO DeltaF/F values%
-    figure
-    subplot(1,2,1)
-    bar(mouseBehavior(j).WindowMuON)
-    title(['tone-onset DeltaF/F'])
-    xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'});
-    xtickangle(-15)
-    set(gca, 'Box', 'off')
-    subplot(1,2,2)
-    bar(mouseBehavior(j).WindowMuOFF)
-    title(['tone-offset DeltaF/F'])
-    xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'});
-    xtickangle(-15)
-    set(gca, 'Box', 'off')
-    sgtitle(['average post-tone-onset DeltaF/F (passive and behavior)'])
-    set(gcf, 'WindowStyle', 'Docked')
-    figname = sprintf(fig3,expDate);
-    figSave = fullfile(root,animal,expDate,figures,figname);
-    savefig(figSave);
+    if figON
+        figure
+        subplot(1,2,1)
+        bar(mouseBehavior(j).WindowMuON)
+        title(['tone-onset DeltaF/F'])
+        xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'});
+        xtickangle(-15)
+        set(gca, 'Box', 'off')
+        subplot(1,2,2)
+        bar(mouseBehavior(j).WindowMuOFF)
+        title(['tone-offset DeltaF/F'])
+        xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'});
+        xtickangle(-15)
+        set(gca, 'Box', 'off')
+        sgtitle(['average post-tone-onset DeltaF/F (passive and behavior)'])
+        set(gcf, 'WindowStyle', 'Docked')
+        figname = sprintf(fig3,expDate);
+        figSave = fullfile(root,animal,expDate,figures,figname);
+        savefig(figSave);
+    end
     
     %%% Adjusted (Behavior) %%%
     
@@ -542,23 +639,25 @@ for j = 1:expCount
     mouseBehavior(j).adjWindowImgs(:,:,3) = adjFalarmImg;
     mouseBehavior(j).adjWindowImgs(:,:,4) = adjCorrejImg;
     %Plotting average images%
-    figure
-    subplot(2,2,1)
-    imshow(adjHitImg, [-1 1])
-    title(['adjusted hit'])
-    subplot(2,2,2)
-    imshow(adjMissImg, [-1 1])
-    title(['adjusted miss'])
-    subplot(2,2,3)
-    imshow(adjFalarmImg, [-1 1])
-    title(['adjusted false alarm'])
-    subplot(2,2,4)
-    imshow(adjCorrejImg, [-1 1])
-    title(['adjusted correct reject'])
-    set(gcf, 'WindowStyle', 'Docked')
-    figname = sprintf(fig4,expDate);
-    figSave = fullfile(root,animal,expDate,figures,figname);
-    savefig(figSave);
+    if figON
+        figure
+        subplot(2,2,1)
+        imshow(adjHitImg, [-1 1])
+        title(['adjusted hit'])
+        subplot(2,2,2)
+        imshow(adjMissImg, [-1 1])
+        title(['adjusted miss'])
+        subplot(2,2,3)
+        imshow(adjFalarmImg, [-1 1])
+        title(['adjusted false alarm'])
+        subplot(2,2,4)
+        imshow(adjCorrejImg, [-1 1])
+        title(['adjusted correct reject'])
+        set(gcf, 'WindowStyle', 'Docked')
+        figname = sprintf(fig4,expDate);
+        figSave = fullfile(root,animal,expDate,figures,figname);
+        savefig(figSave);
+    end
 
     %Calculate average behavioral deltaF traces adjusted by average passive traces at each pixel%
     adjHitTrace = squeeze(nanmean(nanmean(normAdjHit,1),2));
@@ -568,39 +667,41 @@ for j = 1:expCount
     %move average adjusted traces into matrix%
     mouseBehavior(j).adjWindowTraces(:,1:4) = [adjHitTrace adjMissTrace adjFalarmTrace adjCorrejTrace];
     %plot average traces%
-    figure
-    subplot(2,2,1)
-    plot(adjHitTrace)
-    title(['adjusted hit trace'])
-    ylim([-1 1])
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    set(gca, 'Box', 'off')
-    subplot(2,2,3)
-    plot(adjFalarmTrace)
-    title(['adjusted false alarm trace'])
-    ylim([-1 1])
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    set(gca, 'Box', 'off')
-    subplot(2,2,2)
-    plot(adjMissTrace)
-    title(['adjusted misss trace'])
-    ylim([-1 1])
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    set(gca, 'Box', 'off')
-    subplot(2,2,4)
-    plot(adjCorrejTrace)
-    title(['adjusted correct reject trace'])
-    ylim([-1 1])
-    xticks([4, 8, 12, 16])
-    xticklabels({'1', '2', '3', '4'})
-    set(gca, 'Box', 'off')
-    set(gcf, 'WindowStyle', 'Docked')
-    figname = sprintf(fig5,expDate);
-    figSave = fullfile(root,animal,expDate,figures,figname);
-    savefig(figSave);
+    if figON
+        figure
+        subplot(2,2,1)
+        plot(adjHitTrace)
+        title(['adjusted hit trace'])
+        ylim([-1 1])
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        set(gca, 'Box', 'off')
+        subplot(2,2,3)
+        plot(adjFalarmTrace)
+        title(['adjusted false alarm trace'])
+        ylim([-1 1])
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        set(gca, 'Box', 'off')
+        subplot(2,2,2)
+        plot(adjMissTrace)
+        title(['adjusted misss trace'])
+        ylim([-1 1])
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        set(gca, 'Box', 'off')
+        subplot(2,2,4)
+        plot(adjCorrejTrace)
+        title(['adjusted correct reject trace'])
+        ylim([-1 1])
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        set(gca, 'Box', 'off')
+        set(gcf, 'WindowStyle', 'Docked')
+        figname = sprintf(fig5,expDate);
+        figSave = fullfile(root,animal,expDate,figures,figname);
+        savefig(figSave);
+    end
     
     %Calculate average post-tone-onset DeltaF/F for behavioral response categories adjusted by passive response%
     %tone onset
@@ -622,36 +723,31 @@ for j = 1:expCount
     muAdjCorrej = nanmean(nanmean(nanmean(normAdjCorrej(:,:,idx),1),2),3);
     mouseBehavior(j).adjWindowMuALL = [muAdjHit muAdjMiss muAdjFalarm muAdjCorrej];
     %Plot average adjusted PTO DeltaF/F values%
-    figure
-    subplot(1,2,1)
-    bar(mouseBehavior(j).adjWindowMuON)
-    title(['tone-onset DeltaF/F'])
-    xticklabels({'hit','miss','false alarm','correct reject'});
-    xtickangle(-15)
-    set(gca, 'Box', 'off')
-    subplot(1,2,2)
-    bar(mouseBehavior(j).adjWindowMuOFF)
-    title(['tone-offset DeltaF/F'])
-    xticklabels({'hit','miss','false alarm','correct reject'});
-    xtickangle(-15)
-    set(gca, 'Box', 'off')
-    sgtitle(['average passive-adjusted behavioral post-tone-onset DeltaF/F'])
-    set(gcf, 'WindowStyle', 'Docked')
-    figname = sprintf(fig6,expDate);
-    figSave = fullfile(root,animal,expDate,figures,figname);
-    savefig(figSave);
+    if figON
+        figure
+        subplot(1,2,1)
+        bar(mouseBehavior(j).adjWindowMuON)
+        title(['tone-onset DeltaF/F'])
+        xticklabels({'hit','miss','false alarm','correct reject'});
+        xtickangle(-15)
+        set(gca, 'Box', 'off')
+        subplot(1,2,2)
+        bar(mouseBehavior(j).adjWindowMuOFF)
+        title(['tone-offset DeltaF/F'])
+        xticklabels({'hit','miss','false alarm','correct reject'});
+        xtickangle(-15)
+        set(gca, 'Box', 'off')
+        sgtitle(['average passive-adjusted behavioral post-tone-onset DeltaF/F'])
+        set(gcf, 'WindowStyle', 'Docked')
+        figname = sprintf(fig6,expDate);
+        figSave = fullfile(root,animal,expDate,figures,figname);
+        savefig(figSave);
+    end
     
     %%%%%%%% Passive-based BF ROI analysis %%%%%%%%
     
-    %Create ROI's based on threshold response values from tones presented during passive imaging prior to behavioral imaging (experiment-specific, not from novice imaging)%
-    if tf == 1                                                             %checking for test case
-    else
-        tntOpt = 'TonotopyOutput.mat';                                     %experiment-specific passive imaging output file
-        tntLoad = fullfile(SavePath,tntOpt);
-        load(tntLoad);
-        analysisCoords = {};
-        pixCoords = {};
-    end
+    %Create ROI's based on threshold response values from tones presented...% 
+    %during passive imaging prior to behavioral imaging (experiment-specific, not from novice imaging)%
     for i = 1:length(Freqidx)                                              %separating pixels into cells based on BF tuning from passive imaging
         [r c] = find(DSTP == Freqidx(i));
         pixCoords{Freqidx(i),1}(:,1) = r;
@@ -756,30 +852,32 @@ for j = 1:expCount
         mouseBehavior(j).freqROIimgs(:,:,5,f) = falarmROIimg;
         mouseBehavior(j).freqROIimgs(:,:,6,f) = correjROIimg;
         %Plot average behavioral images%
-        figure
-        suptitle(num2str(pixCoords{f,2}))
-        subplot(2,3,1)
-        imshow(tarROIimg, [-1 1])
-        title(['ROI target'])
-        subplot(2,3,2)
-        imshow(hitROIimg, [-1 1])
-        title(['ROI hit'])
-        subplot(2,3,3)
-        imshow(missROIimg, [-1 1])
-        title(['ROI miss'])
-        subplot(2,3,4)
-        imshow(nonROIimg, [-1 1])
-        title(['ROI nontarget'])
-        subplot(2,3,5)
-        imshow(falarmROIimg, [-1 1])
-        title(['ROI false alarm'])
-        subplot(2,3,6)
-        imshow(correjROIimg, [-1 1])
-        title(['ROI correct reject'])
-        set(gcf, 'WindowStyle', 'Docked')
-        figname = sprintf(fig7,expDate,num2str(pixCoords{f,2}));
-        figSave = fullfile(root,animal,expDate,figures,figname);
-        savefig(figSave);
+        if figON
+            figure
+            suptitle(num2str(pixCoords{f,2}))
+            subplot(2,3,1)
+            imshow(tarROIimg, [-1 1])
+            title(['ROI target'])
+            subplot(2,3,2)
+            imshow(hitROIimg, [-1 1])
+            title(['ROI hit'])
+            subplot(2,3,3)
+            imshow(missROIimg, [-1 1])
+            title(['ROI miss'])
+            subplot(2,3,4)
+            imshow(nonROIimg, [-1 1])
+            title(['ROI nontarget'])
+            subplot(2,3,5)
+            imshow(falarmROIimg, [-1 1])
+            title(['ROI false alarm'])
+            subplot(2,3,6)
+            imshow(correjROIimg, [-1 1])
+            title(['ROI correct reject'])
+            set(gcf, 'WindowStyle', 'Docked')
+            figname = sprintf(fig7,expDate,num2str(pixCoords{f,2}));
+            figSave = fullfile(root,animal,expDate,figures,figname);
+            savefig(figSave);
+        end
 
         %average traces across trials within passive and behavioral response categories%
         hitROItrace = squeeze(nanmean(nanmean(normROIhit(:,:,:,f),1),2));
@@ -791,54 +889,56 @@ for j = 1:expCount
         %move avg BF ROI traces into matrix%
         mouseBehavior(j).freqROItraces(:,1:6,f) = [tarROItrace hitROItrace missROItrace nonROItrace falarmROItrace correjROItrace];               %"freqROItraces" contains normalized average traces (1) of each category (2) from each BF ROI (3)
         %Plotting unadjusted trace averages for each response category (still in frequency loop)
-        figure
-        suptitle(num2str(pixCoords{f,2}))
-        subplot(2,3,1)
-        plot(tarROItrace)
-        title(['ROI target trace'])
-        ylim([-1 1])
-        xticks([4, 8, 12, 16])
-        xticklabels({'1', '2', '3', '4'})
-        set(gca, 'Box', 'off')
-        subplot(2,3,2)
-        plot(hitROItrace)
-        title(['ROI hit trace'])
-        ylim([-1 1])
-        xticks([4, 8, 12, 16])
-        xticklabels({'1', '2', '3', '4'})
-        set(gca, 'Box', 'off')
-        subplot(2,3,3)
-        plot(missROItrace)
-        title(['ROI miss trace'])
-        ylim([-1 1])
-        xticks([4, 8, 12, 16])
-        xticklabels({'1', '2', '3', '4'})
-        set(gca, 'Box', 'off')
-        subplot(2,3,4)
-        plot(nonROItrace)
-        title(['ROI nontarget trace'])
-        ylim([-1 1])
-        xticks([4, 8, 12, 16])
-        xticklabels({'1', '2', '3', '4'})
-        set(gca, 'Box', 'off')
-        subplot(2,3,5)
-        plot(falarmROItrace)
-        title(['ROI false alarm trace'])
-        ylim([-1 1])
-        xticks([4, 8, 12, 16])
-        xticklabels({'1', '2', '3', '4'})
-        set(gca, 'Box', 'off')
-        subplot(2,3,6)
-        plot(correjROItrace)
-        title(['ROI correct reject trace'])
-        ylim([-1 1])
-        xticks([4, 8, 12, 16])
-        xticklabels({'1', '2', '3', '4'})
-        set(gca, 'Box', 'off')
-        set(gcf, 'WindowStyle', 'Docked')
-        figname = sprintf(fig8,expDate,num2str(pixCoords{f,2}));
-        figSave = fullfile(root,animal,expDate,figures,figname);
-        savefig(figSave);
+        if figON
+            figure
+            suptitle(num2str(pixCoords{f,2}))
+            subplot(2,3,1)
+            plot(tarROItrace)
+            title(['ROI target trace'])
+            ylim([-1 1])
+            xticks([4, 8, 12, 16])
+            xticklabels({'1', '2', '3', '4'})
+            set(gca, 'Box', 'off')
+            subplot(2,3,2)
+            plot(hitROItrace)
+            title(['ROI hit trace'])
+            ylim([-1 1])
+            xticks([4, 8, 12, 16])
+            xticklabels({'1', '2', '3', '4'})
+            set(gca, 'Box', 'off')
+            subplot(2,3,3)
+            plot(missROItrace)
+            title(['ROI miss trace'])
+            ylim([-1 1])
+            xticks([4, 8, 12, 16])
+            xticklabels({'1', '2', '3', '4'})
+            set(gca, 'Box', 'off')
+            subplot(2,3,4)
+            plot(nonROItrace)
+            title(['ROI nontarget trace'])
+            ylim([-1 1])
+            xticks([4, 8, 12, 16])
+            xticklabels({'1', '2', '3', '4'})
+            set(gca, 'Box', 'off')
+            subplot(2,3,5)
+            plot(falarmROItrace)
+            title(['ROI false alarm trace'])
+            ylim([-1 1])
+            xticks([4, 8, 12, 16])
+            xticklabels({'1', '2', '3', '4'})
+            set(gca, 'Box', 'off')
+            subplot(2,3,6)
+            plot(correjROItrace)
+            title(['ROI correct reject trace'])
+            ylim([-1 1])
+            xticks([4, 8, 12, 16])
+            xticklabels({'1', '2', '3', '4'})
+            set(gca, 'Box', 'off')
+            set(gcf, 'WindowStyle', 'Docked')
+            figname = sprintf(fig8,expDate,num2str(pixCoords{f,2}));
+            figSave = fullfile(root,animal,expDate,figures,figname);
+            savefig(figSave);
+        end
 
         %post-tone-onset average DeltaF/F by BF ROI for passive and behavior response categories%
         %tone onset
@@ -866,21 +966,23 @@ for j = 1:expCount
         muCorrejROI = nanmean(nanmean(nanmean(normROIcorrej(:,:,idx,f),1),2),3);
         mouseBehavior(j).freqROImeansALL(f,:) = [muTarROI muHitROI muMissROI muNonROI muFalarmROI muCorrejROI];      %"freqROImeans" contains the average passive and behavioral (columns) post onset DeltaF/F across pixels in each BF ROI (rows)
         %plot average PTO DeltaF/F values%
-        figure
-        subplot(1,2,1)
-        bar(mouseBehavior(j).freqROImeansON(f,:))
-        xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
-        title(['tone onset'])
-        subplot(1,2,2)
-        bar(mouseBehavior(j).freqROImeansOFF(f,:))
-        xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
-        title(['tone offset'])
-        set(gca, 'Box', 'off')
-        sgtitle(['Average DeltaF after tone onset:',num2str(pixCoords{f,2})])
-        set(gcf, 'WindowStyle', 'Docked')
-        figname = sprintf(fig9,expDate,num2str(pixCoords{f,2}));
-        figSave = fullfile(root,animal,expDate,figures,figname);
-        savefig(figSave); 
+        if figON
+            figure
+            subplot(1,2,1)
+            bar(mouseBehavior(j).freqROImeansON(f,:))
+            xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
+            title(['tone onset'])
+            subplot(1,2,2)
+            bar(mouseBehavior(j).freqROImeansOFF(f,:))
+            xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
+            title(['tone offset'])
+            set(gca, 'Box', 'off')
+            sgtitle(['Average DeltaF after tone onset:',num2str(pixCoords{f,2})])
+            set(gcf, 'WindowStyle', 'Docked')
+            figname = sprintf(fig9,expDate,num2str(pixCoords{f,2}));
+            figSave = fullfile(root,animal,expDate,figures,figname);
+            savefig(figSave);
+        end
         
         %%% Adjusted (Behavior) %%%
         
@@ -895,24 +997,26 @@ for j = 1:expCount
         mouseBehavior(j).adjROIimgs(:,:,3,f) = adjFalarmROIimg;
         mouseBehavior(j).adjROIimgs(:,:,4,f) = adjCorrejROIimg;
         %Plot average behavioral images%
-        figure
-        suptitle(num2str(pixCoords{f,2}))
-        subplot(2,2,1)
-        imshow(adjHitROIimg, [-1 1])
-        title(['adj ROI hit'])
-        subplot(2,2,2)
-        imshow(adjMissROIimg, [-1 1])
-        title(['adj ROI miss'])
-        subplot(2,2,3)
-        imshow(adjFalarmROIimg, [-1 1])
-        title(['adj ROI false alarm'])
-        subplot(2,2,4)
-        imshow(adjCorrejROIimg, [-1 1])
-        title(['adj ROI correct reject'])
-        set(gcf, 'WindowStyle', 'Docked')
-        figname = sprintf(fig10,expDate,num2str(pixCoords{f,2}));
-        figSave = fullfile(root,animal,expDate,figures,figname);
-        savefig(figSave);
+        if figON
+            figure
+            suptitle(num2str(pixCoords{f,2}))
+            subplot(2,2,1)
+            imshow(adjHitROIimg, [-1 1])
+            title(['adj ROI hit'])
+            subplot(2,2,2)
+            imshow(adjMissROIimg, [-1 1])
+            title(['adj ROI miss'])
+            subplot(2,2,3)
+            imshow(adjFalarmROIimg, [-1 1])
+            title(['adj ROI false alarm'])
+            subplot(2,2,4)
+            imshow(adjCorrejROIimg, [-1 1])
+            title(['adj ROI correct reject'])
+            set(gcf, 'WindowStyle', 'Docked')
+            figname = sprintf(fig10,expDate,num2str(pixCoords{f,2}));
+            figSave = fullfile(root,animal,expDate,figures,figname);
+            savefig(figSave);
+        end
         
         %average traces across trials within behavioral response categories%
         adjHitROItrace = squeeze(nanmean(nanmean(normAdjROIhit(:,:,:,f),1),2));
@@ -922,40 +1026,42 @@ for j = 1:expCount
         %move adjusted BF ROI traces into single matrix%
         mouseBehavior(j).adjROItraces(:,1:4,f) = [adjHitROItrace adjMissROItrace adjFalarmROItrace adjCorrejROItrace];     %"adjROItraces" contains normalized average traces (1) of each category (2) from each BF ROI (3)
         %Plotting unadjusted trace averages for each response category (still in frequency loop)
-        figure
-        suptitle(num2str(pixCoords{f,2}))
-        subplot(2,2,1)
-        plot(adjHitROItrace)
-        title(['adj ROI hit trace'])
-        ylim([-1 1])
-        xticks([4, 8, 12, 16])
-        xticklabels({'1', '2', '3', '4'})
-        set(gca, 'Box', 'off')
-        subplot(2,2,2)
-        plot(adjMissROItrace)
-        title(['adj ROI miss trace'])
-        ylim([-1 1])
-        xticks([4, 8, 12, 16])
-        xticklabels({'1', '2', '3', '4'})
-        set(gca, 'Box', 'off')
-        subplot(2,2,3)
-        plot(adjFalarmROItrace)
-        title(['adj ROI false alarm trace'])
-        ylim([-1 1])
-        xticks([4, 8, 12, 16])
-        xticklabels({'1', '2', '3', '4'})
-        set(gca, 'Box', 'off')
-        subplot(2,2,4)
-        plot(adjCorrejROItrace)
-        title(['adj ROI correct reject trace'])
-        ylim([-1 1])
-        xticks([4, 8, 12, 16])
-        xticklabels({'1', '2', '3', '4'})
-        set(gca, 'Box', 'off')
-        set(gcf, 'WindowStyle', 'Docked')
-        figname = sprintf(fig11,expDate,num2str(pixCoords{f,2}));
-        figSave = fullfile(root,animal,expDate,figures,figname);
-        savefig(figSave);
+        if figON
+            figure
+            suptitle(num2str(pixCoords{f,2}))
+            subplot(2,2,1)
+            plot(adjHitROItrace)
+            title(['adj ROI hit trace'])
+            ylim([-1 1])
+            xticks([4, 8, 12, 16])
+            xticklabels({'1', '2', '3', '4'})
+            set(gca, 'Box', 'off')
+            subplot(2,2,2)
+            plot(adjMissROItrace)
+            title(['adj ROI miss trace'])
+            ylim([-1 1])
+            xticks([4, 8, 12, 16])
+            xticklabels({'1', '2', '3', '4'})
+            set(gca, 'Box', 'off')
+            subplot(2,2,3)
+            plot(adjFalarmROItrace)
+            title(['adj ROI false alarm trace'])
+            ylim([-1 1])
+            xticks([4, 8, 12, 16])
+            xticklabels({'1', '2', '3', '4'})
+            set(gca, 'Box', 'off')
+            subplot(2,2,4)
+            plot(adjCorrejROItrace)
+            title(['adj ROI correct reject trace'])
+            ylim([-1 1])
+            xticks([4, 8, 12, 16])
+            xticklabels({'1', '2', '3', '4'})
+            set(gca, 'Box', 'off')
+            set(gcf, 'WindowStyle', 'Docked')
+            figname = sprintf(fig11,expDate,num2str(pixCoords{f,2}));
+            figSave = fullfile(root,animal,expDate,figures,figname);
+            savefig(figSave);
+        end
         
         %post-tone-onset average DeltaF/F by BF ROI for adjusted behavior categories%
         %tone onset
@@ -976,21 +1082,23 @@ for j = 1:expCount
         muAdjFalarmROI = nanmean(nanmean(nanmean(normAdjROIfalarm(:,:,idx,f),1),2),3);
         muAdjCorrejROI = nanmean(nanmean(nanmean(normAdjROIcorrej(:,:,idx,f),1),2),3);
         mouseBehavior(j).adjROImeans(f,:) = [muAdjHitROI muAdjMissROI muAdjFalarmROI muAdjCorrejROI];       %"adjROImeans" contains the average passive and behavioral (rows) post onset DeltaF/F across pixels in each BF ROI (columns)
-        figure
-        subplot(1,2,1)
-        bar(mouseBehavior(j).adjROImeansON(f,:))
-        xticklabels({'hit','miss','false alarm','correct reject'})
-        title(['tone onset'])
-        subplot(1,2,2)
-        bar(mouseBehavior(j).adjROImeansOFF(f,:))
-        xticklabels({'hit','miss','false alarm','correct reject'})
-        title(['tone offset'])
-        set(gca, 'Box', 'off')
-        sgtitle(['adjusted average DeltaF after tone onset:',num2str(pixCoords{f,2})])
-        set(gcf, 'WindowStyle', 'Docked')
-        figname = sprintf(fig12,expDate,num2str(pixCoords{f,2}));
-        figSave = fullfile(root,animal,expDate,figures,figname);
-        savefig(figSave); 
+        if figON
+            figure
+            subplot(1,2,1)
+            bar(mouseBehavior(j).adjROImeansON(f,:))
+            xticklabels({'hit','miss','false alarm','correct reject'})
+            title(['tone onset'])
+            subplot(1,2,2)
+            bar(mouseBehavior(j).adjROImeansOFF(f,:))
+            xticklabels({'hit','miss','false alarm','correct reject'})
+            title(['tone offset'])
+            set(gca, 'Box', 'off')
+            sgtitle(['adjusted average DeltaF after tone onset:',num2str(pixCoords{f,2})])
+            set(gcf, 'WindowStyle', 'Docked')
+            figname = sprintf(fig12,expDate,num2str(pixCoords{f,2}));
+            figSave = fullfile(root,animal,expDate,figures,figname);
+            savefig(figSave);
+        end
     end
     close all
     
@@ -1003,103 +1111,163 @@ for j = 1:expCount
         AELoad = fullfile(SavePath,AEopt);
         load(AELoad);
     end
-                         %saving autoencoder ROI coordinates to output
-    for i = 1:size(AEroiCoords,1)                                          %creating masks for each set of pixels in AEroiCoords
-        AEblank(:,:,i) = NaN(128);
-        [pr pc] = size(AEroiCoords{i,1});
-        for ii = 1:pr
-            AEblank(AEroiCoords{i,1}(ii,1),AEroiCoords{i,1}(ii,2),i) = 1;  %"AEblank" is the 3D matrix containing the autoencoder ROI masks (pixel x pixel x AE ROIs)
-        end
-    end
+%                          %saving autoencoder ROI coordinates to output
+%     for i = 1:size(AEroiCoords,1)                                          %creating masks for each set of pixels in AEroiCoords
+%         AEblank(:,:,i) = NaN(128);
+%         [pr pc] = size(AEroiCoords{i,1});
+%         for ii = 1:pr
+%             AEblank(AEroiCoords{i,1}(ii,1),AEroiCoords{i,1}(ii,2),i) = 1;  %"AEblank" is the 3D matrix containing the autoencoder ROI masks (pixel x pixel x AE ROIs)
+%         end
+%     end
     
     %Create average trial trace for each AE ROI for all trials%
 %     mouseBehavior(j).autoencoderROIcoordinates = AEroiCoords(:,1);         %saving autoencoder ROI coordinates to output
-    for i = 1:length(AEroiCoords)
-        mouseBehavior(j).AEROIidx{i,1} = AEroiCoords{i,2};
+    for i = 1:length(AEroiData)
+        mouseBehavior(j).AEROI(i).componentIDX = AEroiData(i).componentIDX;
         for ii = 1:size(DeltaFFds,4)
             for iii = 1:size(DeltaFFds,3)
-                AEROIframe = DeltaFFds(:,:,iii,ii).*AEblank(:,:,i);
+                AEROIframe = DeltaFFds(:,:,iii,ii).*AEroiData(i).maskImg;
                 mouseBehavior(j).AEROIdeltaFF(iii,ii,i) = nanmean(nanmean(AEROIframe,1),2);
             end
         end
-        for n = 1:size(AEroiCoords{i,1},1)
-            behaviorPixels(j).pixAEROIdeltaFF{i,1}(:,:,n) = squeeze(DeltaFFds(AEroiCoords{i,1}(n,1),AEroiCoords{i,1}(n,2),:,:));
+        for n = 1:size(AEroiData(i).coordinates,1)
+            behaviorPixels(j).pixAEROIdeltaFF{i,1}(:,:,n) = squeeze(DeltaFFds(AEroiData(i).coordinates(n,1),AEroiData(i).coordinates(n,2),:,:));
         end
         for ii = 1:size(pDeltaFFds,4)
             for iii = 1:size(pDeltaFFds,3)
-                AEROIframe = pDeltaFFds(:,:,iii,ii).*AEblank(:,:,i);
+                AEROIframe = pDeltaFFds(:,:,iii,ii).*AEroiData(i).maskImg;
                 mouseBehavior(j).passAEROIdeltaFF(iii,ii,i) = nanmean(nanmean(AEROIframe,1),2);
             end
         end
-        for n = 1:size(AEroiCoords{i,1},1)
-            behaviorPixels(j).pixpassAEROIdeltaFF{i,1}(:,:,n) = squeeze(pDeltaFFds(AEroiCoords{i,1}(n,1),AEroiCoords{i,1}(n,2),:,:));
+        for n = 1:size(AEroiData(i).coordinates,1)
+            behaviorPixels(j).pixpassAEROIdeltaFF{i,1}(:,:,n) = squeeze(pDeltaFFds(AEroiData(i).coordinates(n,1),AEroiData(i).coordinates(n,2),:,:));
         end
-    end
-    
-    %calculate autoencoder ROI best frequency tuning%
-    for i = 1:length(AEroiCoords)
-        for ii = 1:size(Freqind,3)
-            passFreqResps = mouseBehavior(j).passAEROIdeltaFF(:,Freqind(:,2,ii),i);
-            avgPassResp(ii) = nanmean(nanmean(passFreqResps,1),2);
-        end
-        AEROImaxResp = max(avgPassResp);
-        AEROImaxIDX = find(avgPassResp == AEROImaxResp);
-        if isempty(AEROImaxIDX)
-            msg = 'No BF tuning found';
-            error(msg)
-        end
-        mouseBehavior(j).AEROIidx{i,2} = AEroiCoords{i,1};
-        mouseBehavior(j).AEROIidx{i,3} = outputFreqs(AEROImaxIDX);
-        [srt sidx] = sort(avgPassResp, 'descend');
-        mouseBehavior(j).AEROIidx{i,4} = outputFreqs(sidx);
+%     end
+        mouseBehavior(j).AEROI(i).coordinates = AEroiData(i).coordinates;
+    %         mousePassive(j).AEROIidx{i,2} = AEroiCoords{i,1};
+    %         mousePassive(j).AEROIidx{i,3} = outputFreqs(AEROImaxIDX);
+        mouseBehavior(j).AEROI(i).maskImg = AEroiData(i).maskImg;
+        AEboundImg = zeros(128,128);
+        AEboundImg(AEroiData(i).maskImg == 1) = 1;
+        AEb = bwboundaries(AEboundImg);
+        mouseBehavior(j).AEROI(i).boundary = AEb{1};
+        mouseBehavior(j).AEROI(i).BFtuning = AEroiData(i).BF;
+        mouseBehavior(j).AEROI(i).BFnumPix = AEroiData(i).BFnumPix;
+    %calculate autoencoder ROI cortical location%
+%     for i = 1:length(AEroiData)
+%         for ii = 1:size(Freqind,3)
+%             passFreqResps = mouseBehavior(j).passAEROIdeltaFF(:,Freqind(:,2,ii),i);
+%             avgPassResp(ii) = nanmean(nanmean(passFreqResps,1),2);
+%         end
+%         AEROImaxResp = max(avgPassResp);
+%         AEROImaxIDX = find(avgPassResp == AEROImaxResp);
+%         if isempty(AEROImaxIDX)
+%             msg = 'No BF tuning found';
+%             error(msg)
+%         end
+%         mouseBehavior(j).AEROIidx{i,2} = AEroiCoords{i,1};
+%         mouseBehavior(j).AEROIidx{i,3} = outputFreqs(AEROImaxIDX);
+%         [srt sidx] = sort(avgPassResp, 'descend');
+%         mouseBehavior(j).AEROIidx{i,4} = outputFreqs(sidx);
         for ii = 1:size(ACRcoords,2)
-            x(ii) = length(find(ismember(ACRcoords{1,ii},AEroiCoords{i,1},'rows')));
+            x(ii) = length(find(ismember(ACRcoords(ii).coordinates,AEroiData(i).coordinates,'rows')));
         end
-        if max(x) >= size(AEroiCoords{i,1},1)*0.6
+        if max(x) >= size(AEroiData(i).coordinates,1)*0.3
             ACregIDX = find(x == max(x));
         else
             ACregIDX = 4;
         end
-        mouseBehavior(j).AEROIidx{i,5} = ACregIDX;
-        mouseBehavior(j).AEROIidx{i,6} = AEblank(:,:,i);
+        mouseBehavior(j).AEROI(i).ACregionIdx = ACregIDX;
+%         mouseBehavior(j).AEROIidx{i,6} = AEblank(:,:,i);
     end
+    for i = 1:4
+        regCount = 1;
+        AEmasks = [];
+        for ii = 1:size(AEroiData,2)
+            if mouseBehavior(j).AEROI(ii).ACregionIdx == i
+                AEmasks(:,:,regCount) = mouseBehavior(j).AEROI(ii).maskImg;
+                regCount = regCount + 1;
+            end
+        end
+        if isempty(AEmasks)
+            AEmasks = nan(128,128);
+        end
+        avgAEmask(:,:,i) = nanmean(AEmasks,3);
+        figure
+        set(gcf,'WindowStyle','Docked')
+        imagesc(avgAEmask(:,:,i))
+        title([animal,': AE ROIs located in ',ACregs{i}])
+        if i < 4
+            hold on
+            plot(ACRcoords(i).boundary(:,2),ACRcoords(i).boundary(:,1),'w','LineWidth',2)
+            hold off
+        end
+    end
+%     bColor = {'b','g','y'};
+%     allAEmask = nanmean(avgAEmask,3);
+%     figure
+%     set(gcf,'WindowStyle','Docked')
+%     imagesc()
+    tntImg = fullfile(SavePath,'ACregionsImg.fig');
+    open(tntImg)
+    hold on
+    for i = 1:size(mouseBehavior(j).AEROI,2)
+        plot(mouseBehavior(j).AEROI(i).boundary(:,2),mouseBehavior(j).AEROI(i).boundary(:,1),'w','LineWidth',2)
+    end
+    hold off
+    title([animal,': AE ROIs located in window with AC region boundaries'])
+    figSave = fullfile(SavePath,'AEROItonotopy.fig');
+    savefig(figSave)
     
     for n = 1:length(ACregs)
         regCount = 1;
         %Create average trial movies for passive and behavior categories using AE ROI masks%
-        for i = 1:length(AEroiCoords)
-            if mouseBehavior(j).AEROIidx{i,5} == n
-                AEblank = mouseBehavior(j).AEROIidx{i,6};
+        for i = 1:length(AEroiData)
+            if mouseBehavior(j).AEROI(i).ACregionIdx == n
+                AEblank = mouseBehavior(j).AEROI(i).maskImg;
                 avgAEROIhit(:,:,:,regCount) = avgHit.*AEblank;                     %each "avgAEROI___" matrix contains the average trial movie for that category
                 avgAEROImiss(:,:,:,regCount) = avgMiss.*AEblank;                   %separated into ATMs (one for each AE ROI) with the corresponding ROI mask
                 avgAEROIfalarm(:,:,:,regCount) = avgFalarm.*AEblank;               %128 pixel x 128 pixel x 18 frames x AE ROIs
                 avgAEROIcorrej(:,:,:,regCount) = avgCorrej.*AEblank;
                 avgAEROItar(:,:,:,regCount) = avgTar.*AEblank;
                 avgAEROInon(:,:,:,regCount) = avgNon.*AEblank;
-                AEid(regCount) = AEroiCoords{i,2};
+                AEid(regCount) = mouseBehavior(j).AEROI(i).componentIDX;
                 regCount = regCount + 1;
             end
         end
-        %Create adjusted average trial movies for each behavior category by subtracting the value of the average trial movie of the corresponding AE ROI
-        adjAEROIhit = avgAEROIhit - avgAEROItar;
-        adjAEROImiss = avgAEROImiss - avgAEROItar;
-        adjAEROIfalarm = avgAEROIfalarm - avgAEROInon;
-        adjAEROIcorrej = avgAEROIcorrej - avgAEROInon;
-        %Calculate absolute maximum average trial movie value from all passive and behavior AE ROIs%
-        maxAEROIvals = [max(max(max(max(abs(avgAEROIhit))))) max(max(max(max(abs(avgAEROImiss))))) max(max(max(max(abs(avgAEROIfalarm)))))...
-            max(max(max(max(abs(avgAEROIcorrej))))) max(max(max(max(abs(avgAEROItar))))) max(max(max(max(abs(avgAEROInon)))))];
-        maxAEROI = max(maxAEROIvals);
-        %normalize AE ROI average trial movies for passive, behavior, and adjusted average trial movies%
-        normAEROIhit = avgAEROIhit/maxAEROI;
-        normAEROImiss = avgAEROImiss/maxAEROI;
-        normAEROIfalarm = avgAEROIfalarm/maxAEROI;
-        normAEROIcorrej = avgAEROIcorrej/maxAEROI;
-        normAEROItar = avgAEROItar/maxAEROI;
-        normAEROInon = avgAEROInon/maxAEROI;
-        normAdjAEROIhit = adjAEROIhit/maxAEROI;
-        normAdjAEROImiss = adjAEROImiss/maxAEROI;
-        normAdjAEROIfalarm = adjAEROIfalarm/maxAEROI;
-        normAdjAEROIcorrej = adjAEROIcorrej/maxAEROI;
+        if regCount == 1
+            mouseBehavior(j).AEROIimgs{n} = nan;
+            mouseBehavior(j).AEROItraces{n} = nan;
+            mouseBehavior(j).AEROImeansON{n} = nan;
+            mouseBehavior(j).AEROImeansOFF{n} = nan;
+            mouseBehavior(j).AEROImeansALL{n} = nan;
+            mouseBehavior(j).adjAEROIimgs{n} = nan;
+            mouseBehavior(j).adjAEROItraces{n} = nan;
+            mouseBehavior(j).adjAEROImeansON{n} = nan;
+            mouseBehavior(j).adjAEROImeansOFF{n} = nan;
+            mouseBehavior(j).adjAEROImeansALL{n} = nan; 
+        else
+            %Create adjusted average trial movies for each behavior category by subtracting the value of the average trial movie of the corresponding AE ROI
+            adjAEROIhit = avgAEROIhit - avgAEROItar;
+            adjAEROImiss = avgAEROImiss - avgAEROItar;
+            adjAEROIfalarm = avgAEROIfalarm - avgAEROInon;
+            adjAEROIcorrej = avgAEROIcorrej - avgAEROInon;
+            %Calculate absolute maximum average trial movie value from all passive and behavior AE ROIs%
+            maxAEROIvals = [max(max(max(max(abs(avgAEROIhit))))) max(max(max(max(abs(avgAEROImiss))))) max(max(max(max(abs(avgAEROIfalarm)))))...
+                max(max(max(max(abs(avgAEROIcorrej))))) max(max(max(max(abs(avgAEROItar))))) max(max(max(max(abs(avgAEROInon)))))];
+            maxAEROI = max(maxAEROIvals);
+            %normalize AE ROI average trial movies for passive, behavior, and adjusted average trial movies%
+            normAEROIhit = avgAEROIhit/maxAEROI;
+            normAEROImiss = avgAEROImiss/maxAEROI;
+            normAEROIfalarm = avgAEROIfalarm/maxAEROI;
+            normAEROIcorrej = avgAEROIcorrej/maxAEROI;
+            normAEROItar = avgAEROItar/maxAEROI;
+            normAEROInon = avgAEROInon/maxAEROI;
+            normAdjAEROIhit = adjAEROIhit/maxAEROI;
+            normAdjAEROImiss = adjAEROImiss/maxAEROI;
+            normAdjAEROIfalarm = adjAEROIfalarm/maxAEROI;
+            normAdjAEROIcorrej = adjAEROIcorrej/maxAEROI;
+        end
 
         %AE ROI analysis
         for f = 1:(regCount-1)    
@@ -1120,30 +1288,32 @@ for j = 1:expCount
             mouseBehavior(j).AEROIimgs{n}(:,:,5,f) = falarmAEROIimg;
             mouseBehavior(j).AEROIimgs{n}(:,:,6,f) = correjAEROIimg;
             %Plot average behavioral images%
-            figure
-            suptitle(strcat('ROI_',num2str(AEid(f))))
-            subplot(2,3,1)
-            imshow(tarAEROIimg, [-1 1])
-            title(['ROI target'])
-            subplot(2,3,2)
-            imshow(hitAEROIimg, [-1 1])
-            title(['ROI hit'])
-            subplot(2,3,3)
-            imshow(missAEROIimg, [-1 1])
-            title(['ROI miss'])
-            subplot(2,3,4)
-            imshow(nonAEROIimg, [-1 1])
-            title(['ROI nontarget'])
-            subplot(2,3,5)
-            imshow(falarmAEROIimg, [-1 1])
-            title(['ROI false alarm'])
-            subplot(2,3,6)
-            imshow(correjAEROIimg, [-1 1])
-            title(['ROI correct reject'])
-            set(gcf, 'WindowStyle', 'Docked')
-            figname = sprintf(fig13,expDate,num2str(AEid(f)));
-            figSave = fullfile(root,animal,expDate,figures,figname);
-            savefig(figSave);
+            if figON
+                figure
+                suptitle(strcat('ROI_',num2str(AEid(f))))
+                subplot(2,3,1)
+                imshow(tarAEROIimg, [-1 1])
+                title(['ROI target'])
+                subplot(2,3,2)
+                imshow(hitAEROIimg, [-1 1])
+                title(['ROI hit'])
+                subplot(2,3,3)
+                imshow(missAEROIimg, [-1 1])
+                title(['ROI miss'])
+                subplot(2,3,4)
+                imshow(nonAEROIimg, [-1 1])
+                title(['ROI nontarget'])
+                subplot(2,3,5)
+                imshow(falarmAEROIimg, [-1 1])
+                title(['ROI false alarm'])
+                subplot(2,3,6)
+                imshow(correjAEROIimg, [-1 1])
+                title(['ROI correct reject'])
+                set(gcf, 'WindowStyle', 'Docked')
+                figname = sprintf(fig13,expDate,num2str(AEid(f)));
+                figSave = fullfile(root,animal,expDate,figures,figname);
+                savefig(figSave);
+            end
 
             %average traces across trials within passive and behavioral response categories%
             hitAEROItrace = squeeze(nanmean(nanmean(normAEROIhit(:,:,:,f),1),2));
@@ -1156,54 +1326,56 @@ for j = 1:expCount
             mouseBehavior(j).AEROItraces{n}(:,1:6,f) = [tarAEROItrace hitAEROItrace missAEROItrace... 
                 nonAEROItrace falarmAEROItrace correjAEROItrace];               %"AEROItraces" contains normalized average traces (1) of each category (2) from each AE ROI (3)
             %Plotting unadjusted trace averages for each response category (still in AE ROI loop)
-            figure
-            suptitle(strcat('ROI_',num2str(AEid(f))))
-            subplot(2,3,1)
-            plot(tarAEROItrace)
-            title(['ROI target trace'])
-            ylim([-1 1])
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            set(gca, 'Box', 'off')
-            subplot(2,3,2)
-            plot(hitAEROItrace)
-            title(['ROI hit trace'])
-            ylim([-1 1])
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            set(gca, 'Box', 'off')
-            subplot(2,3,3)
-            plot(missAEROItrace)
-            title(['ROI miss trace'])
-            ylim([-1 1])
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            set(gca, 'Box', 'off')
-            subplot(2,3,4)
-            plot(nonAEROItrace)
-            title(['ROI nontarget trace'])
-            ylim([-1 1])
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            set(gca, 'Box', 'off')
-            subplot(2,3,5)
-            plot(falarmAEROItrace)
-            title(['ROI false alarm trace'])
-            ylim([-1 1])
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            set(gca, 'Box', 'off')
-            subplot(2,3,6)
-            plot(correjAEROItrace)
-            title(['ROI correct reject trace'])
-            ylim([-1 1])
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            set(gca, 'Box', 'off')
-            set(gcf, 'WindowStyle', 'Docked')
-            figname = sprintf(fig14,expDate,num2str(AEid(f)));
-            figSave = fullfile(root,animal,expDate,figures,figname);
-            savefig(figSave);
+            if figON
+                figure
+                suptitle(strcat('ROI_',num2str(AEid(f))))
+                subplot(2,3,1)
+                plot(tarAEROItrace)
+                title(['ROI target trace'])
+                ylim([-1 1])
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                set(gca, 'Box', 'off')
+                subplot(2,3,2)
+                plot(hitAEROItrace)
+                title(['ROI hit trace'])
+                ylim([-1 1])
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                set(gca, 'Box', 'off')
+                subplot(2,3,3)
+                plot(missAEROItrace)
+                title(['ROI miss trace'])
+                ylim([-1 1])
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                set(gca, 'Box', 'off')
+                subplot(2,3,4)
+                plot(nonAEROItrace)
+                title(['ROI nontarget trace'])
+                ylim([-1 1])
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                set(gca, 'Box', 'off')
+                subplot(2,3,5)
+                plot(falarmAEROItrace)
+                title(['ROI false alarm trace'])
+                ylim([-1 1])
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                set(gca, 'Box', 'off')
+                subplot(2,3,6)
+                plot(correjAEROItrace)
+                title(['ROI correct reject trace'])
+                ylim([-1 1])
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                set(gca, 'Box', 'off')
+                set(gcf, 'WindowStyle', 'Docked')
+                figname = sprintf(fig14,expDate,num2str(AEid(f)));
+                figSave = fullfile(root,animal,expDate,figures,figname);
+                savefig(figSave);
+            end
 
             %post-tone-onset average DeltaF/F by AE ROI for passive and behavior response categories%
             %tone onset
@@ -1234,21 +1406,23 @@ for j = 1:expCount
             mouseBehavior(j).AEROImeansALL{n}(f,:) = [muTarAEROI muHitAEROI muMissAEROI... 
                 muNonAEROI muFalarmAEROI muCorrejAEROI];                     %"AEROImeansALL" contains the average passive and behavioral (columns) post onset DeltaF/F across pixels in each AE ROI (rows)
             %plot average PTO DeltaF/F values%
-            figure
-            subplot(1,2,1)
-            bar(mouseBehavior(j).AEROImeansON{n}(f,:))
-            xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
-            title(['tone onset'])
-            subplot(1,2,2)
-            bar(mouseBehavior(j).AEROImeansOFF{n}(f,:))
-            xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
-            title(['tone offset'])
-            set(gca, 'Box', 'off')
-            sgtitle(['Average DeltaF after tone onset:',strcat('ROI_',num2str(AEroiCoords{f,2}))])
-            set(gcf, 'WindowStyle', 'Docked')
-            figname = sprintf(fig15,expDate,num2str(AEid(f)));
-            figSave = fullfile(root,animal,expDate,figures,figname);
-            savefig(figSave); 
+            if figON
+                figure
+                subplot(1,2,1)
+                bar(mouseBehavior(j).AEROImeansON{n}(f,:))
+                xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
+                title(['tone onset'])
+                subplot(1,2,2)
+                bar(mouseBehavior(j).AEROImeansOFF{n}(f,:))
+                xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
+                title(['tone offset'])
+                set(gca, 'Box', 'off')
+                sgtitle(['Average DeltaF after tone onset: ROI_',num2str(AEid(f))])
+                set(gcf, 'WindowStyle', 'Docked')
+                figname = sprintf(fig15,expDate,num2str(AEid(f)));
+                figSave = fullfile(root,animal,expDate,figures,figname);
+                savefig(figSave);
+            end
 
             %%% Adjusted (Behavior) %%%
 
@@ -1263,24 +1437,26 @@ for j = 1:expCount
             mouseBehavior(j).adjAEROIimgs{n}(:,:,3,f) = adjFalarmAEROIimg;
             mouseBehavior(j).adjAEROIimgs{n}(:,:,4,f) = adjCorrejAEROIimg;
             %Plot average behavioral images%
-            figure
-            suptitle(strcat('ROI_',num2str(AEid(f))))
-            subplot(2,2,1)
-            imshow(adjHitAEROIimg, [-1 1])
-            title(['adj ROI hit'])
-            subplot(2,2,2)
-            imshow(adjMissAEROIimg, [-1 1])
-            title(['adj ROI miss'])
-            subplot(2,2,3)
-            imshow(adjFalarmAEROIimg, [-1 1])
-            title(['adj ROI false alarm'])
-            subplot(2,2,4)
-            imshow(adjCorrejAEROIimg, [-1 1])
-            title(['adj ROI correct reject'])
-            set(gcf, 'WindowStyle', 'Docked')
-            figname = sprintf(fig16,expDate,num2str(AEid(f)));
-            figSave = fullfile(root,animal,expDate,figures,figname);
-            savefig(figSave);
+            if figON
+                figure
+                suptitle(strcat('ROI_',num2str(AEid(f))))
+                subplot(2,2,1)
+                imshow(adjHitAEROIimg, [-1 1])
+                title(['adj ROI hit'])
+                subplot(2,2,2)
+                imshow(adjMissAEROIimg, [-1 1])
+                title(['adj ROI miss'])
+                subplot(2,2,3)
+                imshow(adjFalarmAEROIimg, [-1 1])
+                title(['adj ROI false alarm'])
+                subplot(2,2,4)
+                imshow(adjCorrejAEROIimg, [-1 1])
+                title(['adj ROI correct reject'])
+                set(gcf, 'WindowStyle', 'Docked')
+                figname = sprintf(fig16,expDate,num2str(AEid(f)));
+                figSave = fullfile(root,animal,expDate,figures,figname);
+                savefig(figSave);
+            end
 
             %average traces across trials within behavioral response categories%
             adjHitAEROItrace = squeeze(nanmean(nanmean(normAdjAEROIhit(:,:,:,f),1),2));
@@ -1291,40 +1467,42 @@ for j = 1:expCount
             mouseBehavior(j).adjAEROItraces{n}(:,1:4,f) = [adjHitAEROItrace adjMissAEROItrace... 
                 adjFalarmAEROItrace adjCorrejAEROItrace];                      %"adjAEROItraces" contains normalized average traces (1) of each category (2) from each AE ROI (3)
             %Plotting unadjusted trace averages for each response category (still in frequency loop)
-            figure
-            suptitle(strcat('ROI_',num2str(AEid(f))))
-            subplot(2,2,1)
-            plot(adjHitAEROItrace)
-            title(['adj ROI hit trace'])
-            ylim([-1 1])
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            set(gca, 'Box', 'off')
-            subplot(2,2,2)
-            plot(adjMissAEROItrace)
-            title(['adj ROI miss trace'])
-            ylim([-1 1])
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            set(gca, 'Box', 'off')
-            subplot(2,2,3)
-            plot(adjFalarmAEROItrace)
-            title(['adj ROI false alarm trace'])
-            ylim([-1 1])
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            set(gca, 'Box', 'off')
-            subplot(2,2,4)
-            plot(adjCorrejAEROItrace)
-            title(['adj ROI correct reject trace'])
-            ylim([-1 1])
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            set(gca, 'Box', 'off')
-            set(gcf, 'WindowStyle', 'Docked')
-            figname = sprintf(fig17,expDate,num2str(AEid(f)));
-            figSave = fullfile(root,animal,expDate,figures,figname);
-            savefig(figSave);
+            if figON
+                figure
+                suptitle(strcat('ROI_',num2str(AEid(f))))
+                subplot(2,2,1)
+                plot(adjHitAEROItrace)
+                title(['adj ROI hit trace'])
+                ylim([-1 1])
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                set(gca, 'Box', 'off')
+                subplot(2,2,2)
+                plot(adjMissAEROItrace)
+                title(['adj ROI miss trace'])
+                ylim([-1 1])
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                set(gca, 'Box', 'off')
+                subplot(2,2,3)
+                plot(adjFalarmAEROItrace)
+                title(['adj ROI false alarm trace'])
+                ylim([-1 1])
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                set(gca, 'Box', 'off')
+                subplot(2,2,4)
+                plot(adjCorrejAEROItrace)
+                title(['adj ROI correct reject trace'])
+                ylim([-1 1])
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                set(gca, 'Box', 'off')
+                set(gcf, 'WindowStyle', 'Docked')
+                figname = sprintf(fig17,expDate,num2str(AEid(f)));
+                figSave = fullfile(root,animal,expDate,figures,figname);
+                savefig(figSave);
+            end
 
             %post-tone-onset average DeltaF/F by AE ROI for adjusted behavior categories%
             %tone onset
@@ -1348,36 +1526,38 @@ for j = 1:expCount
             muAdjCorrejAEROI = nanmean(nanmean(nanmean(normAdjAEROIcorrej(:,:,idx,f),1),2),3);
             mouseBehavior(j).adjAEROImeansALL{n}(f,:) = [muAdjHitAEROI muAdjMissAEROI... 
                 muAdjFalarmAEROI muAdjCorrejAEROI];                            %"adjAEROImeans" contains the average passive and behavioral (columns) post onset DeltaF/F across pixels in each AE ROI (rows)
-            figure
-            subplot(1,2,1)
-            bar(mouseBehavior(j).adjAEROImeansON{n}(f,:))
-            xticklabels({'hit','miss','false alarm','correct reject'})
-            title(['tone onset'])
-            subplot(1,2,2)
-            bar(mouseBehavior(j).adjAEROImeansOFF{n}(f,:))
-            xticklabels({'hit','miss','false alarm','correct reject'})
-            title(['tone offset'])
-            set(gca, 'Box', 'off')
-            sgtitle(['adjusted average DeltaF after tone onset:',strcat('ROI_',num2str(AEroiCoords{f,2}))])
-            set(gcf, 'WindowStyle', 'Docked')
-            figname = sprintf(fig18,expDate,num2str(AEid(f)));
-            figSave = fullfile(root,animal,expDate,figures,figname);
-            savefig(figSave);
+            if figON
+                figure
+                subplot(1,2,1)
+                bar(mouseBehavior(j).adjAEROImeansON{n}(f,:))
+                xticklabels({'hit','miss','false alarm','correct reject'})
+                title(['tone onset'])
+                subplot(1,2,2)
+                bar(mouseBehavior(j).adjAEROImeansOFF{n}(f,:))
+                xticklabels({'hit','miss','false alarm','correct reject'})
+                title(['tone offset'])
+                set(gca, 'Box', 'off')
+                sgtitle(['adjusted average DeltaF after tone onset: ROI_',num2str(AEid(f))])
+                set(gcf, 'WindowStyle', 'Docked')
+                figname = sprintf(fig18,expDate,num2str(AEid(f)));
+                figSave = fullfile(root,animal,expDate,figures,figname);
+                savefig(figSave);
+            end
             clearvars -except animal expCount j mousePassive mouseBehavior root figures... 
                 fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9 fig10 fig11 fig12... 
                 fig13 fig14 fig15 fig16 fig17 fig18 fig19 expDates tf test PTcount...
-                passivePixels behaviorPixels ACregs AEroiCoords n expDate...
+                passivePixels behaviorPixels ACregs AEroiData n expDate...
                 avgHit avgMiss avgFalarm avgCorrej avgTar avgNon idx ONidx OFFidx...
                 normAEROIhit normAEROImiss normAEROIfalarm normAEROIcorrej... 
                 normAEROItar normAEROInon normAdjAEROIhit normAdjAEROImiss... 
-                normAdjAEROIfalarm normAdjAEROIcorrej AEid f ACRcoords
+                normAdjAEROIfalarm normAdjAEROIcorrej AEid f ACRcoords figON
         end
         close all
         clearvars -except animal expCount j mousePassive mouseBehavior root figures... 
         fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9 fig10 fig11 fig12... 
         fig13 fig14 fig15 fig16 fig17 fig18 fig19 expDates tf test PTcount...
-        passivePixels behaviorPixels ACregs AEroiCoords ACRcoords n expDate...
-        avgHit avgMiss avgFalarm avgCorrej avgTar avgNon idx ONidx OFFidx
+        passivePixels behaviorPixels ACregs AEroiData ACRcoords n expDate...
+        avgHit avgMiss avgFalarm avgCorrej avgTar avgNon idx ONidx OFFidx figON
     end
 
 %     %NOT IN USE DUE TO LACK OF DIFFERENCE BETWEEN NEAR/FAR-TUNED REGIONS%
@@ -1396,7 +1576,7 @@ for j = 1:expCount
     clearvars -except animal expCount j mousePassive mouseBehavior root figures... 
         fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9 fig10 fig11 fig12... 
         fig13 fig14 fig15 fig16 fig17 fig18 fig19 expDates tf test PTcount...
-        passivePixels behaviorPixels ACRcoords ACregs
+        passivePixels behaviorPixels ACregs figON
     close all
 end
 
@@ -1407,3 +1587,4 @@ save(savePlace,'mousePassive','mouseBehavior','-v7.3');
 filename = 'mousePixelData.mat';
 savePlace = fullfile(root,animal,filename);
 save(savePlace,'passivePixels','behaviorPixels','-v7.3');
+disp('Saved Data')

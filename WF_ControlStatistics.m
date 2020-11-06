@@ -15,31 +15,35 @@ Freqs = {'4 kHz','5.6 kHz','8 kHz','11.3 kHz','16 kHz','22.6 kHz','32 kHz','45.2
 dubFreqs = [4000;5657;8000;11314;16000;22627;32000;45255];
 totalFreqDist = [];                                                        %variable containing percent of pixels tuned to each presented frequency, all experiments for each animal saved in a single cell
 ctl = 'control';                                                           %variable used in saving population figures
-ACregs = {'A1','A2','AAF','ACnon'};                                        %AC regions defined in "AC_parcellation"
+ACregs = {'A1','A2','AAF','ACnon'};%,'VP','DAF','UF','DP'};                                        %AC regions defined in "AC_parcellation"
 %figures%
 fig1 = 'frequency-tuning_distribution.fig';
-fig2 = 'whole-window_frequency-specific_traces.fig';
-fig3 = 'whole-window_frequency-specific_PODF.fig';
-fig4 = {'4kHz_ROI_frequency-specific_traces.fig' '5.6kHz_ROI_frequency-specific_traces.fig' '8kHz_ROI_frequency-specific_traces.fig' ...
+fig2 = '_frequency-tuning_distribution.fig';
+fig3 = 'whole-window_frequency-specific_traces.fig';
+fig4 = 'whole-window_frequency-specific_PODF.fig';
+fig5 = {'4kHz_ROI_frequency-specific_traces.fig' '5.6kHz_ROI_frequency-specific_traces.fig' '8kHz_ROI_frequency-specific_traces.fig' ...
     '11.3kHz_ROI_frequency-specific_traces.fig' '16kHz_ROI_frequency-specific_traces.fig' '22.6kHz_ROI_frequency-specific_traces.fig' ...
     '32kHz_ROI_frequency-specific_traces.fig' '45.2kHz_ROI_frequency-specific_traces.fig'};
-fig5 = {'4kHz_ROI_frequency-specific_PODF.fig' '5.6kHz_ROI_frequency-specific_PODF.fig' '8kHz_ROI_frequency-specific_PODF.fig' ...
+fig6 = {'4kHz_ROI_frequency-specific_PODF.fig' '5.6kHz_ROI_frequency-specific_PODF.fig' '8kHz_ROI_frequency-specific_PODF.fig' ...
     '11.3kHz_ROI_frequency-specific_PODF.fig' '16kHz_ROI_frequency-specific_PODF.fig' '22.6kHz_ROI_frequency-specific_PODF.fig' ...
     '32kHz_ROI_frequency-specific_PODF.fig' '45.2kHz_ROI_frequency-specific_PODF.fig'};
-fig6 = '_onset-tuned_AEROI_frequency-specific_traces.fig';
-fig7 = '_onset-tuned_AEROI_frequency-specific_PODF.fig';
-fig8 = '_offset-tuned_AEROI_frequency-specific_traces.fig';
-fig9 = '_offset-tuned_AEROI_frequency-specific_PODF.fig';
-onACregTraces = cell(4,numAnimals);
-onACregMu = cell(4,numAnimals);
-onACregMuON = cell(4,numAnimals);
-onACregMuOFF = cell(4,numAnimals);
-offACregTraces = cell(4,numAnimals);
-offACregMu = cell(4,numAnimals);
-offACregMuON = cell(4,numAnimals);
-offACregMuOFF = cell(4,numAnimals);
-AEstatTableON = cell(4,2,numAnimals);
-AEstatTableOFF = cell(4,2,numAnimals);
+fig7 = '_AEROI_frequency-specific_traces.fig';
+fig8 = '_AEROI_frequency-specific_PODF.fig';
+% fig8 = '_offset-tuned_AEROI_frequency-specific_traces.fig';
+% fig9 = '_offset-tuned_AEROI_frequency-specific_PODF.fig';
+ACregTraces = cell(4,numAnimals);
+ACregMu = cell(4,numAnimals);
+ACregMuON = cell(4,numAnimals);
+ACregMuOFF = cell(4,numAnimals);
+% offACregTraces = cell(4,numAnimals);
+% offACregMu = cell(4,numAnimals);
+% offACregMuON = cell(4,numAnimals);
+% offACregMuOFF = cell(4,numAnimals);
+AEstatTable = cell(4,2,numAnimals);
+ACregTntDist = struct([]);
+% AEstatTableOFF = cell(4,2,numAnimals);
+distSigPoints = {[0.85,1.15],[1.85,2.15],[2.85,3.15],[3.85,4.15],...
+    [4.85,5.15],[5.85,6.15],[6.85,7.15],[7.85,8.15]};
 
 %% Individual animal analysis %%
 for j = 1:numAnimals
@@ -60,66 +64,255 @@ for j = 1:numAnimals
         BFROImu(:,:,i,j) = mousePassive(i).freqROImeansALL;                %BF ROI post-onset all DeltaF/F (frequency ROI x frequency presented x experiment x animal)
         BFROImuON(:,:,i,j) = mousePassive(i).freqROImeansON;               %BF ROI tone-onset DeltaF/F (frequency ROI x frequency presented x experiment x animal)
         BFROImuOFF(:,:,i,j) = mousePassive(i).freqROImeansOFF;             %BF ROI tone-offset DeltaF/F (frequency ROI x frequency presented x experiment x animal)
+        
     end
     
     %%% Tonotopy BF distribution %%%
+    bacNum = [0 0 0];
+    pacNum = [0 0 0];
     pNum = fix(animalExps(j)/2);
-    for i = 1:pNum
-        PfreqDist(:,i) = mousePassive(i).tonotopicDist;
+    PexpNum = [1:pNum];
+    BexpNum = [1+pNum:length(mousePassive)];
+    for i = PexpNum
+        PfreqDist(:,i,j) = mousePassive(i).tonotopicDist;
+        for n = 1:size(mousePassive(i).ACregions,2)
+            if sum(mousePassive(i).ACregions(n).tonotopicDist) == 0
+                PACfreqDist(i,:,n) = nan(1,8);
+            else
+                PACfreqDist(i,:,n) = mousePassive(i).ACregions(n).tonotopicDist;
+                pacNum(n) = pacNum(n) + 1;
+            end
+        end
     end
     for i = 1:(length(mousePassive)-pNum)
-        BfreqDist(:,i) = mousePassive(i+pNum).tonotopicDist;
+        BfreqDist(:,i,j) = mousePassive(BexpNum(i)).tonotopicDist;
+        for n = 1:size(mousePassive(BexpNum(i)).ACregions,2)
+            if sum(mousePassive(BexpNum(i)).ACregions(n).tonotopicDist) == 0
+                BACfreqDist(i,:,n) = nan(1,8);
+            else
+                BACfreqDist(i,:,n) = mousePassive(BexpNum(i)).ACregions(n).tonotopicDist;
+                bacNum(n) = bacNum(n) + 1;
+            end
+        end
     end
     for i = 1:length(mousePassive)
         barFreqDist(:,i,j) = mousePassive(i).tonotopicDist;
     end
-    compFreqDist(:,1) = mean(PfreqDist,2);
-    compFreqDist(:,2) = mean(BfreqDist,2);
-%      barFreqDist = compFreqDist;
+    ACregTntDist(j).bacNum = bacNum;
+    ACregTntDist(j).pacNum = pacNum;
+    ACregTntDist(j).BACdist = BACfreqDist;
+    ACregTntDist(j).PACdist = PACfreqDist;
+    
+    %Whole window frequency distribution standard error%
+    Pexps = length(PexpNum);
+    Bexps = length(BexpNum);
+    %expert
+    b4se = nanstd(BfreqDist(1,:,j))/sqrt(Bexps);
+    b5se = nanstd(BfreqDist(2,:,j))/sqrt(Bexps);
+    b8se = nanstd(BfreqDist(3,:,j))/sqrt(Bexps);
+    b11se = nanstd(BfreqDist(4,:,j))/sqrt(Bexps);
+    b16se = nanstd(BfreqDist(5,:,j))/sqrt(Bexps);
+    b22se = nanstd(BfreqDist(6,:,j))/sqrt(Bexps);
+    b32se = nanstd(BfreqDist(7,:,j))/sqrt(Bexps);
+    b45se = nanstd(BfreqDist(8,:,j))/sqrt(Bexps);
+    %novice
+    p4se = nanstd(PfreqDist(1,:,j))/sqrt(Pexps);
+    p5se = nanstd(PfreqDist(2,:,j))/sqrt(Pexps);
+    p8se = nanstd(PfreqDist(3,:,j))/sqrt(Pexps);
+    p11se = nanstd(PfreqDist(4,:,j))/sqrt(Pexps);
+    p16se = nanstd(PfreqDist(5,:,j))/sqrt(Pexps);
+    p22se = nanstd(PfreqDist(6,:,j))/sqrt(Pexps);
+    p32se = nanstd(PfreqDist(7,:,j))/sqrt(Pexps);
+    p45se = nanstd(PfreqDist(8,:,j))/sqrt(Pexps);
+    %checking for statistical significance%
+    [H4 P4] = kstest2(PfreqDist(1,:,j),BfreqDist(1,:,j),alpha);
+    [H5 P5] = kstest2(PfreqDist(2,:,j),BfreqDist(2,:,j),alpha);
+    [H8 P8] = kstest2(PfreqDist(3,:,j),BfreqDist(3,:,j),alpha);
+    [H11 P11] = kstest2(PfreqDist(4,:,j),BfreqDist(4,:,j),alpha);
+    [H16 P16] = kstest2(PfreqDist(5,:,j),BfreqDist(5,:,j),alpha);
+    [H22 P22] = kstest2(PfreqDist(6,:,j),BfreqDist(6,:,j),alpha);
+    [H32 P32] = kstest2(PfreqDist(7,:,j),BfreqDist(7,:,j),alpha);
+    [H45 P45] = kstest2(PfreqDist(8,:,j),BfreqDist(8,:,j),alpha);
+    freqDistSig(:,1,j) = [P4; P5; P8; P11; P16; P22; P32; P45];
+    %combining for plotting
+    compFreqDistSE = [p4se b4se; p5se b5se; p8se b8se; p11se b11se;...
+        p16se b16se; p22se b22se; p32se b32se; p45se b45se];
+    compFreqDist(:,1) = mean(PfreqDist(:,:,j),2);
+    compFreqDist(:,2) = mean(BfreqDist(:,:,j),2);
+    BARFreqDist = [PfreqDist(:,:,j) BfreqDist(:,:,j)]';
+    for i = 1:pNum
+        stackBardates{i} = ['novice:',mousePassive(i).date];
+    end
+    for i = 1:(animalExps(j)-pNum)
+        stackBardates{i+pNum} = ['expert:',mousePassive(i+pNum).date];
+    end
     totalFreqDist(:,:,j) = compFreqDist';
 
-%     barFreqDist = freqDist';
-%     avgFreqDist = nanmean(barFreqDist,2);                                  %average animal pixel tuning (across experiments)
-%     mouseDates = {cMouseData{1,2:end}};                                    %dates of imaging sessions
     colormap = jet;
     colormap = colormap(1:32:end,:);                                       %creates rgb legend corresponding to 8 frequencies presented
-    if figON
+     if figON
         figure
-        suptitle([animal{j}])
-        subplot(1,2,1)                                                         %stacked frequency distribution for each day of imaging
-        bfd = bar(totalFreqDist(:,:,j), 'stacked');
-    %     for i = 1:8
-    %         bfd(i).FaceColor = 'flat';
-    %         bfd(i).CData = repmat(colormap(i,:),animalExps(j),1);              %assigns colors to each frequency based on "colormap"
-    %     end
-        title(['Best-Frequency-Tuning Distribution'])
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle([animal{j},': Whole Window'])
+        bar(BARFreqDist, 'stacked');
         legend('4kHz','5.6kHz','8kHz','11.3kHz','16kHz','22.6kHz','32kHz','45.2kHz')
-        ylabel('Percent of Pixels')
+        title('BF-Tuning Distribution Across Learning')
+        xticklabels(stackBardates)
+        xtickangle(-15)
+        ylabel('Percent of Tuned Pixels')
         ylim([0 1])
-        xticklabels({'"Novice"','"Expert"'})
-        xtickangle(-25)
-        legend(Freqs)
         set(gca, 'Box', 'off')
-        subplot(1,2,2)                                                         %average frequency distribution across all imaging sessions
-
-    %     for i = 1:8
-    %         baf.CData(i,:) = colormap(i,:);
-    %     en
-        bbf = bar(barFreqDist(:,1:animalExps(j),j),'FaceColor',[0.5 0.5 0.5],'EdgeColor','k');      %same info as "bfd" superimposed onto "baf"
+        figSave = fullfile(file_loc,animal{j},'stacked_frequency-tuning_distribution.fig');
+        savefig(figSave)
+        figure
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle([animal{j},': Whole Window'])
+        b = bar(compFreqDist);
+        legend('"Novice"','"Expert"','AutoUpdate','off')
+        title({'"Novice" vs. "Expert" : Average BF-Tuning Distribution'})
         hold on
-        baf = bar(totalFreqDist(:,:,j)', 'grouped');
-    %     baf.FaceColor = 'flat';
-        legend('"Novice"','"Expert"')
-        hold off
-        title(['Average BF Tuning'])
-        ylabel('Percent of Pixels')
-        ylim([0 1])
-        xlabel('Frequency (kHz)')
+        x = [];
+        nbars = size(compFreqDist,2);
+        for n = 1:nbars
+            x = [x; b(n).XEndPoints];
+        end
+        err = errorbar(x',compFreqDist,2*compFreqDistSE);
+        for n = 1:nbars
+            err(n).Color = [0 0 0];
+            err(n).LineStyle = 'None';
+        end
+        sigstar(distSigPoints,[P4,P5,P8,P11,P16,P22,P32,P45])
+        xticks([1:8])
         xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
+        xlabel('Frequency (kHz)')
+        ylabel('Percent of Tuned Pixels')
+        ylim([-0.1 1])
         set(gca, 'Box', 'off')
-%         set(gcf, 'WindowStyle', 'Docked')
-        figSave = fullfile(file_loc,animal{j},fig1);     
-        savefig(figSave);
+        hold off
+        figSave1 = fullfile(file_loc,animal{j},fig1);
+        savefig(figSave1);
+     end
+    
+     %AC region-specific frequency distribution%
+    for i = 1:(length(ACregs)-1)
+        %combining distribution values across experiments%
+        %expert
+        bac4 = squeeze(BACfreqDist(1:Bexps,1,i));
+        bac5 = squeeze(BACfreqDist(1:Bexps,2,i));
+        bac8 = squeeze(BACfreqDist(1:Bexps,3,i));
+        bac11 = squeeze(BACfreqDist(1:Bexps,4,i));
+        bac16 = squeeze(BACfreqDist(1:Bexps,5,i));
+        bac22 = squeeze(BACfreqDist(1:Bexps,6,i));
+        bac32 = squeeze(BACfreqDist(1:Bexps,7,i));
+        bac45 = squeeze(BACfreqDist(1:Bexps,8,i));
+        %novice
+        pac4 = squeeze(PACfreqDist(1:Pexps,1,i));
+        pac5 = squeeze(PACfreqDist(1:Pexps,2,i));
+        pac8 = squeeze(PACfreqDist(1:Pexps,3,i));
+        pac11 = squeeze(PACfreqDist(1:Pexps,4,i));
+        pac16 = squeeze(PACfreqDist(1:Pexps,5,i));
+        pac22 = squeeze(PACfreqDist(1:Pexps,6,i));
+        pac32 = squeeze(PACfreqDist(1:Pexps,7,i));
+        pac45 = squeeze(PACfreqDist(1:Pexps,8,i));
+        %calculating standard error%
+        %expert
+        bac4se = nanstd(bac4)/sqrt(bacNum(i));
+        bac5se = nanstd(bac5)/sqrt(bacNum(i));
+        bac8se = nanstd(bac8)/sqrt(bacNum(i));
+        bac11se = nanstd(bac11)/sqrt(bacNum(i));
+        bac16se = nanstd(bac16)/sqrt(bacNum(i));
+        bac22se = nanstd(bac22)/sqrt(bacNum(i));
+        bac32se = nanstd(bac32)/sqrt(bacNum(i));
+        bac45se = nanstd(bac45)/sqrt(bacNum(i));
+        %novice
+        pac4se = nanstd(pac4)/sqrt(pacNum(i));
+        pac5se = nanstd(pac5)/sqrt(pacNum(i));
+        pac8se = nanstd(pac8)/sqrt(pacNum(i));
+        pac11se = nanstd(pac11)/sqrt(pacNum(i));
+        pac16se = nanstd(pac16)/sqrt(pacNum(i));
+        pac22se = nanstd(pac22)/sqrt(pacNum(i));
+        pac32se = nanstd(pac32)/sqrt(pacNum(i));
+        pac45se = nanstd(pac45)/sqrt(pacNum(i));
+        %checking for statistically significant differences%
+        if ~bacNum(i) || ~pacNum(i)
+            Pac4 = 1;
+            Pac5 = 1;
+            Pac8 = 1;
+            Pac11 = 1;
+            Pac16 = 1;
+            Pac22 = 1;
+            Pac32 = 1;
+            Pac45 = 1;
+        else
+            [Hac4 Pac4] = kstest2(bac4,pac4,alpha);
+            [Hac5 Pac5] = kstest2(bac5,pac5,alpha);
+            [Hac8 Pac8] = kstest2(bac8,pac8,alpha);
+            [Hac11 Pac11] = kstest2(bac11,pac11,alpha);
+            [Hac16 Pac16] = kstest2(bac16,pac16,alpha);
+            [Hac22, Pac22] = kstest2(bac22,pac22,alpha);
+            [Hac32 Pac32] = kstest2(bac32,pac32,alpha);
+            [Hac45 Pac45] = kstest2(bac45,pac45,alpha);
+        end
+        freqDistSig(:,i+1,j) = [Pac4; Pac5; Pac8; Pac11; Pac16; Pac22; Pac32; Pac45];
+        %combine for plotting
+        compACdist = [nanmean(pac4) nanmean(bac4); nanmean(pac5) nanmean(bac5);... 
+            nanmean(pac8) nanmean(bac8); nanmean(pac11) nanmean(bac11);...
+            nanmean(pac16) nanmean(bac16); nanmean(pac22) nanmean(bac22);... 
+            nanmean(pac32) nanmean(bac32); nanmean(pac45) nanmean(bac45)];
+        compACdistSE = [pac4se bac4se; pac5se bac5se; pac8se bac8se; pac11se bac11se;...
+            pac16se bac16se; pac22se bac22se; pac32se bac32se; pac45se bac45se];
+        barACfreqDist = [PACfreqDist(:,:,i); BACfreqDist(:,:,i)];
+        stackBardates = {};
+        for ii = 1:pNum
+            stackBardates{ii} = ['novice:',mousePassive(ii).date];
+        end
+        for ii = 1:(animalExps(j)-pNum)
+            stackBardates{ii+pNum} = ['expert:',mousePassive(ii+pNum).date];
+        end
+        totalACfreqDist(:,:,i,j) = compACdist';
+        %plot AC regional frequency distribution%
+        if figON
+            figure
+            set(gcf, 'WindowStyle', 'Docked')
+            suptitle([animal{j},' : ',ACregs{i}])
+            bar(barACfreqDist, 'stacked');
+            legend('4kHz','5.6kHz','8kHz','11.3kHz','16kHz','22.6kHz','32kHz','45.2kHz')
+            title('BF-Tuning Distribution Across Learning')
+            xticklabels(stackBardates)
+            xtickangle(-15)
+            ylabel('Percent of Tuned Pixels')
+            ylim([0 1])
+            set(gca, 'Box', 'off')
+            figSave = fullfile(file_loc,animal{j},[ACregs{i},'_stacked_frequency-tuning_distribution.fig']);
+            savefig(figSave)
+            figure
+            set(gcf, 'WindowStyle', 'Docked')
+            suptitle([animal{j},' : ',ACregs{i}])
+            b = bar(compACdist);
+            legend('"Novice"','"Expert"','AutoUpdate','off')
+            title('"Novice" vs. "Expert" : Average BF-Tuning Distribution')
+            hold on
+            x = [];
+            nbars = size(compACdist,2);
+            for n = 1:nbars
+                x = [x; b(n).XEndPoints];
+            end
+            err = errorbar(x',compACdist,2*compACdistSE);
+            for n = 1:nbars
+                err(n).Color = [0 0 0];
+                err(n).LineStyle = 'None';
+            end
+            sigstar(distSigPoints,[Pac4,Pac5,Pac8,Pac11,Pac16,Pac22,Pac32,Pac45])
+            xticks([1:8])
+            xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
+            xlabel('Frequency (kHz)')
+            ylabel('Percent of Tuned Pixels')
+            ylim([-0.1 1])
+            set(gca, 'Box', 'off')
+            hold off
+            figSave2 = fullfile(file_loc,animal{j},[ACregs{i},fig2]);
+            savefig(figSave2);
+        end
     end
     
     %%% Whole window Analysis %%%
@@ -149,83 +342,127 @@ for j = 1:numAnimals
     win45traceSE = nanstd(squeeze(winTraces(:,8,1:animalExps(j),j))')/sqrt(animalExps(j));
     
     %plot whole window traces%
+    onBar = repmat((min(winTraceMin)-0.05),1,5);
+    offBar = repmat((min(winTraceMin)-0.05),1,5);
+    onIdx = [4:8];
+    offIdx = [8:12];
     if figON
         figure                                                                 %each trace shaded by the error bar = 2 SEM of all experiment average traces for specific frequency
-        suptitle([animal{j},': Frequency-Specific, Whole-Window Average Fluorescence Trace'])
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle([animal{j},': Whole Window : Frequency-Sepcific Average Fluorescence Trace'])
         subplot(2,4,1)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],win4trace,2*win4traceSE,{'Color',colormap(1,:)},1)
+        hold off
         title(['4 kHz'])
-        ylim([min(winTraceMin) max(winTraceMax)])
-        ylabel('Relative DeltaF/F')
+        ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.2])
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,2)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],win5trace,2*win5traceSE,{'Color',colormap(2,:)},1)
+        hold off
         title(['5.6 kHz'])
-        ylim([min(winTraceMin) max(winTraceMax)])
-        ylabel('Relative DeltaF/F')
+        ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.2])
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,3)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],win8trace,2*win8traceSE,{'Color',colormap(3,:)},1)
+        hold off
         title(['8 kHz'])
-        ylim([min(winTraceMin) max(winTraceMax)])
-        ylabel('Relative DeltaF/F')
+        ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.2])
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,4)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],win11trace,2*win11traceSE,{'Color',colormap(4,:)},1)
+        hold off
         title(['11.3 kHz'])
-        ylim([min(winTraceMin) max(winTraceMax)])
-        ylabel('Relative DeltaF/F')
+        ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.2])
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,5)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],win16trace,2*win16traceSE,{'Color',colormap(5,:)},1)
+        hold off
         title(['16 kHz'])
-        ylim([min(winTraceMin) max(winTraceMax)])
-        ylabel('Relative DeltaF/F')
+        ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.2])
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,6)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],win22trace,2*win22traceSE,{'Color',colormap(6,:)},1)
+        hold off
         title(['22.6 kHz'])
-        ylim([min(winTraceMin) max(winTraceMax)])
-        ylabel('Relative DeltaF/F')
+        ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.2])
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,7)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],win32trace,2*win32traceSE,{'Color',colormap(7,:)},1)
+        hold off
         title(['32 kHz'])
-        ylim([min(winTraceMin) max(winTraceMax)])
-        ylabel('Relative DeltaF/F')
+        ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.2])
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,8)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],win45trace,2*win45traceSE,{'Color',colormap(8,:)},1)
+        hold off
         title(['45 kHz'])
-        ylim([min(winTraceMin) max(winTraceMax)])
-        ylabel('Relative DeltaF/F')
+        ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.2])
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
-%         set(gcf, 'WindowStyle', 'Docked')
-        figSave = fullfile(file_loc,animal{j},fig2);
+        figSave = fullfile(file_loc,animal{j},fig3);
         savefig(figSave);
     end
     
@@ -414,8 +651,10 @@ for j = 1:numAnimals
     %plot whole window post-onset DEltaF/F%
     if figON
         figure
-        b = bar(BARwinPODFs(:,:,j))
-        title(strcat(animal{j},': Frequency-Specific, Whole-Window Average Post-Onset DeltaF/F'))
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle([animal{j},': Whole-Window'])
+        b = bar(BARwinPODFs(:,:,j));
+        title('Frequency-Specific Average Post-Onset DeltaF/F')
         hold on
     %     err = errorbar(BARwinPODFs,BARwinPODFses);
         nbars = size(BARwinPODFs,2);
@@ -433,14 +672,13 @@ for j = 1:numAnimals
         sigstar(pairs,sigVals)
         sigstar(pairsON,sigValsON)
         sigstar(pairsOFF,sigValsOFF)
-        ylabel('Relative DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         xlabel('Frequency (kHz)')
         xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
         ylim([min(min(BARwinPODFs(:,:,j)))-0.05 max(max(BARwinPODFs(:,:,j)))+0.1])
         hold off
         set(gca, 'Box', 'off')
-%         set(gcf, 'WindowStyle', 'Docked')
-        figSave = fullfile(file_loc,animal{j},fig3);
+        figSave = fullfile(file_loc,animal{j},fig4);
         savefig(figSave);
     end
     
@@ -472,83 +710,127 @@ for j = 1:numAnimals
         roi45traceSE = nanstd(squeeze(BFROItraces(:,8,f,1:animalExps(j),j))')/sqrt(animalExps(j));
         
         %plot ROI-specific average frequency traces%
+        onBar = repmat((min(roiTraceMin)-0.05),1,5);
+        offBar = repmat((min(roiTraceMin)-0.05),1,5);
+        onIdx = [4:8];
+        offIdx = [8:12];
         if figON
             figure
-            suptitle([animal{j}, ' ', Freqs{f}, ' ROI Average Fluorescence Traces'])
+            set(gcf, 'WindowStyle', 'Docked')
+            suptitle([animal{j}, ' ', Freqs{f}, ' ROI Average DeltaF/F Traces'])
             subplot(2,4,1)
+            plot(onIdx,onBar,'k','LineWidth',3)
+            hold on
+            plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+            legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
             shadedErrorBar([1:18],roi4trace,2*roi4traceSE,{'Color',colormap(1,:)},1)
+            hold off
             title(['4 kHz'])
             ylim([min(roiTraceMin)-0.1 max(roiTraceMax)+0.1])
-            ylabel('Relative DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             xlabel('Time (s)')
             xticks([4,8,12,16])
             xticklabels({'1','2','3','4'})
             set(gca, 'Box', 'off')
             subplot(2,4,2)
+            plot(onIdx,onBar,'k','LineWidth',3)
+            hold on
+            plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+            legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
             shadedErrorBar([1:18],roi5trace,2*roi5traceSE,{'Color',colormap(2,:)},1)
+            hold off
             title(['5.6 kHz'])
             ylim([min(roiTraceMin)-0.1 max(roiTraceMax)+0.1])
-            ylabel('Relative DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             xlabel('Time (s)')
             xticks([4,8,12,16])
             xticklabels({'1','2','3','4'})
             set(gca, 'Box', 'off')
             subplot(2,4,3)
+            plot(onIdx,onBar,'k','LineWidth',3)
+            hold on
+            plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+            legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
             shadedErrorBar([1:18],roi8trace,2*roi8traceSE,{'Color',colormap(3,:)},1)
+            hold off
             title(['8 kHz'])
             ylim([min(roiTraceMin)-0.1 max(roiTraceMax)+0.1])
-            ylabel('Relative DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             xlabel('Time (s)')
             xticks([4,8,12,16])
             xticklabels({'1','2','3','4'})
             set(gca, 'Box', 'off')
             subplot(2,4,4)
+            plot(onIdx,onBar,'k','LineWidth',3)
+            hold on
+            plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+            legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
             shadedErrorBar([1:18],roi11trace,2*roi11traceSE,{'Color',colormap(4,:)},1)
+            hold off
             title(['11.3 kHz'])
             ylim([min(roiTraceMin)-0.1 max(roiTraceMax)+0.1])
-            ylabel('Relative DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             xlabel('Time (s)')
             xticks([4,8,12,16])
             xticklabels({'1','2','3','4'})
             set(gca, 'Box', 'off')
             subplot(2,4,5)
+            plot(onIdx,onBar,'k','LineWidth',3)
+            hold on
+            plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+            legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
             shadedErrorBar([1:18],roi16trace,2*roi16traceSE,{'Color',colormap(5,:)},1)
+            hold off
             title(['16 kHz'])
             ylim([min(roiTraceMin)-0.1 max(roiTraceMax)+0.1])
-            ylabel('Relative DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             xlabel('Time (s)')
             xticks([4,8,12,16])
             xticklabels({'1','2','3','4'})
             set(gca, 'Box', 'off')
             subplot(2,4,6)
+            plot(onIdx,onBar,'k','LineWidth',3)
+            hold on
+            plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+            legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
             shadedErrorBar([1:18],roi22trace,2*roi22traceSE,{'Color',colormap(6,:)},1)
+            hold off
             title(['22.6 kHz'])
             ylim([min(roiTraceMin)-0.1 max(roiTraceMax)+0.1])
-            ylabel('Relative DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             xlabel('Time (s)')
             xticks([4,8,12,16])
             xticklabels({'1','2','3','4'})
             set(gca, 'Box', 'off')
             subplot(2,4,7)
+            plot(onIdx,onBar,'k','LineWidth',3)
+            hold on
+            plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+            legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
             shadedErrorBar([1:18],roi32trace,2*roi32traceSE,{'Color',colormap(7,:)},1)
+            hold off
             title(['32 kHz'])
             ylim([min(roiTraceMin)-0.1 max(roiTraceMax)+0.1])
-            ylabel('Relative DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             xlabel('Time (s)')
             xticks([4,8,12,16])
             xticklabels({'1','2','3','4'})
             set(gca, 'Box', 'off')
             subplot(2,4,8)
+            plot(onIdx,onBar,'k','LineWidth',3)
+            hold on
+            plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+            legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
             shadedErrorBar([1:18],roi45trace,2*roi45traceSE,{'Color',colormap(8,:)},1)
+            hold off
             title(['45 kHz'])
             ylim([min(roiTraceMin)-0.1 max(roiTraceMax)+0.1])
-            ylabel('Relative DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             xlabel('Time (s)')
             xticks([4,8,12,16])
             xticklabels({'1','2','3','4'})
             set(gca, 'Box', 'off')
-%             set(gcf, 'WindowStyle', 'Docked')
-            figSave = fullfile(file_loc,animal{j},fig4{f});
+            figSave = fullfile(file_loc,animal{j},fig5{f});
             savefig(figSave);
         end
         
@@ -737,12 +1019,12 @@ for j = 1:numAnimals
         %plot ROI-specific average frequency post-onset DEltaF/F%
         if figON
             figure
-            title(strcat(animal{j},': ',Freqs{f},' ROI Average Fluorescence Post-Onset DeltaF/F'))
+            set(gcf, 'WindowStyle', 'Docked')
+            suptitle([animal{j},': ',Freqs{f},' ROI'])
             hold on
-            b = bar(BARroiPODFs(:,:,j))
-    %         title(strcat(animal{j},': Frequency-Specific, Whole-Window Average Post-Onset DeltaF/F'))
+            b = bar(BARroiPODFs(:,:,j));
+            title('Frequency-Specific Average Post-Onset DeltaF/F')
             hold on
-        %     err = errorbar(BARwinPODFs,BARwinPODFses);
             nbars = size(BARroiPODFs(:,:,j),2);
             x = [];
             for n = 1:nbars
@@ -753,800 +1035,443 @@ for j = 1:numAnimals
                 err(n).Color = [0 0 0];
                 err(n).LineStyle = 'None';
             end
-    %         err = errorbar(BARroiPODFs,BARroiPODFses);
-    %         err.Color = [0 0 0];
-    %         err.LineStyle = 'None';
             sigstar(ROIpairs,ROIsigVals)
             sigstar(ROIpairsON,ROIsigValsON)
             sigstar(ROIpairsOFF,ROIsigValsOFF)
-            ylabel('Relative DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             xlabel('Frequency (kHz)')
             xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
             ylim([min(min(BARroiPODFs(:,:,j)))-0.05 max(max(BARroiPODFs(:,:,j)))+0.1])
             hold off
             set(gca, 'Box', 'off')
-%             set(gcf, 'WindowStyle', 'Docked')
-            figSave = fullfile(file_loc,animal{j},fig5{f});
+            figSave = fullfile(file_loc,animal{j},fig6{f});
             savefig(figSave);
         end
     end
     
     %%% autoencoder ROI analysis %%%
     
-%     %separate average AEROI traces and PODF by ROI BF (freq)%
-%     count = [1;1;1;1;1;1;1;1];
-%     for i = 1:animalExps(j)
-%         for ii = 1:size(mousePassive(i).avgAEROItraces,2)
-%             BF = mousePassive(i).AEROIidx{ii,2}(1);
-%             BFidx = find(dubFreqs == BF);
-%             AEROIfreqTraces{BFidx,j}(:,:,count(BFidx)) = mousePassive(i).avgAEROItraces(:,ii,:);
-%             AEROIfreqMu{BFidx,j}(count(BFidx),:) = mousePassive(i).AEROImeansALL(ii,:);
-%             AEROIfreqMuON{BFidx,j}(count(BFidx),:) = mousePassive(i).AEROImeansON(ii,:);
-%             AEROIfreqMuOFF{BFidx,j}(count(BFidx),:) = mousePassive(i).AEROImeansOFF(ii,:);
-%             count(BFidx) = count(BFidx) + 1;
-%         end
-%     end
-%     %fill in any empty values (no AE ROI's tuned to a certain frequency) with NaNs so that analysis does not break%
-%     for i = 1:length(Freqs)
-%         if isempty(AEROIfreqTraces{i,j})
-%             AEROIfreqTraces{i,j} = nan(18,8);
-%             AEROIfreqMu{i,j} = nan(1,8);
-%             AEROIfreqMuON{i,j} = nan(1,8);
-%             AEROIfreqMuOFF{i,j} = nan(1,8);
-%         end
-%     end
     for f = 1:length(ACregs)
-        onroiCounter = 1;
-        offroiCounter = 1;
         for i = 1:animalExps(j)
-            roiCount = size(mousePassive(i).avgAEROItraces{f},2);
-            for ii = 1:roiCount
-                onVals = mousePassive(i).AEROImeansON{f}(ii,:);
-                onVal = sum(onVals);
-                offVals = mousePassive(i).AEROImeansOFF{f}(ii,:);
-                offVal = sum(offVals);
-            end
-            if onVal > offVal
-                onACregTraces{f,j}(:,onroiCounter,:) = mousePassive(i).avgAEROItraces{f}(:,ii,:);
-                onACregMu{f,j} = [onACregMu{f,j}; mousePassive(i).AEROImeansALL{f}(ii,:)];
-                onACregMuON{f,j} = [onACregMuON{f,j}; mousePassive(i).AEROImeansON{f}(ii,:)];
-                onACregMuOFF{f,j} = [onACregMuOFF{f,j}; mousePassive(i).AEROImeansOFF{f}(ii,:)];
-                onroiCounter = onroiCounter + 1;
+            if isnan(mousePassive(i).avgAEROItraces{f})
+                continue
             else
-                offACregTraces{f,j}(:,offroiCounter,:) = mousePassive(i).avgAEROItraces{f}(:,ii,:);
-                offACregMu{f,j} = [offACregMu{f,j}; mousePassive(i).AEROImeansALL{f}(ii,:)];
-                offACregMuON{f,j} = [offACregMuON{f,j}; mousePassive(i).AEROImeansON{f}(ii,:)];
-                offACregMuOFF{f,j} = [offACregMuOFF{f,j}; mousePassive(i).AEROImeansOFF{f}(ii,:)];
-                offroiCounter = offroiCounter + 1;
+                ACregTraces{f,j} = cat(3,ACregTraces{f,j},squeeze(nanmean(mousePassive(i).avgAEROItraces{f},2)));
+                ACregMu{f,j} = [ACregMu{f,j}; nanmean(mousePassive(i).AEROImeansALL{f},1)];
+                ACregMuON{f,j} = [ACregMuON{f,j}; nanmean(mousePassive(i).AEROImeansON{f},1)];
+                ACregMuOFF{f,j} = [ACregMuOFF{f,j}; nanmean(mousePassive(i).AEROImeansOFF{f},1)];
             end
         end
-        
-        %%% ONSET AE ROI ANALYSIS%%%
-        if onroiCounter > 1
+
+        if isempty(ACregTraces{f,j})
+            continue
+        else
+            roiCount = size(ACregTraces{f,j},2);
             %separate current freq AE ROI traces by frequency response%
-            onaeroi4trace = nanmean(squeeze(onACregTraces{f,j}(:,:,1)),2);              
-            onaeroi5trace = nanmean(squeeze(onACregTraces{f,j}(:,:,2)),2);
-            onaeroi8trace = nanmean(squeeze(onACregTraces{f,j}(:,:,3)),2);
-            onaeroi11trace = nanmean(squeeze(onACregTraces{f,j}(:,:,4)),2);
-            onaeroi16trace = nanmean(squeeze(onACregTraces{f,j}(:,:,5)),2);
-            onaeroi22trace = nanmean(squeeze(onACregTraces{f,j}(:,:,6)),2);
-            onaeroi32trace = nanmean(squeeze(onACregTraces{f,j}(:,:,7)),2);
-            onaeroi45trace = nanmean(squeeze(onACregTraces{f,j}(:,:,8)),2);
-            onaeroiTraceMax = [max(onaeroi4trace) max(onaeroi5trace) max(onaeroi8trace) max(onaeroi11trace)...
-                max(onaeroi16trace) max(onaeroi22trace) max(onaeroi32trace) max(onaeroi45trace)];
-            onaeroiTraceMin = [min(onaeroi4trace) min(onaeroi5trace) min(onaeroi8trace) min(onaeroi11trace)...
-                min(onaeroi16trace) min(onaeroi22trace) min(onaeroi32trace) min(onaeroi45trace)];
+            aeroi4trace = nanmean(squeeze(ACregTraces{f,j}(:,1,:)),2);              
+            aeroi5trace = nanmean(squeeze(ACregTraces{f,j}(:,2,:)),2);
+            aeroi8trace = nanmean(squeeze(ACregTraces{f,j}(:,3,:)),2);
+            aeroi11trace = nanmean(squeeze(ACregTraces{f,j}(:,4,:)),2);
+            aeroi16trace = nanmean(squeeze(ACregTraces{f,j}(:,5,:)),2);
+            aeroi22trace = nanmean(squeeze(ACregTraces{f,j}(:,6,:)),2);
+            aeroi32trace = nanmean(squeeze(ACregTraces{f,j}(:,7,:)),2);
+            aeroi45trace = nanmean(squeeze(ACregTraces{f,j}(:,8,:)),2);
+            aeroiTraceMax = [max(aeroi4trace) max(aeroi5trace) max(aeroi8trace) max(aeroi11trace)...
+                max(aeroi16trace) max(aeroi22trace) max(aeroi32trace) max(aeroi45trace)];
+            aeroiTraceMin = [min(aeroi4trace) min(aeroi5trace) min(aeroi8trace) min(aeroi11trace)...
+                min(aeroi16trace) min(aeroi22trace) min(aeroi32trace) min(aeroi45trace)];
 
             %ROI-specific average frequency traces standard error%
-            if size(onACregTraces{f,j},2) < 2
-                onaeroi4traceSE = zeros(1,18);
-                onaeroi5traceSE = zeros(1,18);
-                onaeroi8traceSE = zeros(1,18);
-                onaeroi11traceSE = zeros(1,18);
-                onaeroi16traceSE = zeros(1,18);
-                onaeroi22traceSE = zeros(1,18);
-                onaeroi32traceSE = zeros(1,18);
-                onaeroi45traceSE = zeros(1,18);
+            if size(ACregTraces{f,j},2) < 2
+                aeroi4traceSE = zeros(1,18);
+                aeroi5traceSE = zeros(1,18);
+                aeroi8traceSE = zeros(1,18);
+                aeroi11traceSE = zeros(1,18);
+                aeroi16traceSE = zeros(1,18);
+                aeroi22traceSE = zeros(1,18);
+                aeroi32traceSE = zeros(1,18);
+                aeroi45traceSE = zeros(1,18);
             else
-                onaeroi4traceSE = nanstd(squeeze(onACregTraces{f,j}(:,:,1))')/sqrt(onroiCounter-1);
-                onaeroi5traceSE = nanstd(squeeze(onACregTraces{f,j}(:,:,2))')/sqrt(onroiCounter-1);
-                onaeroi8traceSE = nanstd(squeeze(onACregTraces{f,j}(:,:,3))')/sqrt(onroiCounter-1);
-                onaeroi11traceSE = nanstd(squeeze(onACregTraces{f,j}(:,:,4))')/sqrt(onroiCounter-1);
-                onaeroi16traceSE = nanstd(squeeze(onACregTraces{f,j}(:,:,5))')/sqrt(onroiCounter-1);
-                onaeroi22traceSE = nanstd(squeeze(onACregTraces{f,j}(:,:,6))')/sqrt(onroiCounter-1);
-                onaeroi32traceSE = nanstd(squeeze(onACregTraces{f,j}(:,:,7))')/sqrt(onroiCounter-1);
-                onaeroi45traceSE = nanstd(squeeze(onACregTraces{f,j}(:,:,8))')/sqrt(onroiCounter-1);
+                aeroi4traceSE = nanstd(squeeze(ACregTraces{f,j}(:,1,:))')/sqrt(roiCount);
+                aeroi5traceSE = nanstd(squeeze(ACregTraces{f,j}(:,2,:))')/sqrt(roiCount);
+                aeroi8traceSE = nanstd(squeeze(ACregTraces{f,j}(:,3,:))')/sqrt(roiCount);
+                aeroi11traceSE = nanstd(squeeze(ACregTraces{f,j}(:,4,:))')/sqrt(roiCount);
+                aeroi16traceSE = nanstd(squeeze(ACregTraces{f,j}(:,5,:))')/sqrt(roiCount);
+                aeroi22traceSE = nanstd(squeeze(ACregTraces{f,j}(:,6,:))')/sqrt(roiCount);
+                aeroi32traceSE = nanstd(squeeze(ACregTraces{f,j}(:,7,:))')/sqrt(roiCount);
+                aeroi45traceSE = nanstd(squeeze(ACregTraces{f,j}(:,8,:))')/sqrt(roiCount);
             end
 
             %plot frequency-specific average AE ROI frequency traces%
+            onBar = repmat((min(aeroiTraceMin)-0.05),1,5);
+            offBar = repmat((min(aeroiTraceMin)-0.05),1,5);
+            onIdx = [4:8];
+            offIdx = [8:12];
             if figON
                 figure
-                suptitle([animal{j},' ',ACregs{f},': onset-tuned AE ROI Average Fluorescence Traces'])
+                set(gcf, 'WindowStyle', 'Docked')
+                suptitle([animal(j),' ',ACregs{f},' AE ROI'])
                 subplot(2,4,1)
-                shadedErrorBar([1:18],onaeroi4trace,2*onaeroi4traceSE,{'Color',colormap(1,:)},1)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+                shadedErrorBar([1:18],aeroi4trace,2*aeroi4traceSE,{'Color',colormap(1,:)},1)
+                hold off
                 title(['4 kHz'])
-                if sum(onaeroi4traceSE) ~= 0
-                    ylim([min(onaeroiTraceMin)-0.1 max(onaeroiTraceMax)+0.1])
+                if sum(aeroi4traceSE) ~= 0
+                    ylim([min(aeroiTraceMin)-0.1 max(aeroiTraceMax)+0.1])
                 end
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,2)
-                shadedErrorBar([1:18],onaeroi5trace,2*onaeroi5traceSE,{'Color',colormap(2,:)},1)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+                shadedErrorBar([1:18],aeroi5trace,2*aeroi5traceSE,{'Color',colormap(2,:)},1)
+                hold off
                 title(['5.6 kHz'])
-                if sum(onaeroi5traceSE) ~= 0
-                    ylim([min(onaeroiTraceMin)-0.1 max(onaeroiTraceMax)+0.1])
+                if sum(aeroi5traceSE) ~= 0
+                    ylim([min(aeroiTraceMin)-0.1 max(aeroiTraceMax)+0.1])
                 end
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,3)
-                shadedErrorBar([1:18],onaeroi8trace,2*onaeroi8traceSE,{'Color',colormap(3,:)},1)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+                shadedErrorBar([1:18],aeroi8trace,2*aeroi8traceSE,{'Color',colormap(3,:)},1)
+                hold off
                 title(['8 kHz'])
-                if sum(onaeroi8traceSE) ~= 0
-                    ylim([min(onaeroiTraceMin)-0.1 max(onaeroiTraceMax)+0.1])
+                if sum(aeroi8traceSE) ~= 0
+                    ylim([min(aeroiTraceMin)-0.1 max(aeroiTraceMax)+0.1])
                 end
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,4)
-                shadedErrorBar([1:18],onaeroi11trace,2*onaeroi11traceSE,{'Color',colormap(4,:)},1)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+                shadedErrorBar([1:18],aeroi11trace,2*aeroi11traceSE,{'Color',colormap(4,:)},1)
+                hold off
                 title(['11.3 kHz'])
-                if sum(onaeroi11traceSE) ~= 0
-                    ylim([min(onaeroiTraceMin)-0.1 max(onaeroiTraceMax)+0.1])
+                if sum(aeroi11traceSE) ~= 0
+                    ylim([min(aeroiTraceMin)-0.1 max(aeroiTraceMax)+0.1])
                 end
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,5)
-                shadedErrorBar([1:18],onaeroi16trace,2*onaeroi16traceSE,{'Color',colormap(5,:)},1)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+                shadedErrorBar([1:18],aeroi16trace,2*aeroi16traceSE,{'Color',colormap(5,:)},1)
+                hold off
                 title(['16 kHz'])
-                if sum(onaeroi16traceSE) ~= 0
-                    ylim([min(onaeroiTraceMin)-0.1 max(onaeroiTraceMax)+0.1])
+                if sum(aeroi16traceSE) ~= 0
+                    ylim([min(aeroiTraceMin)-0.1 max(aeroiTraceMax)+0.1])
                 end
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,6)
-                shadedErrorBar([1:18],onaeroi22trace,2*onaeroi22traceSE,{'Color',colormap(6,:)},1)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+                shadedErrorBar([1:18],aeroi22trace,2*aeroi22traceSE,{'Color',colormap(6,:)},1)
+                hold off
                 title(['22.6 kHz'])
-                if sum(onaeroi22traceSE) ~= 0
-                    ylim([min(onaeroiTraceMin)-0.1 max(onaeroiTraceMax)+0.1])
+                if sum(aeroi22traceSE) ~= 0
+                    ylim([min(aeroiTraceMin)-0.1 max(aeroiTraceMax)+0.1])
                 end
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,7)
-                shadedErrorBar([1:18],onaeroi32trace,2*onaeroi32traceSE,{'Color',colormap(7,:)},1)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+                shadedErrorBar([1:18],aeroi32trace,2*aeroi32traceSE,{'Color',colormap(7,:)},1)
+                hold off
                 title(['32 kHz'])
-                if sum(onaeroi32traceSE) ~= 0
-                    ylim([min(onaeroiTraceMin)-0.1 max(onaeroiTraceMax)+0.1])
+                if sum(aeroi32traceSE) ~= 0
+                    ylim([min(aeroiTraceMin)-0.1 max(aeroiTraceMax)+0.1])
                 end
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,8)
-                shadedErrorBar([1:18],onaeroi45trace,2*onaeroi45traceSE,{'Color',colormap(8,:)},1)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+                shadedErrorBar([1:18],aeroi45trace,2*aeroi45traceSE,{'Color',colormap(8,:)},1)
+                hold off
                 title(['45 kHz'])
-                if sum(onaeroi45traceSE) ~= 0
-                    ylim([min(onaeroiTraceMin)-0.1 max(onaeroiTraceMax)+0.1])
+                if sum(aeroi45traceSE) ~= 0
+                    ylim([min(aeroiTraceMin)-0.1 max(aeroiTraceMax)+0.1])
                 end
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
-%                 set(gcf, 'WindowStyle', 'Docked')
-                figName = strcat(ACregs{f},fig6);
+                figName = strcat(ACregs{f},fig7);
                 figSave = fullfile(file_loc,animal{j},figName);
                 savefig(figSave)
             end
 
             %separate current freq AE ROI PODF by frequency response%
             %post-onset all
-            onaeroi4podf = squeeze(onACregMu{f,j}(:,1));              
-            onaeroi5podf = squeeze(onACregMu{f,j}(:,2));
-            onaeroi8podf = squeeze(onACregMu{f,j}(:,3));
-            onaeroi11podf = squeeze(onACregMu{f,j}(:,4));
-            onaeroi16podf = squeeze(onACregMu{f,j}(:,5));
-            onaeroi22podf = squeeze(onACregMu{f,j}(:,6));
-            onaeroi32podf = squeeze(onACregMu{f,j}(:,7));
-            onaeroi45podf = squeeze(onACregMu{f,j}(:,8));
+            aeroi4podf = squeeze(ACregMu{f,j}(:,1));              
+            aeroi5podf = squeeze(ACregMu{f,j}(:,2));
+            aeroi8podf = squeeze(ACregMu{f,j}(:,3));
+            aeroi11podf = squeeze(ACregMu{f,j}(:,4));
+            aeroi16podf = squeeze(ACregMu{f,j}(:,5));
+            aeroi22podf = squeeze(ACregMu{f,j}(:,6));
+            aeroi32podf = squeeze(ACregMu{f,j}(:,7));
+            aeroi45podf = squeeze(ACregMu{f,j}(:,8));
             %tone-onset
-            onaeroi4podfON = squeeze(onACregMuON{f,j}(:,1));           
-            onaeroi5podfON = squeeze(onACregMuON{f,j}(:,2));
-            onaeroi8podfON = squeeze(onACregMuON{f,j}(:,3));
-            onaeroi11podfON = squeeze(onACregMuON{f,j}(:,4));
-            onaeroi16podfON = squeeze(onACregMuON{f,j}(:,5));
-            onaeroi22podfON = squeeze(onACregMuON{f,j}(:,6));
-            onaeroi32podfON = squeeze(onACregMuON{f,j}(:,7));
-            onaeroi45podfON = squeeze(onACregMuON{f,j}(:,8));
+            aeroi4podfON = squeeze(ACregMuON{f,j}(:,1));           
+            aeroi5podfON = squeeze(ACregMuON{f,j}(:,2));
+            aeroi8podfON = squeeze(ACregMuON{f,j}(:,3));
+            aeroi11podfON = squeeze(ACregMuON{f,j}(:,4));
+            aeroi16podfON = squeeze(ACregMuON{f,j}(:,5));
+            aeroi22podfON = squeeze(ACregMuON{f,j}(:,6));
+            aeroi32podfON = squeeze(ACregMuON{f,j}(:,7));
+            aeroi45podfON = squeeze(ACregMuON{f,j}(:,8));
             %tone-offet
-            onaeroi4podfOFF = squeeze(onACregMuOFF{f,j}(:,1));         
-            onaeroi5podfOFF = squeeze(onACregMuOFF{f,j}(:,2));
-            onaeroi8podfOFF = squeeze(onACregMuOFF{f,j}(:,3));
-            onaeroi11podfOFF = squeeze(onACregMuOFF{f,j}(:,4));
-            onaeroi16podfOFF = squeeze(onACregMuOFF{f,j}(:,5));
-            onaeroi22podfOFF = squeeze(onACregMuOFF{f,j}(:,6));
-            onaeroi32podfOFF = squeeze(onACregMuOFF{f,j}(:,7));        
-            onaeroi45podfOFF = squeeze(onACregMuOFF{f,j}(:,8));        
+            aeroi4podfOFF = squeeze(ACregMuOFF{f,j}(:,1));         
+            aeroi5podfOFF = squeeze(ACregMuOFF{f,j}(:,2));
+            aeroi8podfOFF = squeeze(ACregMuOFF{f,j}(:,3));
+            aeroi11podfOFF = squeeze(ACregMuOFF{f,j}(:,4));
+            aeroi16podfOFF = squeeze(ACregMuOFF{f,j}(:,5));
+            aeroi22podfOFF = squeeze(ACregMuOFF{f,j}(:,6));
+            aeroi32podfOFF = squeeze(ACregMuOFF{f,j}(:,7));        
+            aeroi45podfOFF = squeeze(ACregMuOFF{f,j}(:,8));        
             %combine values for plotting
-            onBARaeroiPODF(:,1,j) = [nanmean(onaeroi4podf); nanmean(onaeroi5podf); nanmean(onaeroi8podf); nanmean(onaeroi11podf);...
-                nanmean(onaeroi16podf); nanmean(onaeroi22podf); nanmean(onaeroi32podf); nanmean(onaeroi45podf)];
-            onBARaeroiPODF(:,2,j) = [nanmean(onaeroi4podfON); nanmean(onaeroi5podfON); nanmean(onaeroi8podfON); nanmean(onaeroi11podfON);...
-                nanmean(onaeroi16podfON); nanmean(onaeroi22podfON); nanmean(onaeroi32podfON); nanmean(onaeroi45podfON)];
-            onBARaeroiPODF(:,3,j) = [nanmean(onaeroi4podfOFF); nanmean(onaeroi5podfOFF); nanmean(onaeroi8podfOFF); nanmean(onaeroi11podfOFF);...
-                nanmean(onaeroi16podfOFF); nanmean(onaeroi22podfOFF); nanmean(onaeroi32podfOFF); nanmean(onaeroi45podfOFF)];
+            BARaeroiPODF(:,1,j) = [nanmean(aeroi4podf); nanmean(aeroi5podf); nanmean(aeroi8podf); nanmean(aeroi11podf);...
+                nanmean(aeroi16podf); nanmean(aeroi22podf); nanmean(aeroi32podf); nanmean(aeroi45podf)];
+            BARaeroiPODF(:,2,j) = [nanmean(aeroi4podfON); nanmean(aeroi5podfON); nanmean(aeroi8podfON); nanmean(aeroi11podfON);...
+                nanmean(aeroi16podfON); nanmean(aeroi22podfON); nanmean(aeroi32podfON); nanmean(aeroi45podfON)];
+            BARaeroiPODF(:,3,j) = [nanmean(aeroi4podfOFF); nanmean(aeroi5podfOFF); nanmean(aeroi8podfOFF); nanmean(aeroi11podfOFF);...
+                nanmean(aeroi16podfOFF); nanmean(aeroi22podfOFF); nanmean(aeroi32podfOFF); nanmean(aeroi45podfOFF)];
 
             %ROI-specific average frequency PODF standard error%
             %post-onset all
-            onaeroi4podfSE = nanstd(onaeroi4podf)/sqrt(onroiCounter-1);
-            onaeroi5podfSE = nanstd(onaeroi5podf)/sqrt(onroiCounter-1);
-            onaeroi8podfSE = nanstd(onaeroi8podf)/sqrt(onroiCounter-1);
-            onaeroi11podfSE = nanstd(onaeroi11podf)/sqrt(onroiCounter-1);
-            onaeroi16podfSE = nanstd(onaeroi16podf)/sqrt(onroiCounter-1);
-            onaeroi22podfSE = nanstd(onaeroi22podf)/sqrt(onroiCounter-1);
-            onaeroi32podfSE = nanstd(onaeroi32podf)/sqrt(onroiCounter-1);
-            onaeroi45podfSE = nanstd(onaeroi45podf)/sqrt(onroiCounter-1);
+            aeroi4podfSE = nanstd(aeroi4podf)/sqrt(roiCount);
+            aeroi5podfSE = nanstd(aeroi5podf)/sqrt(roiCount);
+            aeroi8podfSE = nanstd(aeroi8podf)/sqrt(roiCount);
+            aeroi11podfSE = nanstd(aeroi11podf)/sqrt(roiCount);
+            aeroi16podfSE = nanstd(aeroi16podf)/sqrt(roiCount);
+            aeroi22podfSE = nanstd(aeroi22podf)/sqrt(roiCount);
+            aeroi32podfSE = nanstd(aeroi32podf)/sqrt(roiCount);
+            aeroi45podfSE = nanstd(aeroi45podf)/sqrt(roiCount);
             %tone-onset
-            onaeroi4podfSEon = nanstd(onaeroi4podfON)/sqrt(onroiCounter-1);
-            onaeroi5podfSEon = nanstd(onaeroi5podfON)/sqrt(onroiCounter-1);
-            onaeroi8podfSEon = nanstd(onaeroi8podfON)/sqrt(onroiCounter-1);
-            onaeroi11podfSEon = nanstd(onaeroi11podfON)/sqrt(onroiCounter-1);
-            onaeroi16podfSEon = nanstd(onaeroi16podfON)/sqrt(onroiCounter-1);
-            onaeroi22podfSEon = nanstd(onaeroi22podfON)/sqrt(onroiCounter-1);
-            onaeroi32podfSEon = nanstd(onaeroi32podfON)/sqrt(onroiCounter-1);
-            onaeroi45podfSEon = nanstd(onaeroi45podfON)/sqrt(onroiCounter-1);
+            aeroi4podfSEon = nanstd(aeroi4podfON)/sqrt(roiCount);
+            aeroi5podfSEon = nanstd(aeroi5podfON)/sqrt(roiCount);
+            aeroi8podfSEon = nanstd(aeroi8podfON)/sqrt(roiCount);
+            aeroi11podfSEon = nanstd(aeroi11podfON)/sqrt(roiCount);
+            aeroi16podfSEon = nanstd(aeroi16podfON)/sqrt(roiCount);
+            aeroi22podfSEon = nanstd(aeroi22podfON)/sqrt(roiCount);
+            aeroi32podfSEon = nanstd(aeroi32podfON)/sqrt(roiCount);
+            onaeroi45podfSEon = nanstd(aeroi45podfON)/sqrt(roiCount);
             %tone-offset
-            onaeroi4podfSEoff = nanstd(onaeroi4podfOFF)/sqrt(onroiCounter-1);
-            onaeroi5podfSEoff = nanstd(onaeroi5podfOFF)/sqrt(onroiCounter-1);
-            onaeroi8podfSEoff = nanstd(onaeroi8podfOFF)/sqrt(onroiCounter-1);
-            onaeroi11podfSEoff = nanstd(onaeroi11podfOFF)/sqrt(onroiCounter-1);
-            onaeroi16podfSEoff = nanstd(onaeroi16podfOFF)/sqrt(onroiCounter-1);
-            onaeroi22podfSEoff = nanstd(onaeroi22podfOFF)/sqrt(onroiCounter-1);
-            onaeroi32podfSEoff = nanstd(onaeroi32podfOFF)/sqrt(onroiCounter-1);
-            onaeroi45podfSEoff = nanstd(onaeroi45podfOFF)/sqrt(onroiCounter-1);
+            aeroi4podfSEoff = nanstd(aeroi4podfOFF)/sqrt(roiCount);
+            aeroi5podfSEoff = nanstd(aeroi5podfOFF)/sqrt(roiCount);
+            aeroi8podfSEoff = nanstd(aeroi8podfOFF)/sqrt(roiCount);
+            aeroi11podfSEoff = nanstd(aeroi11podfOFF)/sqrt(roiCount);
+            aeroi16podfSEoff = nanstd(aeroi16podfOFF)/sqrt(roiCount);
+            aeroi22podfSEoff = nanstd(aeroi22podfOFF)/sqrt(roiCount);
+            aeroi32podfSEoff = nanstd(aeroi32podfOFF)/sqrt(roiCount);
+            aeroi45podfSEoff = nanstd(aeroi45podfOFF)/sqrt(roiCount);
             %combine values for plotting
-            onBARaeroiPODFses(:,1,j) = [onaeroi4podfSE; onaeroi5podfSE; onaeroi8podfSE; onaeroi11podfSE;...
-                onaeroi16podfSE; onaeroi22podfSE; onaeroi32podfSE; onaeroi45podfSE];
-            onBARaeroiPODFses(:,2,j) = [onaeroi4podfSEon; onaeroi5podfSEon; onaeroi8podfSEon; onaeroi11podfSEon;...
-                onaeroi16podfSEon; onaeroi22podfSEon; onaeroi32podfSEon; onaeroi45podfSEon];
-            onBARaeroiPODFses(:,3,j) = [onaeroi4podfSEoff; onaeroi5podfSEoff; onaeroi8podfSEoff; onaeroi11podfSEoff;...
-                onaeroi16podfSEoff; onaeroi22podfSEoff; onaeroi32podfSEoff; onaeroi45podfSEoff];
+            BARaeroiPODFses(:,1,j) = [aeroi4podfSE; aeroi5podfSE; aeroi8podfSE; aeroi11podfSE;...
+                aeroi16podfSE; aeroi22podfSE; aeroi32podfSE; aeroi45podfSE];
+            BARaeroiPODFses(:,2,j) = [aeroi4podfSEon; aeroi5podfSEon; aeroi8podfSEon; aeroi11podfSEon;...
+                aeroi16podfSEon; aeroi22podfSEon; aeroi32podfSEon; onaeroi45podfSEon];
+            BARaeroiPODFses(:,3,j) = [aeroi4podfSEoff; aeroi5podfSEoff; aeroi8podfSEoff; aeroi11podfSEoff;...
+                aeroi16podfSEoff; aeroi22podfSEoff; aeroi32podfSEoff; aeroi45podfSEoff];
 
-            if ~isnan(onaeroi4podfSE)
-                %checking for statistically significant differences post-onset all%
-                [Hae(1) Pae(1)] = kstest2(onaeroi4podf,onaeroi5podf,alpha);%[1 2]
-                [Hae(2) Pae(2)] = kstest2(onaeroi4podf,onaeroi8podf,alpha);%[1 3]
-                [Hae(3) Pae(3)] = kstest2(onaeroi4podf,onaeroi11podf,alpha);%[1 4]
-                [Hae(4) Pae(4)] = kstest2(onaeroi4podf,onaeroi16podf,alpha);%[1 5]
-                [Hae(5) Pae(5)] = kstest2(onaeroi4podf,onaeroi22podf,alpha);%[1 6]
-                [Hae(6) Pae(6)] = kstest2(onaeroi4podf,onaeroi32podf,alpha);%[1 7]
-                [Hae(7) Pae(7)] = kstest2(onaeroi4podf,onaeroi45podf,alpha);%[1 8]
-                [Hae(8) Pae(8)] = kstest2(onaeroi5podf,onaeroi8podf,alpha);%[2 3]
-                [Hae(9) Pae(9)] = kstest2(onaeroi5podf,onaeroi11podf,alpha);%[2 4]
-                [Hae(10) Pae(10)] = kstest2(onaeroi5podf,onaeroi16podf,alpha);%[2 5]
-                [Hae(11) Pae(11)] = kstest2(onaeroi5podf,onaeroi22podf,alpha);%[2 6]
-                [Hae(12) Pae(12)] = kstest2(onaeroi5podf,onaeroi32podf,alpha);%[2 7]
-                [Hae(13) Pae(13)] = kstest2(onaeroi5podf,onaeroi45podf,alpha);%[2 8]
-                [Hae(14) Pae(14)] = kstest2(onaeroi8podf,onaeroi11podf,alpha);%[3 4]
-                [Hae(15) Pae(15)] = kstest2(onaeroi8podf,onaeroi16podf,alpha);%[3 5]
-                [Hae(16) Pae(16)] = kstest2(onaeroi8podf,onaeroi22podf,alpha);%[3 6]
-                [Hae(17) Pae(17)] = kstest2(onaeroi8podf,onaeroi32podf,alpha);%[3 7]
-                [Hae(18) Pae(18)] = kstest2(onaeroi8podf,onaeroi45podf,alpha);%[3 8]
-                [Hae(19) Pae(19)] = kstest2(onaeroi11podf,onaeroi16podf,alpha);%[4 5]
-                [Hae(20) Pae(20)] = kstest2(onaeroi11podf,onaeroi22podf,alpha);%[4 6]
-                [Hae(21) Pae(21)] = kstest2(onaeroi11podf,onaeroi32podf,alpha);%[4 7]
-                [Hae(22) Pae(22)] = kstest2(onaeroi11podf,onaeroi45podf,alpha);%[4 8]
-                [Hae(23) Pae(23)] = kstest2(onaeroi16podf,onaeroi22podf,alpha);%[5 6]
-                [Hae(24) Pae(24)] = kstest2(onaeroi16podf,onaeroi32podf,alpha);%[5 7]
-                [Hae(25) Pae(25)] = kstest2(onaeroi16podf,onaeroi45podf,alpha);%[5 8]
-                [Hae(26) Pae(26)] = kstest2(onaeroi22podf,onaeroi32podf,alpha);%[6 7]
-                [Hae(27) Pae(27)] = kstest2(onaeroi22podf,onaeroi45podf,alpha);%[6 8]
-                [Hae(28) Pae(28)] = kstest2(onaeroi32podf,onaeroi45podf,alpha);%[7 8]
-                AEROIsigComps = find(Hae == 1);
-                AEROIsigVals = Pae(AEROIsigComps);
-                AEROIsigPairs = [[1 2];[1 3];[1 4];[1 5];[1 6];[1 7];[1 8];[2 3];[2 4];[2 5];[2 6];[2 7];[2 8];...
-                    [3 4];[3 5];[3 6];[3 7];[3 8];[4 5];[4 6];[4 7];[4 8];[5 6];[5 7];[5 8];[6 7];[6 8];[7 8]];
-                AEROIpairs = {};
-                for i = 1:length(AEROIsigComps)
-                    AEROIpairs{i} = AEROIsigPairs(AEROIsigComps(i),:);
-                end
-                %checking for statistically significant differences tone-onset%
-                [HaeON(1) PaeON(1)] = kstest2(onaeroi4podfON,onaeroi5podfON,alpha);%[1 2]
-                [HaeON(2) PaeON(2)] = kstest2(onaeroi4podfON,onaeroi8podfON,alpha);%[1 3]
-                [HaeON(3) PaeON(3)] = kstest2(onaeroi4podfON,onaeroi11podfON,alpha);%[1 4]
-                [HaeON(4) PaeON(4)] = kstest2(onaeroi4podfON,onaeroi16podfON,alpha);%[1 5]
-                [HaeON(5) PaeON(5)] = kstest2(onaeroi4podfON,onaeroi22podfON,alpha);%[1 6]
-                [HaeON(6) PaeON(6)] = kstest2(onaeroi4podfON,onaeroi32podfON,alpha);%[1 7]
-                [HaeON(7) PaeON(7)] = kstest2(onaeroi4podfON,onaeroi45podfON,alpha);%[1 8]
-                [HaeON(8) PaeON(8)] = kstest2(onaeroi5podfON,onaeroi8podfON,alpha);%[2 3]
-                [HaeON(9) PaeON(9)] = kstest2(onaeroi5podfON,onaeroi11podfON,alpha);%[2 4]
-                [HaeON(10) PaeON(10)] = kstest2(onaeroi5podfON,onaeroi16podfON,alpha);%[2 5]
-                [HaeON(11) PaeON(11)] = kstest2(onaeroi5podfON,onaeroi22podfON,alpha);%[2 6]
-                [HaeON(12) PaeON(12)] = kstest2(onaeroi5podfON,onaeroi32podfON,alpha);%[2 7]
-                [HaeON(13) PaeON(13)] = kstest2(onaeroi5podfON,onaeroi45podfON,alpha);%[2 8]
-                [HaeON(14) PaeON(14)] = kstest2(onaeroi8podfON,onaeroi11podfON,alpha);%[3 4]
-                [HaeON(15) PaeON(15)] = kstest2(onaeroi8podfON,onaeroi16podfON,alpha);%[3 5]
-                [HaeON(16) PaeON(16)] = kstest2(onaeroi8podfON,onaeroi22podfON,alpha);%[3 6]
-                [HaeON(17) PaeON(17)] = kstest2(onaeroi8podfON,onaeroi32podfON,alpha);%[3 7]
-                [HaeON(18) PaeON(18)] = kstest2(onaeroi8podfON,onaeroi45podfON,alpha);%[3 8]
-                [HaeON(19) PaeON(19)] = kstest2(onaeroi11podfON,onaeroi16podfON,alpha);%[4 5]
-                [HaeON(20) PaeON(20)] = kstest2(onaeroi11podfON,onaeroi22podfON,alpha);%[4 6]
-                [HaeON(21) PaeON(21)] = kstest2(onaeroi11podfON,onaeroi32podfON,alpha);%[4 7]
-                [HaeON(22) PaeON(22)] = kstest2(onaeroi11podfON,onaeroi45podfON,alpha);%[4 8]
-                [HaeON(23) PaeON(23)] = kstest2(onaeroi16podfON,onaeroi22podfON,alpha);%[5 6]
-                [HaeON(24) PaeON(24)] = kstest2(onaeroi16podfON,onaeroi32podfON,alpha);%[5 7]
-                [HaeON(25) PaeON(25)] = kstest2(onaeroi16podfON,onaeroi45podfON,alpha);%[5 8]
-                [HaeON(26) PaeON(26)] = kstest2(onaeroi22podfON,onaeroi32podfON,alpha);%[6 7]
-                [HaeON(27) PaeON(27)] = kstest2(onaeroi22podfON,onaeroi45podfON,alpha);%[6 8]
-                [HaeON(28) PaeON(28)] = kstest2(onaeroi32podfON,onaeroi45podfON,alpha);%[7 8]
-                AEROIsigCompsON = find(HaeON == 1);
-                AEROIsigValsON = PaeON(AEROIsigCompsON);
-                AEROIsigPairsON = [[1 2];[1 3];[1 4];[1 5];[1 6];[1 7];[1 8];[2 3];[2 4];[2 5];[2 6];[2 7];[2 8];...
-                    [3 4];[3 5];[3 6];[3 7];[3 8];[4 5];[4 6];[4 7];[4 8];[5 6];[5 7];[5 8];[6 7];[6 8];[7 8]];
-                AEROIpairsON = {};
-                for i = 1:length(AEROIsigCompsON)
-                    AEROIpairsON{i} = AEROIsigPairsON(AEROIsigCompsON(i),:);
-                end
-                %checking for statistically significant differences tone-offset%
-                [HaeOFF(1) PaeOFF(1)] = kstest2(onaeroi4podfOFF,onaeroi5podfOFF,alpha);%[1 2]
-                [HaeOFF(2) PaeOFF(2)] = kstest2(onaeroi4podfOFF,onaeroi8podfOFF,alpha);%[1 3]
-                [HaeOFF(3) PaeOFF(3)] = kstest2(onaeroi4podfOFF,onaeroi11podfOFF,alpha);%[1 4]
-                [HaeOFF(4) PaeOFF(4)] = kstest2(onaeroi4podfOFF,onaeroi16podfOFF,alpha);%[1 5]
-                [HaeOFF(5) PaeOFF(5)] = kstest2(onaeroi4podfOFF,onaeroi22podfOFF,alpha);%[1 6]
-                [HaeOFF(6) PaeOFF(6)] = kstest2(onaeroi4podfOFF,onaeroi32podfOFF,alpha);%[1 7]
-                [HaeOFF(7) PaeOFF(7)] = kstest2(onaeroi4podfOFF,onaeroi45podfOFF,alpha);%[1 8]
-                [HaeOFF(8) PaeOFF(8)] = kstest2(onaeroi5podfOFF,onaeroi8podfOFF,alpha);%[2 3]
-                [HaeOFF(9) PaeOFF(9)] = kstest2(onaeroi5podfOFF,onaeroi11podfOFF,alpha);%[2 4]
-                [HaeOFF(10) PaeOFF(10)] = kstest2(onaeroi5podfOFF,onaeroi16podfOFF,alpha);%[2 5]
-                [HaeOFF(11) PaeOFF(11)] = kstest2(onaeroi5podfOFF,onaeroi22podfOFF,alpha);%[2 6]
-                [HaeOFF(12) PaeOFF(12)] = kstest2(onaeroi5podfOFF,onaeroi32podfOFF,alpha);%[2 7]
-                [HaeOFF(13) PaeOFF(13)] = kstest2(onaeroi5podfOFF,onaeroi45podfOFF,alpha);%[2 8]
-                [HaeOFF(14) PaeOFF(14)] = kstest2(onaeroi8podfOFF,onaeroi11podfOFF,alpha);%[3 4]
-                [HaeOFF(15) PaeOFF(15)] = kstest2(onaeroi8podfOFF,onaeroi16podfOFF,alpha);%[3 5]
-                [HaeOFF(16) PaeOFF(16)] = kstest2(onaeroi8podfOFF,onaeroi22podfOFF,alpha);%[3 6]
-                [HaeOFF(17) PaeOFF(17)] = kstest2(onaeroi8podfOFF,onaeroi32podfOFF,alpha);%[3 7]
-                [HaeOFF(18) PaeOFF(18)] = kstest2(onaeroi8podfOFF,onaeroi45podfOFF,alpha);%[3 8]
-                [HaeOFF(19) PaeOFF(19)] = kstest2(onaeroi11podfOFF,onaeroi16podfOFF,alpha);%[4 5]
-                [HaeOFF(20) PaeOFF(20)] = kstest2(onaeroi11podfOFF,onaeroi22podfOFF,alpha);%[4 6]
-                [HaeOFF(21) PaeOFF(21)] = kstest2(onaeroi11podfOFF,onaeroi32podfOFF,alpha);%[4 7]
-                [HaeOFF(22) PaeOFF(22)] = kstest2(onaeroi11podfOFF,onaeroi45podfOFF,alpha);%[4 8]
-                [HaeOFF(23) PaeOFF(23)] = kstest2(onaeroi16podfOFF,onaeroi22podfOFF,alpha);%[5 6]
-                [HaeOFF(24) PaeOFF(24)] = kstest2(onaeroi16podfOFF,onaeroi32podfOFF,alpha);%[5 7]
-                [HaeOFF(25) PaeOFF(25)] = kstest2(onaeroi16podfOFF,onaeroi45podfOFF,alpha);%[5 8]
-                [HaeOFF(26) PaeOFF(26)] = kstest2(onaeroi22podfOFF,onaeroi32podfOFF,alpha);%[6 7]
-                [HaeOFF(27) PaeOFF(27)] = kstest2(onaeroi22podfOFF,onaeroi45podfOFF,alpha);%[6 8]
-                [HaeOFF(28) PaeOFF(28)] = kstest2(onaeroi32podfOFF,onaeroi45podfOFF,alpha);%[7 8]
-                AEROIsigCompsOFF = find(HaeOFF == 1);
-                AEROIsigValsOFF = PaeOFF(AEROIsigCompsOFF);
-                AEROIsigPairsOFF = [[1 2];[1 3];[1 4];[1 5];[1 6];[1 7];[1 8];[2 3];[2 4];[2 5];[2 6];[2 7];[2 8];...
-                    [3 4];[3 5];[3 6];[3 7];[3 8];[4 5];[4 6];[4 7];[4 8];[5 6];[5 7];[5 8];[6 7];[6 8];[7 8]];
-                AEROIpairsOFF = {};
-                for i = 1:length(AEROIsigCompsOFF)
-                    AEROIpairsOFF{i} = AEROIsigPairs(AEROIsigCompsOFF(i),:);
-                end
-
-                %plot ROI-specific average frequency post-onset DEltaF/F%
-                if figON
-                    figure
-                    title(strcat(animal{j},' ',ACregs{f},': onset-tuned AE ROI Average Fluorescence Post-Onset DeltaF/F'))
-                    hold on
-                    b = bar(onBARaeroiPODF(:,:,j))
-            %         title(strcat(animal{j},': Frequency-Specific, Whole-Window Average Post-Onset DeltaF/F'))
-                    hold on
-                %     err = errorbar(BARwinPODFs,BARwinPODFses);
-                    nbars = size(onBARaeroiPODF(:,:,j),2);
-                    x = [];
-                    for n = 1:nbars
-                        x = [x; b(n).XEndPoints];
-                    end
-                    err = errorbar(x',onBARaeroiPODF(:,:,j),onBARaeroiPODFses(:,:,j));
-                    for n = 1:nbars
-                        err(n).Color = [0 0 0];
-                        err(n).LineStyle = 'None';
-                    end
-            %         err = errorbar(BARroiPODFs,BARroiPODFses);
-            %         err.Color = [0 0 0];
-            %         err.LineStyle = 'None';
-                    sigstar(AEROIpairs,AEROIsigVals)
-                    sigstar(AEROIpairsON,AEROIsigValsON)
-                    sigstar(AEROIpairsOFF,AEROIsigValsOFF)
-                    ylabel('Relative DeltaF/F')
-                    xlabel('Frequency (kHz)')
-                    xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
-                    ylim([min(min(onBARaeroiPODF(:,:,j)))-0.05 max(max(onBARaeroiPODF(:,:,j)))+0.1])
-                    hold off
-                    set(gca, 'Box', 'off')
-%                     set(gcf, 'WindowStyle', 'Docked')
-                    figName = strcat(ACregs{f},fig7);
-                    figSave = fullfile(file_loc,animal{j},figName);
-                    savefig(figSave)
-                end
+%             if ~isnan(aeroi4podfSE)
+            %checking for statistically significant differences post-onset all%
+            [Hae(1) Pae(1)] = kstest2(aeroi4podf,aeroi5podf,alpha);%[1 2]
+            [Hae(2) Pae(2)] = kstest2(aeroi4podf,aeroi8podf,alpha);%[1 3]
+            [Hae(3) Pae(3)] = kstest2(aeroi4podf,aeroi11podf,alpha);%[1 4]
+            [Hae(4) Pae(4)] = kstest2(aeroi4podf,aeroi16podf,alpha);%[1 5]
+            [Hae(5) Pae(5)] = kstest2(aeroi4podf,aeroi22podf,alpha);%[1 6]
+            [Hae(6) Pae(6)] = kstest2(aeroi4podf,aeroi32podf,alpha);%[1 7]
+            [Hae(7) Pae(7)] = kstest2(aeroi4podf,aeroi45podf,alpha);%[1 8]
+            [Hae(8) Pae(8)] = kstest2(aeroi5podf,aeroi8podf,alpha);%[2 3]
+            [Hae(9) Pae(9)] = kstest2(aeroi5podf,aeroi11podf,alpha);%[2 4]
+            [Hae(10) Pae(10)] = kstest2(aeroi5podf,aeroi16podf,alpha);%[2 5]
+            [Hae(11) Pae(11)] = kstest2(aeroi5podf,aeroi22podf,alpha);%[2 6]
+            [Hae(12) Pae(12)] = kstest2(aeroi5podf,aeroi32podf,alpha);%[2 7]
+            [Hae(13) Pae(13)] = kstest2(aeroi5podf,aeroi45podf,alpha);%[2 8]
+            [Hae(14) Pae(14)] = kstest2(aeroi8podf,aeroi11podf,alpha);%[3 4]
+            [Hae(15) Pae(15)] = kstest2(aeroi8podf,aeroi16podf,alpha);%[3 5]
+            [Hae(16) Pae(16)] = kstest2(aeroi8podf,aeroi22podf,alpha);%[3 6]
+            [Hae(17) Pae(17)] = kstest2(aeroi8podf,aeroi32podf,alpha);%[3 7]
+            [Hae(18) Pae(18)] = kstest2(aeroi8podf,aeroi45podf,alpha);%[3 8]
+            [Hae(19) Pae(19)] = kstest2(aeroi11podf,aeroi16podf,alpha);%[4 5]
+            [Hae(20) Pae(20)] = kstest2(aeroi11podf,aeroi22podf,alpha);%[4 6]
+            [Hae(21) Pae(21)] = kstest2(aeroi11podf,aeroi32podf,alpha);%[4 7]
+            [Hae(22) Pae(22)] = kstest2(aeroi11podf,aeroi45podf,alpha);%[4 8]
+            [Hae(23) Pae(23)] = kstest2(aeroi16podf,aeroi22podf,alpha);%[5 6]
+            [Hae(24) Pae(24)] = kstest2(aeroi16podf,aeroi32podf,alpha);%[5 7]
+            [Hae(25) Pae(25)] = kstest2(aeroi16podf,aeroi45podf,alpha);%[5 8]
+            [Hae(26) Pae(26)] = kstest2(aeroi22podf,aeroi32podf,alpha);%[6 7]
+            [Hae(27) Pae(27)] = kstest2(aeroi22podf,aeroi45podf,alpha);%[6 8]
+            [Hae(28) Pae(28)] = kstest2(aeroi32podf,aeroi45podf,alpha);%[7 8]
+            AEROIsigComps = find(Hae == 1);
+            AEROIsigVals = Pae(AEROIsigComps);
+            AEROIsigPairs = [[1 2];[1 3];[1 4];[1 5];[1 6];[1 7];[1 8];[2 3];[2 4];[2 5];[2 6];[2 7];[2 8];...
+                [3 4];[3 5];[3 6];[3 7];[3 8];[4 5];[4 6];[4 7];[4 8];[5 6];[5 7];[5 8];[6 7];[6 8];[7 8]];
+            AEROIpairs = {};
+            for i = 1:length(AEROIsigComps)
+                AEROIpairs{i} = AEROIsigPairs(AEROIsigComps(i),:);
             end
-        end
-        
-        %%% OFFSET AE ROI ANALYSIS%%%
-        if offroiCounter > 1
-            %separate current freq AE ROI traces by frequency response%
-            offaeroi4trace = nanmean(squeeze(offACregTraces{f,j}(:,:,1)),2);              
-            offaeroi5trace = nanmean(squeeze(offACregTraces{f,j}(:,:,2)),2);
-            offaeroi8trace = nanmean(squeeze(offACregTraces{f,j}(:,:,3)),2);
-            offaeroi11trace = nanmean(squeeze(offACregTraces{f,j}(:,:,4)),2);
-            offaeroi16trace = nanmean(squeeze(offACregTraces{f,j}(:,:,5)),2);
-            offaeroi22trace = nanmean(squeeze(offACregTraces{f,j}(:,:,6)),2);
-            offaeroi32trace = nanmean(squeeze(offACregTraces{f,j}(:,:,7)),2);
-            offaeroi45trace = nanmean(squeeze(offACregTraces{f,j}(:,:,8)),2);
-            offaeroiTraceMax = [max(offaeroi4trace) max(offaeroi5trace) max(offaeroi8trace) max(offaeroi11trace)...
-                max(offaeroi16trace) max(offaeroi22trace) max(offaeroi32trace) max(offaeroi45trace)];
-            offaeroiTraceMin = [min(offaeroi4trace) min(offaeroi5trace) min(offaeroi8trace) min(offaeroi11trace)...
-                min(offaeroi16trace) min(offaeroi22trace) min(offaeroi32trace) min(offaeroi45trace)];
-
-            %ROI-specific average frequency traces standard error%
-            if size(offACregTraces{f,j},2) < 2
-                offaeroi4traceSE = zeros(1,18);
-                offaeroi5traceSE = zeros(1,18);
-                offaeroi8traceSE = zeros(1,18);
-                offaeroi11traceSE = zeros(1,18);
-                offaeroi16traceSE = zeros(1,18);
-                offaeroi22traceSE = zeros(1,18);
-                offaeroi32traceSE = zeros(1,18);
-                offaeroi45traceSE = zeros(1,18);
-            else
-                offaeroi4traceSE = nanstd(squeeze(offACregTraces{f,j}(:,:,1))')/sqrt(offroiCounter-1);
-                offaeroi5traceSE = nanstd(squeeze(offACregTraces{f,j}(:,:,2))')/sqrt(offroiCounter-1);
-                offaeroi8traceSE = nanstd(squeeze(offACregTraces{f,j}(:,:,3))')/sqrt(offroiCounter-1);
-                offaeroi11traceSE = nanstd(squeeze(offACregTraces{f,j}(:,:,4))')/sqrt(offroiCounter-1);
-                offaeroi16traceSE = nanstd(squeeze(offACregTraces{f,j}(:,:,5))')/sqrt(offroiCounter-1);
-                offaeroi22traceSE = nanstd(squeeze(offACregTraces{f,j}(:,:,6))')/sqrt(offroiCounter-1);
-                offaeroi32traceSE = nanstd(squeeze(offACregTraces{f,j}(:,:,7))')/sqrt(offroiCounter-1);
-                offaeroi45traceSE = nanstd(squeeze(offACregTraces{f,j}(:,:,8))')/sqrt(offroiCounter-1);
+            %checking for statistically significant differences tone-onset%
+            [HaeON(1) PaeON(1)] = kstest2(aeroi4podfON,aeroi5podfON,alpha);%[1 2]
+            [HaeON(2) PaeON(2)] = kstest2(aeroi4podfON,aeroi8podfON,alpha);%[1 3]
+            [HaeON(3) PaeON(3)] = kstest2(aeroi4podfON,aeroi11podfON,alpha);%[1 4]
+            [HaeON(4) PaeON(4)] = kstest2(aeroi4podfON,aeroi16podfON,alpha);%[1 5]
+            [HaeON(5) PaeON(5)] = kstest2(aeroi4podfON,aeroi22podfON,alpha);%[1 6]
+            [HaeON(6) PaeON(6)] = kstest2(aeroi4podfON,aeroi32podfON,alpha);%[1 7]
+            [HaeON(7) PaeON(7)] = kstest2(aeroi4podfON,aeroi45podfON,alpha);%[1 8]
+            [HaeON(8) PaeON(8)] = kstest2(aeroi5podfON,aeroi8podfON,alpha);%[2 3]
+            [HaeON(9) PaeON(9)] = kstest2(aeroi5podfON,aeroi11podfON,alpha);%[2 4]
+            [HaeON(10) PaeON(10)] = kstest2(aeroi5podfON,aeroi16podfON,alpha);%[2 5]
+            [HaeON(11) PaeON(11)] = kstest2(aeroi5podfON,aeroi22podfON,alpha);%[2 6]
+            [HaeON(12) PaeON(12)] = kstest2(aeroi5podfON,aeroi32podfON,alpha);%[2 7]
+            [HaeON(13) PaeON(13)] = kstest2(aeroi5podfON,aeroi45podfON,alpha);%[2 8]
+            [HaeON(14) PaeON(14)] = kstest2(aeroi8podfON,aeroi11podfON,alpha);%[3 4]
+            [HaeON(15) PaeON(15)] = kstest2(aeroi8podfON,aeroi16podfON,alpha);%[3 5]
+            [HaeON(16) PaeON(16)] = kstest2(aeroi8podfON,aeroi22podfON,alpha);%[3 6]
+            [HaeON(17) PaeON(17)] = kstest2(aeroi8podfON,aeroi32podfON,alpha);%[3 7]
+            [HaeON(18) PaeON(18)] = kstest2(aeroi8podfON,aeroi45podfON,alpha);%[3 8]
+            [HaeON(19) PaeON(19)] = kstest2(aeroi11podfON,aeroi16podfON,alpha);%[4 5]
+            [HaeON(20) PaeON(20)] = kstest2(aeroi11podfON,aeroi22podfON,alpha);%[4 6]
+            [HaeON(21) PaeON(21)] = kstest2(aeroi11podfON,aeroi32podfON,alpha);%[4 7]
+            [HaeON(22) PaeON(22)] = kstest2(aeroi11podfON,aeroi45podfON,alpha);%[4 8]
+            [HaeON(23) PaeON(23)] = kstest2(aeroi16podfON,aeroi22podfON,alpha);%[5 6]
+            [HaeON(24) PaeON(24)] = kstest2(aeroi16podfON,aeroi32podfON,alpha);%[5 7]
+            [HaeON(25) PaeON(25)] = kstest2(aeroi16podfON,aeroi45podfON,alpha);%[5 8]
+            [HaeON(26) PaeON(26)] = kstest2(aeroi22podfON,aeroi32podfON,alpha);%[6 7]
+            [HaeON(27) PaeON(27)] = kstest2(aeroi22podfON,aeroi45podfON,alpha);%[6 8]
+            [HaeON(28) PaeON(28)] = kstest2(aeroi32podfON,aeroi45podfON,alpha);%[7 8]
+            AEROIsigCompsON = find(HaeON == 1);
+            AEROIsigValsON = PaeON(AEROIsigCompsON);
+            AEROIsigPairsON = [[1 2];[1 3];[1 4];[1 5];[1 6];[1 7];[1 8];[2 3];[2 4];[2 5];[2 6];[2 7];[2 8];...
+                [3 4];[3 5];[3 6];[3 7];[3 8];[4 5];[4 6];[4 7];[4 8];[5 6];[5 7];[5 8];[6 7];[6 8];[7 8]];
+            AEROIpairsON = {};
+            for i = 1:length(AEROIsigCompsON)
+                AEROIpairsON{i} = AEROIsigPairsON(AEROIsigCompsON(i),:);
+            end
+            %checking for statistically significant differences tone-offset%
+            [HaeOFF(1) PaeOFF(1)] = kstest2(aeroi4podfOFF,aeroi5podfOFF,alpha);%[1 2]
+            [HaeOFF(2) PaeOFF(2)] = kstest2(aeroi4podfOFF,aeroi8podfOFF,alpha);%[1 3]
+            [HaeOFF(3) PaeOFF(3)] = kstest2(aeroi4podfOFF,aeroi11podfOFF,alpha);%[1 4]
+            [HaeOFF(4) PaeOFF(4)] = kstest2(aeroi4podfOFF,aeroi16podfOFF,alpha);%[1 5]
+            [HaeOFF(5) PaeOFF(5)] = kstest2(aeroi4podfOFF,aeroi22podfOFF,alpha);%[1 6]
+            [HaeOFF(6) PaeOFF(6)] = kstest2(aeroi4podfOFF,aeroi32podfOFF,alpha);%[1 7]
+            [HaeOFF(7) PaeOFF(7)] = kstest2(aeroi4podfOFF,aeroi45podfOFF,alpha);%[1 8]
+            [HaeOFF(8) PaeOFF(8)] = kstest2(aeroi5podfOFF,aeroi8podfOFF,alpha);%[2 3]
+            [HaeOFF(9) PaeOFF(9)] = kstest2(aeroi5podfOFF,aeroi11podfOFF,alpha);%[2 4]
+            [HaeOFF(10) PaeOFF(10)] = kstest2(aeroi5podfOFF,aeroi16podfOFF,alpha);%[2 5]
+            [HaeOFF(11) PaeOFF(11)] = kstest2(aeroi5podfOFF,aeroi22podfOFF,alpha);%[2 6]
+            [HaeOFF(12) PaeOFF(12)] = kstest2(aeroi5podfOFF,aeroi32podfOFF,alpha);%[2 7]
+            [HaeOFF(13) PaeOFF(13)] = kstest2(aeroi5podfOFF,aeroi45podfOFF,alpha);%[2 8]
+            [HaeOFF(14) PaeOFF(14)] = kstest2(aeroi8podfOFF,aeroi11podfOFF,alpha);%[3 4]
+            [HaeOFF(15) PaeOFF(15)] = kstest2(aeroi8podfOFF,aeroi16podfOFF,alpha);%[3 5]
+            [HaeOFF(16) PaeOFF(16)] = kstest2(aeroi8podfOFF,aeroi22podfOFF,alpha);%[3 6]
+            [HaeOFF(17) PaeOFF(17)] = kstest2(aeroi8podfOFF,aeroi32podfOFF,alpha);%[3 7]
+            [HaeOFF(18) PaeOFF(18)] = kstest2(aeroi8podfOFF,aeroi45podfOFF,alpha);%[3 8]
+            [HaeOFF(19) PaeOFF(19)] = kstest2(aeroi11podfOFF,aeroi16podfOFF,alpha);%[4 5]
+            [HaeOFF(20) PaeOFF(20)] = kstest2(aeroi11podfOFF,aeroi22podfOFF,alpha);%[4 6]
+            [HaeOFF(21) PaeOFF(21)] = kstest2(aeroi11podfOFF,aeroi32podfOFF,alpha);%[4 7]
+            [HaeOFF(22) PaeOFF(22)] = kstest2(aeroi11podfOFF,aeroi45podfOFF,alpha);%[4 8]
+            [HaeOFF(23) PaeOFF(23)] = kstest2(aeroi16podfOFF,aeroi22podfOFF,alpha);%[5 6]
+            [HaeOFF(24) PaeOFF(24)] = kstest2(aeroi16podfOFF,aeroi32podfOFF,alpha);%[5 7]
+            [HaeOFF(25) PaeOFF(25)] = kstest2(aeroi16podfOFF,aeroi45podfOFF,alpha);%[5 8]
+            [HaeOFF(26) PaeOFF(26)] = kstest2(aeroi22podfOFF,aeroi32podfOFF,alpha);%[6 7]
+            [HaeOFF(27) PaeOFF(27)] = kstest2(aeroi22podfOFF,aeroi45podfOFF,alpha);%[6 8]
+            [HaeOFF(28) PaeOFF(28)] = kstest2(aeroi32podfOFF,aeroi45podfOFF,alpha);%[7 8]
+            AEROIsigCompsOFF = find(HaeOFF == 1);
+            AEROIsigValsOFF = PaeOFF(AEROIsigCompsOFF);
+            AEROIsigPairsOFF = [[1 2];[1 3];[1 4];[1 5];[1 6];[1 7];[1 8];[2 3];[2 4];[2 5];[2 6];[2 7];[2 8];...
+                [3 4];[3 5];[3 6];[3 7];[3 8];[4 5];[4 6];[4 7];[4 8];[5 6];[5 7];[5 8];[6 7];[6 8];[7 8]];
+            AEROIpairsOFF = {};
+            for i = 1:length(AEROIsigCompsOFF)
+                AEROIpairsOFF{i} = AEROIsigPairs(AEROIsigCompsOFF(i),:);
             end
 
-            %plot frequency-specific average AE ROI frequency traces%
+            %plot ROI-specific average frequency post-onset DEltaF/F%
             if figON
                 figure
-                suptitle([animal{j},' ',ACregs{f},': offset-tuned AE ROI Average Fluorescence Traces'])
-                subplot(2,4,1)
-                shadedErrorBar([1:18],offaeroi4trace,2*offaeroi4traceSE,{'Color',colormap(1,:)},1)
-                title(['4 kHz'])
-                if sum(offaeroi4traceSE) ~= 0
-                    ylim([min(offaeroiTraceMin)-0.1 max(offaeroiTraceMax)+0.1])
+                set(gcf, 'WindowStyle', 'Docked')
+                suptitle([animal(j),' ',ACregs{f},' AE ROI'])
+                title('Frequency-Specific Average Post-Onset DeltaF/F')
+                hold on
+                b = bar(BARaeroiPODF(:,:,j));
+                hold on
+                nbars = size(BARaeroiPODF(:,:,j),2);
+                x = [];
+                for n = 1:nbars
+                    x = [x; b(n).XEndPoints];
                 end
-                ylabel('Relative DeltaF/F')
-                xlabel('Time (s)')
-                xticks([4,8,12,16])
-                xticklabels({'1','2','3','4'})
-                set(gca, 'Box', 'off')
-                subplot(2,4,2)
-                shadedErrorBar([1:18],offaeroi5trace,2*offaeroi5traceSE,{'Color',colormap(2,:)},1)
-                title(['5.6 kHz'])
-                if sum(offaeroi5traceSE) ~= 0
-                    ylim([min(offaeroiTraceMin)-0.1 max(offaeroiTraceMax)+0.1])
+                err = errorbar(x',BARaeroiPODF(:,:,j),BARaeroiPODFses(:,:,j));
+                for n = 1:nbars
+                    err(n).Color = [0 0 0];
+                    err(n).LineStyle = 'None';
                 end
-                ylabel('Relative DeltaF/F')
-                xlabel('Time (s)')
-                xticks([4,8,12,16])
-                xticklabels({'1','2','3','4'})
+                sigstar(AEROIpairs,AEROIsigVals)
+                sigstar(AEROIpairsON,AEROIsigValsON)
+                sigstar(AEROIpairsOFF,AEROIsigValsOFF)
+                ylabel('Normalized DeltaF/F')
+                xlabel('Frequency (kHz)')
+                xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
+                ylim([min(min(BARaeroiPODF(:,:,j)))-0.05 max(max(BARaeroiPODF(:,:,j)))+0.1])
+                hold off
                 set(gca, 'Box', 'off')
-                subplot(2,4,3)
-                shadedErrorBar([1:18],offaeroi8trace,2*offaeroi8traceSE,{'Color',colormap(3,:)},1)
-                title(['8 kHz'])
-                if sum(offaeroi8traceSE) ~= 0
-                    ylim([min(offaeroiTraceMin)-0.1 max(offaeroiTraceMax)+0.1])
-                end
-                ylabel('Relative DeltaF/F')
-                xlabel('Time (s)')
-                xticks([4,8,12,16])
-                xticklabels({'1','2','3','4'})
-                set(gca, 'Box', 'off')
-                subplot(2,4,4)
-                shadedErrorBar([1:18],offaeroi11trace,2*offaeroi11traceSE,{'Color',colormap(4,:)},1)
-                title(['11.3 kHz'])
-                if sum(offaeroi11traceSE) ~= 0
-                    ylim([min(offaeroiTraceMin)-0.1 max(offaeroiTraceMax)+0.1])
-                end
-                ylabel('Relative DeltaF/F')
-                xlabel('Time (s)')
-                xticks([4,8,12,16])
-                xticklabels({'1','2','3','4'})
-                set(gca, 'Box', 'off')
-                subplot(2,4,5)
-                shadedErrorBar([1:18],offaeroi16trace,2*offaeroi16traceSE,{'Color',colormap(5,:)},1)
-                title(['16 kHz'])
-                if sum(offaeroi16traceSE) ~= 0
-                    ylim([min(offaeroiTraceMin)-0.1 max(offaeroiTraceMax)+0.1])
-                end
-                ylabel('Relative DeltaF/F')
-                xlabel('Time (s)')
-                xticks([4,8,12,16])
-                xticklabels({'1','2','3','4'})
-                set(gca, 'Box', 'off')
-                subplot(2,4,6)
-                shadedErrorBar([1:18],offaeroi22trace,2*offaeroi22traceSE,{'Color',colormap(6,:)},1)
-                title(['22.6 kHz'])
-                if sum(offaeroi22traceSE) ~= 0
-                    ylim([min(offaeroiTraceMin)-0.1 max(offaeroiTraceMax)+0.1])
-                end
-                ylabel('Relative DeltaF/F')
-                xlabel('Time (s)')
-                xticks([4,8,12,16])
-                xticklabels({'1','2','3','4'})
-                set(gca, 'Box', 'off')
-                subplot(2,4,7)
-                shadedErrorBar([1:18],offaeroi32trace,2*offaeroi32traceSE,{'Color',colormap(7,:)},1)
-                title(['32 kHz'])
-                if sum(offaeroi32traceSE) ~= 0
-                    ylim([min(offaeroiTraceMin)-0.1 max(offaeroiTraceMax)+0.1])
-                end
-                ylabel('Relative DeltaF/F')
-                xlabel('Time (s)')
-                xticks([4,8,12,16])
-                xticklabels({'1','2','3','4'})
-                set(gca, 'Box', 'off')
-                subplot(2,4,8)
-                shadedErrorBar([1:18],offaeroi45trace,2*offaeroi45traceSE,{'Color',colormap(8,:)},1)
-                title(['45 kHz'])
-                if sum(offaeroi45traceSE) ~= 0
-                    ylim([min(offaeroiTraceMin)-0.1 max(offaeroiTraceMax)+0.1])
-                end
-                ylabel('Relative DeltaF/F')
-                xlabel('Time (s)')
-                xticks([4,8,12,16])
-                xticklabels({'1','2','3','4'})
-                set(gca, 'Box', 'off')
-%                 set(gcf, 'WindowStyle', 'Docked')
                 figName = strcat(ACregs{f},fig8);
                 figSave = fullfile(file_loc,animal{j},figName);
                 savefig(figSave)
             end
-
-            %separate current freq AE ROI PODF by frequency response%
-            %post-onset all
-            offaeroi4podf = squeeze(offACregMu{f,j}(:,1));              
-            offaeroi5podf = squeeze(offACregMu{f,j}(:,2));
-            offaeroi8podf = squeeze(offACregMu{f,j}(:,3));
-            offaeroi11podf = squeeze(offACregMu{f,j}(:,4));
-            offaeroi16podf = squeeze(offACregMu{f,j}(:,5));
-            offaeroi22podf = squeeze(offACregMu{f,j}(:,6));
-            offaeroi32podf = squeeze(offACregMu{f,j}(:,7));
-            offaeroi45podf = squeeze(offACregMu{f,j}(:,8));
-            %tone-onset
-            offaeroi4podfON = squeeze(offACregMuON{f,j}(:,1));           
-            offaeroi5podfON = squeeze(offACregMuON{f,j}(:,2));
-            offaeroi8podfON = squeeze(offACregMuON{f,j}(:,3));
-            offaeroi11podfON = squeeze(offACregMuON{f,j}(:,4));
-            offaeroi16podfON = squeeze(offACregMuON{f,j}(:,5));
-            offaeroi22podfON = squeeze(offACregMuON{f,j}(:,6));
-            offaeroi32podfON = squeeze(offACregMuON{f,j}(:,7));
-            offaeroi45podfON = squeeze(offACregMuON{f,j}(:,8));
-            %tone-offet
-            offaeroi4podfOFF = squeeze(offACregMuOFF{f,j}(:,1));         
-            offaeroi5podfOFF = squeeze(offACregMuOFF{f,j}(:,2));
-            offaeroi8podfOFF = squeeze(offACregMuOFF{f,j}(:,3));
-            offaeroi11podfOFF = squeeze(offACregMuOFF{f,j}(:,4));
-            offaeroi16podfOFF = squeeze(offACregMuOFF{f,j}(:,5));
-            offaeroi22podfOFF = squeeze(offACregMuOFF{f,j}(:,6));
-            offaeroi32podfOFF = squeeze(offACregMuOFF{f,j}(:,7));        
-            offaeroi45podfOFF = squeeze(offACregMuOFF{f,j}(:,8));        
-            %combine values for plotting
-            offBARaeroiPODF(:,1,j) = [nanmean(offaeroi4podf); nanmean(offaeroi5podf); nanmean(offaeroi8podf); nanmean(offaeroi11podf);...
-                nanmean(offaeroi16podf); nanmean(offaeroi22podf); nanmean(offaeroi32podf); nanmean(offaeroi45podf)];
-            offBARaeroiPODF(:,2,j) = [nanmean(offaeroi4podfON); nanmean(offaeroi5podfON); nanmean(offaeroi8podfON); nanmean(offaeroi11podfON);...
-                nanmean(offaeroi16podfON); nanmean(offaeroi22podfON); nanmean(offaeroi32podfON); nanmean(offaeroi45podfON)];
-            offBARaeroiPODF(:,3,j) = [nanmean(offaeroi4podfOFF); nanmean(offaeroi5podfOFF); nanmean(offaeroi8podfOFF); nanmean(offaeroi11podfOFF);...
-                nanmean(offaeroi16podfOFF); nanmean(offaeroi22podfOFF); nanmean(offaeroi32podfOFF); nanmean(offaeroi45podfOFF)];
-
-            %ROI-specific average frequency PODF standard error%
-            %post-onset all
-            offaeroi4podfSE = nanstd(offaeroi4podf)/sqrt(offroiCounter-1);
-            offaeroi5podfSE = nanstd(offaeroi5podf)/sqrt(offroiCounter-1);
-            offaeroi8podfSE = nanstd(offaeroi8podf)/sqrt(offroiCounter-1);
-            offaeroi11podfSE = nanstd(offaeroi11podf)/sqrt(offroiCounter-1);
-            offaeroi16podfSE = nanstd(offaeroi16podf)/sqrt(offroiCounter-1);
-            offaeroi22podfSE = nanstd(offaeroi22podf)/sqrt(offroiCounter-1);
-            offaeroi32podfSE = nanstd(offaeroi32podf)/sqrt(offroiCounter-1);
-            offaeroi45podfSE = nanstd(offaeroi45podf)/sqrt(offroiCounter-1);
-            %tone-onset
-            offaeroi4podfSEon = nanstd(offaeroi4podfON)/sqrt(offroiCounter-1);
-            offaeroi5podfSEon = nanstd(offaeroi5podfON)/sqrt(offroiCounter-1);
-            offaeroi8podfSEon = nanstd(offaeroi8podfON)/sqrt(offroiCounter-1);
-            offaeroi11podfSEon = nanstd(offaeroi11podfON)/sqrt(offroiCounter-1);
-            offaeroi16podfSEon = nanstd(offaeroi16podfON)/sqrt(offroiCounter-1);
-            offaeroi22podfSEon = nanstd(offaeroi22podfON)/sqrt(offroiCounter-1);
-            offaeroi32podfSEon = nanstd(offaeroi32podfON)/sqrt(offroiCounter-1);
-            offaeroi45podfSEon = nanstd(offaeroi45podfON)/sqrt(offroiCounter-1);
-            %tone-offset
-            offaeroi4podfSEoff = nanstd(offaeroi4podfOFF)/sqrt(offroiCounter-1);
-            offaeroi5podfSEoff = nanstd(offaeroi5podfOFF)/sqrt(offroiCounter-1);
-            offaeroi8podfSEoff = nanstd(offaeroi8podfOFF)/sqrt(offroiCounter-1);
-            offaeroi11podfSEoff = nanstd(offaeroi11podfOFF)/sqrt(offroiCounter-1);
-            offaeroi16podfSEoff = nanstd(offaeroi16podfOFF)/sqrt(offroiCounter-1);
-            offaeroi22podfSEoff = nanstd(offaeroi22podfOFF)/sqrt(offroiCounter-1);
-            offaeroi32podfSEoff = nanstd(offaeroi32podfOFF)/sqrt(offroiCounter-1);
-            offaeroi45podfSEoff = nanstd(offaeroi45podfOFF)/sqrt(offroiCounter-1);
-            %combine values for plotting
-            offBARaeroiPODFses(:,1,j) = [offaeroi4podfSE; offaeroi5podfSE; offaeroi8podfSE; offaeroi11podfSE;...
-                offaeroi16podfSE; offaeroi22podfSE; offaeroi32podfSE; offaeroi45podfSE];
-            offBARaeroiPODFses(:,2,j) = [offaeroi4podfSEon; offaeroi5podfSEon; offaeroi8podfSEon; offaeroi11podfSEon;...
-                offaeroi16podfSEon; offaeroi22podfSEon; offaeroi32podfSEon; offaeroi45podfSEon];
-            offBARaeroiPODFses(:,3,j) = [offaeroi4podfSEoff; offaeroi5podfSEoff; offaeroi8podfSEoff; offaeroi11podfSEoff;...
-                offaeroi16podfSEoff; offaeroi22podfSEoff; offaeroi32podfSEoff; offaeroi45podfSEoff];
-
-            if ~isnan(offaeroi4podfSE)
-                %checking for statistically significant differences post-onset all%
-                [Hae(1) Pae(1)] = kstest2(offaeroi4podf,offaeroi5podf,alpha);%[1 2]
-                [Hae(2) Pae(2)] = kstest2(offaeroi4podf,offaeroi8podf,alpha);%[1 3]
-                [Hae(3) Pae(3)] = kstest2(offaeroi4podf,offaeroi11podf,alpha);%[1 4]
-                [Hae(4) Pae(4)] = kstest2(offaeroi4podf,offaeroi16podf,alpha);%[1 5]
-                [Hae(5) Pae(5)] = kstest2(offaeroi4podf,offaeroi22podf,alpha);%[1 6]
-                [Hae(6) Pae(6)] = kstest2(offaeroi4podf,offaeroi32podf,alpha);%[1 7]
-                [Hae(7) Pae(7)] = kstest2(offaeroi4podf,offaeroi45podf,alpha);%[1 8]
-                [Hae(8) Pae(8)] = kstest2(offaeroi5podf,offaeroi8podf,alpha);%[2 3]
-                [Hae(9) Pae(9)] = kstest2(offaeroi5podf,offaeroi11podf,alpha);%[2 4]
-                [Hae(10) Pae(10)] = kstest2(offaeroi5podf,offaeroi16podf,alpha);%[2 5]
-                [Hae(11) Pae(11)] = kstest2(offaeroi5podf,offaeroi22podf,alpha);%[2 6]
-                [Hae(12) Pae(12)] = kstest2(offaeroi5podf,offaeroi32podf,alpha);%[2 7]
-                [Hae(13) Pae(13)] = kstest2(offaeroi5podf,offaeroi45podf,alpha);%[2 8]
-                [Hae(14) Pae(14)] = kstest2(offaeroi8podf,offaeroi11podf,alpha);%[3 4]
-                [Hae(15) Pae(15)] = kstest2(offaeroi8podf,offaeroi16podf,alpha);%[3 5]
-                [Hae(16) Pae(16)] = kstest2(offaeroi8podf,offaeroi22podf,alpha);%[3 6]
-                [Hae(17) Pae(17)] = kstest2(offaeroi8podf,offaeroi32podf,alpha);%[3 7]
-                [Hae(18) Pae(18)] = kstest2(offaeroi8podf,offaeroi45podf,alpha);%[3 8]
-                [Hae(19) Pae(19)] = kstest2(offaeroi11podf,offaeroi16podf,alpha);%[4 5]
-                [Hae(20) Pae(20)] = kstest2(offaeroi11podf,offaeroi22podf,alpha);%[4 6]
-                [Hae(21) Pae(21)] = kstest2(offaeroi11podf,offaeroi32podf,alpha);%[4 7]
-                [Hae(22) Pae(22)] = kstest2(offaeroi11podf,offaeroi45podf,alpha);%[4 8]
-                [Hae(23) Pae(23)] = kstest2(offaeroi16podf,offaeroi22podf,alpha);%[5 6]
-                [Hae(24) Pae(24)] = kstest2(offaeroi16podf,offaeroi32podf,alpha);%[5 7]
-                [Hae(25) Pae(25)] = kstest2(offaeroi16podf,offaeroi45podf,alpha);%[5 8]
-                [Hae(26) Pae(26)] = kstest2(offaeroi22podf,offaeroi32podf,alpha);%[6 7]
-                [Hae(27) Pae(27)] = kstest2(offaeroi22podf,offaeroi45podf,alpha);%[6 8]
-                [Hae(28) Pae(28)] = kstest2(offaeroi32podf,offaeroi45podf,alpha);%[7 8]
-                AEROIsigComps = find(Hae == 1);
-                AEROIsigVals = Pae(AEROIsigComps);
-                AEROIsigPairs = [[1 2];[1 3];[1 4];[1 5];[1 6];[1 7];[1 8];[2 3];[2 4];[2 5];[2 6];[2 7];[2 8];...
-                    [3 4];[3 5];[3 6];[3 7];[3 8];[4 5];[4 6];[4 7];[4 8];[5 6];[5 7];[5 8];[6 7];[6 8];[7 8]];
-                AEROIpairs = {};
-                for i = 1:length(AEROIsigComps)
-                    AEROIpairs{i} = AEROIsigPairs(AEROIsigComps(i),:);
-                end
-                %checking for statistically significant differences tone-onset%
-                [HaeON(1) PaeON(1)] = kstest2(offaeroi4podfON,offaeroi5podfON,alpha);%[1 2]
-                [HaeON(2) PaeON(2)] = kstest2(offaeroi4podfON,offaeroi8podfON,alpha);%[1 3]
-                [HaeON(3) PaeON(3)] = kstest2(offaeroi4podfON,offaeroi11podfON,alpha);%[1 4]
-                [HaeON(4) PaeON(4)] = kstest2(offaeroi4podfON,offaeroi16podfON,alpha);%[1 5]
-                [HaeON(5) PaeON(5)] = kstest2(offaeroi4podfON,offaeroi22podfON,alpha);%[1 6]
-                [HaeON(6) PaeON(6)] = kstest2(offaeroi4podfON,offaeroi32podfON,alpha);%[1 7]
-                [HaeON(7) PaeON(7)] = kstest2(offaeroi4podfON,offaeroi45podfON,alpha);%[1 8]
-                [HaeON(8) PaeON(8)] = kstest2(offaeroi5podfON,offaeroi8podfON,alpha);%[2 3]
-                [HaeON(9) PaeON(9)] = kstest2(offaeroi5podfON,offaeroi11podfON,alpha);%[2 4]
-                [HaeON(10) PaeON(10)] = kstest2(offaeroi5podfON,offaeroi16podfON,alpha);%[2 5]
-                [HaeON(11) PaeON(11)] = kstest2(offaeroi5podfON,offaeroi22podfON,alpha);%[2 6]
-                [HaeON(12) PaeON(12)] = kstest2(offaeroi5podfON,offaeroi32podfON,alpha);%[2 7]
-                [HaeON(13) PaeON(13)] = kstest2(offaeroi5podfON,offaeroi45podfON,alpha);%[2 8]
-                [HaeON(14) PaeON(14)] = kstest2(offaeroi8podfON,offaeroi11podfON,alpha);%[3 4]
-                [HaeON(15) PaeON(15)] = kstest2(offaeroi8podfON,offaeroi16podfON,alpha);%[3 5]
-                [HaeON(16) PaeON(16)] = kstest2(offaeroi8podfON,offaeroi22podfON,alpha);%[3 6]
-                [HaeON(17) PaeON(17)] = kstest2(offaeroi8podfON,offaeroi32podfON,alpha);%[3 7]
-                [HaeON(18) PaeON(18)] = kstest2(offaeroi8podfON,offaeroi45podfON,alpha);%[3 8]
-                [HaeON(19) PaeON(19)] = kstest2(offaeroi11podfON,offaeroi16podfON,alpha);%[4 5]
-                [HaeON(20) PaeON(20)] = kstest2(offaeroi11podfON,offaeroi22podfON,alpha);%[4 6]
-                [HaeON(21) PaeON(21)] = kstest2(offaeroi11podfON,offaeroi32podfON,alpha);%[4 7]
-                [HaeON(22) PaeON(22)] = kstest2(offaeroi11podfON,offaeroi45podfON,alpha);%[4 8]
-                [HaeON(23) PaeON(23)] = kstest2(offaeroi16podfON,offaeroi22podfON,alpha);%[5 6]
-                [HaeON(24) PaeON(24)] = kstest2(offaeroi16podfON,offaeroi32podfON,alpha);%[5 7]
-                [HaeON(25) PaeON(25)] = kstest2(offaeroi16podfON,offaeroi45podfON,alpha);%[5 8]
-                [HaeON(26) PaeON(26)] = kstest2(offaeroi22podfON,offaeroi32podfON,alpha);%[6 7]
-                [HaeON(27) PaeON(27)] = kstest2(offaeroi22podfON,offaeroi45podfON,alpha);%[6 8]
-                [HaeON(28) PaeON(28)] = kstest2(offaeroi32podfON,offaeroi45podfON,alpha);%[7 8]
-                AEROIsigCompsON = find(HaeON == 1);
-                AEROIsigValsON = PaeON(AEROIsigCompsON);
-                AEROIsigPairsON = [[1 2];[1 3];[1 4];[1 5];[1 6];[1 7];[1 8];[2 3];[2 4];[2 5];[2 6];[2 7];[2 8];...
-                    [3 4];[3 5];[3 6];[3 7];[3 8];[4 5];[4 6];[4 7];[4 8];[5 6];[5 7];[5 8];[6 7];[6 8];[7 8]];
-                AEROIpairsON = {};
-                for i = 1:length(AEROIsigCompsON)
-                    AEROIpairsON{i} = AEROIsigPairsON(AEROIsigCompsON(i),:);
-                end
-                %checking for statistically significant differences tone-offset%
-                [HaeOFF(1) PaeOFF(1)] = kstest2(offaeroi4podfOFF,offaeroi5podfOFF,alpha);%[1 2]
-                [HaeOFF(2) PaeOFF(2)] = kstest2(offaeroi4podfOFF,offaeroi8podfOFF,alpha);%[1 3]
-                [HaeOFF(3) PaeOFF(3)] = kstest2(offaeroi4podfOFF,offaeroi11podfOFF,alpha);%[1 4]
-                [HaeOFF(4) PaeOFF(4)] = kstest2(offaeroi4podfOFF,offaeroi16podfOFF,alpha);%[1 5]
-                [HaeOFF(5) PaeOFF(5)] = kstest2(offaeroi4podfOFF,offaeroi22podfOFF,alpha);%[1 6]
-                [HaeOFF(6) PaeOFF(6)] = kstest2(offaeroi4podfOFF,offaeroi32podfOFF,alpha);%[1 7]
-                [HaeOFF(7) PaeOFF(7)] = kstest2(offaeroi4podfOFF,offaeroi45podfOFF,alpha);%[1 8]
-                [HaeOFF(8) PaeOFF(8)] = kstest2(offaeroi5podfOFF,offaeroi8podfOFF,alpha);%[2 3]
-                [HaeOFF(9) PaeOFF(9)] = kstest2(offaeroi5podfOFF,offaeroi11podfOFF,alpha);%[2 4]
-                [HaeOFF(10) PaeOFF(10)] = kstest2(offaeroi5podfOFF,offaeroi16podfOFF,alpha);%[2 5]
-                [HaeOFF(11) PaeOFF(11)] = kstest2(offaeroi5podfOFF,offaeroi22podfOFF,alpha);%[2 6]
-                [HaeOFF(12) PaeOFF(12)] = kstest2(offaeroi5podfOFF,offaeroi32podfOFF,alpha);%[2 7]
-                [HaeOFF(13) PaeOFF(13)] = kstest2(offaeroi5podfOFF,offaeroi45podfOFF,alpha);%[2 8]
-                [HaeOFF(14) PaeOFF(14)] = kstest2(offaeroi8podfOFF,offaeroi11podfOFF,alpha);%[3 4]
-                [HaeOFF(15) PaeOFF(15)] = kstest2(offaeroi8podfOFF,offaeroi16podfOFF,alpha);%[3 5]
-                [HaeOFF(16) PaeOFF(16)] = kstest2(offaeroi8podfOFF,offaeroi22podfOFF,alpha);%[3 6]
-                [HaeOFF(17) PaeOFF(17)] = kstest2(offaeroi8podfOFF,offaeroi32podfOFF,alpha);%[3 7]
-                [HaeOFF(18) PaeOFF(18)] = kstest2(offaeroi8podfOFF,offaeroi45podfOFF,alpha);%[3 8]
-                [HaeOFF(19) PaeOFF(19)] = kstest2(offaeroi11podfOFF,offaeroi16podfOFF,alpha);%[4 5]
-                [HaeOFF(20) PaeOFF(20)] = kstest2(offaeroi11podfOFF,offaeroi22podfOFF,alpha);%[4 6]
-                [HaeOFF(21) PaeOFF(21)] = kstest2(offaeroi11podfOFF,offaeroi32podfOFF,alpha);%[4 7]
-                [HaeOFF(22) PaeOFF(22)] = kstest2(offaeroi11podfOFF,offaeroi45podfOFF,alpha);%[4 8]
-                [HaeOFF(23) PaeOFF(23)] = kstest2(offaeroi16podfOFF,offaeroi22podfOFF,alpha);%[5 6]
-                [HaeOFF(24) PaeOFF(24)] = kstest2(offaeroi16podfOFF,offaeroi32podfOFF,alpha);%[5 7]
-                [HaeOFF(25) PaeOFF(25)] = kstest2(offaeroi16podfOFF,offaeroi45podfOFF,alpha);%[5 8]
-                [HaeOFF(26) PaeOFF(26)] = kstest2(offaeroi22podfOFF,offaeroi32podfOFF,alpha);%[6 7]
-                [HaeOFF(27) PaeOFF(27)] = kstest2(offaeroi22podfOFF,offaeroi45podfOFF,alpha);%[6 8]
-                [HaeOFF(28) PaeOFF(28)] = kstest2(offaeroi32podfOFF,offaeroi45podfOFF,alpha);%[7 8]
-                AEROIsigCompsOFF = find(HaeOFF == 1);
-                AEROIsigValsOFF = PaeOFF(AEROIsigCompsOFF);
-                AEROIsigPairsOFF = [[1 2];[1 3];[1 4];[1 5];[1 6];[1 7];[1 8];[2 3];[2 4];[2 5];[2 6];[2 7];[2 8];...
-                    [3 4];[3 5];[3 6];[3 7];[3 8];[4 5];[4 6];[4 7];[4 8];[5 6];[5 7];[5 8];[6 7];[6 8];[7 8]];
-                AEROIpairsOFF = {};
-                for i = 1:length(AEROIsigCompsOFF)
-                    AEROIpairsOFF{i} = AEROIsigPairs(AEROIsigCompsOFF(i),:);
-                end
-
-                %plot ROI-specific average frequency post-onset DEltaF/F%
-                if figON
-                    figure
-                    title(strcat(animal{j},' ',ACregs{f},': offset-tuned AE ROI Average Fluorescence Post-Onset DeltaF/F'))
-                    hold on
-                    b = bar(offBARaeroiPODF(:,:,j))
-            %         title(strcat(animal{j},': Frequency-Specific, Whole-Window Average Post-Onset DeltaF/F'))
-                    hold on
-                %     err = errorbar(BARwinPODFs,BARwinPODFses);
-                    nbars = size(offBARaeroiPODF(:,:,j),2);
-                    x = [];
-                    for n = 1:nbars
-                        x = [x; b(n).XEndPoints];
-                    end
-                    err = errorbar(x',offBARaeroiPODF(:,:,j),offBARaeroiPODFses(:,:,j));
-                    for n = 1:nbars
-                        err(n).Color = [0 0 0];
-                        err(n).LineStyle = 'None';
-                    end
-            %         err = errorbar(BARroiPODFs,BARroiPODFses);
-            %         err.Color = [0 0 0];
-            %         err.LineStyle = 'None';
-                    sigstar(AEROIpairs,AEROIsigVals)
-                    sigstar(AEROIpairsON,AEROIsigValsON)
-                    sigstar(AEROIpairsOFF,AEROIsigValsOFF)
-                    ylabel('Relative DeltaF/F')
-                    xlabel('Frequency (kHz)')
-                    xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
-                    ylim([min(min(offBARaeroiPODF(:,:,j)))-0.05 max(max(offBARaeroiPODF(:,:,j)))+0.1])
-                    hold off
-                    set(gca, 'Box', 'off')
-%                     set(gcf, 'WindowStyle', 'Docked')
-                    figName = strcat(ACregs{f},fig9);
-                    figSave = fullfile(file_loc,animal{j},figName);
-                    savefig(figSave)
-                end
-            end
+%             end
         end
+        
         clearvars -except mousePassive numAnimals animal alpha Freqs dubFreqs... 
         animalExps j f figON ACregs ctl fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9... 
         winTraces winMu winMuON winMuOFF barFreqDist totalFreqDist... 
-        BFROItraces BFROImu BFROImuON BFROImuOFF... 
+        BFROItraces BFROImu BFROImuON BFROImuOFF freqDistSig... 
         BARwinPODFs BARwinPODFses BARroiPODFs BARroiPODFses...
-        onACregTraces onACregMu onACregMuON onACregMuOFF... 
-        offACregTraces offACregMu offACregMuON offACregMuOFF...
-        onBARaeroiPODF onBARaeroiPODFses offBARaeroiPODF offBARaeroiPODFses... 
-        colormap file_loc
+        ACregTraces ACregMu ACregMuON ACregMuOFF... 
+        onBARaeroiPODF onBARaeroiPODFses colormap file_loc distSigPoints...
+        totalACfreqDist BACfreqDist PACfreqDist ACregTntDist
     end
     %% Saving Results (if only one animal) %%
     if numAnimals == 1
@@ -1554,18 +1479,20 @@ for j = 1:numAnimals
         saveFile = fullfile(file_loc,animal{1},saveName);
         save(saveFile,'totalFreqDist','winTraces','winMu','winMuON',...
             'winMuOFF','BFROItraces','BFROImu','BFROImuON','BFROImuOFF',...
-            'onACregTraces','onACregMu','onACregMuON','onACregMuOFF',...
-            'offACregTraces','offACregMu','offACregMuON','offACregMuOFF',...
-            'animalExps');
+            'ACregTraces','ACregMu','ACregMuON','ACregMuOFF','freqDistSig',...
+            'animalExps','totalACfreqDist','BACfreqDist','PACfreqDist');
+    end
+    if figON
+        close all
     end
     clearvars -except numAnimals animal alpha Freqs dubFreqs animalExps j ACregs figON... 
         ctl fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9 winTraces winMu winMuON winMuOFF... 
         BFROItraces BFROImu BFROImuON BFROImuOFF barFreqDist totalFreqDist... 
         BARwinPODFs BARwinPODFses BARroiPODFs BARroiPODFses...
-        onACregTraces onACregMu onACregMuON onACregMuOFF... 
-        offACregTraces offACregMu offACregMuON offACregMuOFF...
-        onBARaeroiPODF onBARaeroiPODFses offBARaeroiPODF offBARaeroiPODFses... 
-        colormap file_loc
+        ACregTraces ACregMu ACregMuON ACregMuOFF... 
+        BARaeroiPODF BARaeroiPODFses colormap file_loc distSigPoints...
+        totalACfreqDist ACregTntDist freqDistSig
+        
 end
 
 %% Multiple animals %%
@@ -1629,6 +1556,8 @@ if numAnimals > 1
     distSigPoints = {[0.85,1.15],[1.85,2.15],[2.85,3.15],[3.85,4.15],...
     [4.85,5.15],[5.85,6.15],[6.85,7.15],[7.85,8.15]};
     figure
+    set(gcf, 'WindowStyle', 'Docked')
+    suptitle('Population: Whole Window')
     b = bar(popFreqDist);
     hold on
     nbars = size(popFreqDist,2);
@@ -1644,16 +1573,105 @@ if numAnimals > 1
     sigstar(distSigPoints,[p4,p5,p8,p11,p16,p22,p32,p45])
     hold off
     legend('"Novice"','"Expert"')
-    title(['Control Population Average BF Tuning'])
-    ylabel('Percent of Pixels')
+    title(['Average BF-Tuning Distribution'])
+    ylabel('Percent of Tuned Pixels')
     ylim([-0.2 1])
     xlim([0 9])
     xlabel('Frequency (kHz)')
     xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
     set(gca, 'Box', 'off')
-%     set(gcf, 'WindowStyle', 'Docked')
     figSave = fullfile(file_loc,ctl,fig1);
     savefig(figSave);
+    
+    %AC region-specific frequency distribution%
+    for i = 1:(length(ACregs)-1)
+        if isnan(nanmean(nanmean(nanmean(totalACfreqDist(:,:,i,:)))))
+            disp(['No ',ACregs{i},' frequency representation in population'])
+            continue
+        else
+            %combining average frequency distribution across animals%
+            %expert
+            bac4exp = squeeze(totalACfreqDist(2,1,i,:));
+            bac5exp = squeeze(totalACfreqDist(2,2,i,:));
+            bac8exp = squeeze(totalACfreqDist(2,3,i,:));
+            bac11exp = squeeze(totalACfreqDist(2,4,i,:));
+            bac16exp = squeeze(totalACfreqDist(2,5,i,:));
+            bac22exp = squeeze(totalACfreqDist(2,6,i,:));
+            bac32exp = squeeze(totalACfreqDist(2,7,i,:));
+            bac45exp = squeeze(totalACfreqDist(2,8,i,:));
+            %passive
+            pac4exp = squeeze(totalACfreqDist(1,1,i,:));
+            pac5exp = squeeze(totalACfreqDist(1,2,i,:));
+            pac8exp = squeeze(totalACfreqDist(1,3,i,:));
+            pac11exp = squeeze(totalACfreqDist(1,4,i,:));
+            pac16exp = squeeze(totalACfreqDist(1,5,i,:));
+            pac22exp = squeeze(totalACfreqDist(1,6,i,:));
+            pac32exp = squeeze(totalACfreqDist(1,7,i,:));
+            pac45exp = squeeze(totalACfreqDist(1,8,i,:));
+            %standard error%
+            %expert
+            bac4expSE = nanstd(bac4exp)/sqrt(numAnimals);
+            bac5expSE = nanstd(bac5exp)/sqrt(numAnimals);
+            bac8expSE = nanstd(bac8exp)/sqrt(numAnimals);
+            bac11expSE = nanstd(bac11exp)/sqrt(numAnimals);
+            bac16expSE = nanstd(bac16exp)/sqrt(numAnimals);
+            bac22expSE = nanstd(bac22exp)/sqrt(numAnimals);
+            bac32expSE = nanstd(bac32exp)/sqrt(numAnimals);
+            bac45expSE = nanstd(bac45exp)/sqrt(numAnimals);
+            %passive
+            pac4expSE = nanstd(pac4exp)/sqrt(numAnimals);
+            pac5expSE = nanstd(pac5exp)/sqrt(numAnimals);
+            pac8expSE = nanstd(pac8exp)/sqrt(numAnimals);
+            pac11expSE = nanstd(pac11exp)/sqrt(numAnimals);
+            pac16expSE = nanstd(pac16exp)/sqrt(numAnimals);
+            pac22expSE = nanstd(pac22exp)/sqrt(numAnimals);
+            pac32expSE = nanstd(pac32exp)/sqrt(numAnimals);
+            pac45expSE = nanstd(pac45exp)/sqrt(numAnimals);
+            %checking for statistically significant differences
+            [Hac4 Pac4] = kstest2(bac4exp,pac4exp,alpha);
+            [Hac5 Pac5] = kstest2(bac5exp,pac5exp,alpha);
+            [Hac8 Pac8] = kstest2(bac8exp,pac8exp,alpha);
+            [Hac11 Pac11] = kstest2(bac11exp,pac11exp,alpha);
+            [Hac16 Pac16] = kstest2(bac16exp,pac16exp,alpha);
+            [Hac22 Pac22] = kstest2(bac22exp,pac22exp,alpha);
+            [Hac32 Pac32] = kstest2(bac32exp,pac32exp,alpha);
+            [Hac45 Pac45] = kstest2(bac45exp,pac45exp,alpha);
+            %combining values for plotting
+            popACfreqDist = nanmean(totalACfreqDist(:,:,i,:),4)';
+            popACfreqDistSE = [pac4expSE bac4expSE; pac5expSE bac5expSE;...
+                pac8expSE bac8expSE; pac11expSE bac11expSE; pac16expSE bac16expSE;...
+                pac22expSE bac22expSE; pac32expSE bac32expSE; pac45expSE bac45expSE];
+            figure
+            set(gcf, 'WindowStyle', 'Docked')
+            suptitle(['Population: ',ACregs{i}])
+            popACfreqVals = [];
+            for n = 1:length(popACfreqDist)
+                popACfreqVals = [popACfreqVals popACfreqDist(n,1) popACfreqDist(n,2)];
+            end
+            b = bar(popACfreqDist);
+            nbars = size(popACfreqDist,2);
+            x = [];
+            for n = 1:nbars
+                x = [x; b(n).XEndPoints];
+            end
+            legend('"Novice"','"Expert"','AutoUpdate','off')
+            hold on
+            title(['"Novice" vs. "Expert" ',ACregs{i},' BF-Tuning Distribution'])
+            xticks([1:8])
+            xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
+            xlabel('Frequency (kHz)')
+            ylabel('Percent of Tuned Pixels')
+            err = errorbar(x',popACfreqDist,2*popACfreqDistSE);
+            for n = 1:nbars
+                err(n).Color = [0 0 0];
+                err(n).LineStyle = 'None';
+            end
+            sigstar(distSigPoints,[Pac4,Pac5,Pac8,Pac11,Pac16,Pac22,Pac32,Pac45]);
+            set(gca, 'Box', 'off')
+            figSave2 = fullfile(file_loc,ctl,[ACregs{i},fig2]);
+            savefig(figSave2);
+        end
+    end
     
     %%% Whole Window Analysis %%%
     
@@ -1698,82 +1716,126 @@ if numAnimals > 1
     popWin45traceSE = nanstd(popWin45traces')/sqrt(sum(animalExps));
     
     %plot average traces%
+    onBar = repmat((min(min(min(min(winTraces))))-0.05),1,5);
+    offBar = repmat((min(min(min(min(winTraces))))-0.05),1,5);
+    onIdx = [4:8];
+    offIdx = [8:12];
     figure                                                                 %each trace shaded by the error bar = 2 SEM of all experiment average traces for specific frequency
-    suptitle(['Population Frequency-Specific, Whole-Window Average Fluorescence Traces'])
+    set(gcf, 'WindowStyle', 'Docked')
+    suptitle(['Population: Whole-Window Frequency-Specific Average Fluorescence Traces'])
     subplot(2,4,1)
+    plot(onIdx,onBar,'k','LineWidth',3)
+    hold on
+    plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+    legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
     shadedErrorBar([1:18],popWin4trace,2*popWin4traceSE,{'Color',colormap(1,:)},1)
+    hold off
     title(['4 kHz'])
-    ylim([min(min(min(min(winTraces)))) max(max(max(max(winTraces))))])
-    ylabel('Relative DeltaF/F')
+    ylim([min(min(min(min(winTraces))))-0.1 max(max(max(max(winTraces))))+0.2])
+    ylabel('Normalized DeltaF/F')
     xlabel('Time (s)')
     xticks([4,8,12,16])
     xticklabels({'1','2','3','4'})
     set(gca, 'Box', 'off')
     subplot(2,4,2)
+    plot(onIdx,onBar,'k','LineWidth',3)
+    hold on
+    plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+    legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
     shadedErrorBar([1:18],popWin5trace,2*popWin5traceSE,{'Color',colormap(2,:)},1)
+    hold off
     title(['5.6 kHz'])
-    ylim([min(min(min(min(winTraces)))) max(max(max(max(winTraces))))])
-    ylabel('Relative DeltaF/F')
+    ylim([min(min(min(min(winTraces))))-0.1 max(max(max(max(winTraces))))+0.2])
+    ylabel('Normalized DeltaF/F')
     xlabel('Time (s)')
     xticks([4,8,12,16])
     xticklabels({'1','2','3','4'})
     set(gca, 'Box', 'off')
     subplot(2,4,3)
+    plot(onIdx,onBar,'k','LineWidth',3)
+    hold on
+    plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+    legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
     shadedErrorBar([1:18],popWin8trace,2*popWin8traceSE,{'Color',colormap(3,:)},1)
+    hold off
     title(['8 kHz'])
-    ylim([min(min(min(min(winTraces)))) max(max(max(max(winTraces))))])
-    ylabel('Relative DeltaF/F')
+    ylim([min(min(min(min(winTraces))))-0.1 max(max(max(max(winTraces))))+0.2])
+    ylabel('Normalized DeltaF/F')
     xlabel('Time (s)')
     xticks([4,8,12,16])
     xticklabels({'1','2','3','4'})
     set(gca, 'Box', 'off')
     subplot(2,4,4)
+    plot(onIdx,onBar,'k','LineWidth',3)
+    hold on
+    plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+    legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
     shadedErrorBar([1:18],popWin11trace,2*popWin11traceSE,{'Color',colormap(4,:)},1)
+    hold off
     title(['11.3 kHz'])
-    ylim([min(min(min(min(winTraces)))) max(max(max(max(winTraces))))])
-    ylabel('Relative DeltaF/F')
+    ylim([min(min(min(min(winTraces))))-0.1 max(max(max(max(winTraces))))+0.2])
+    ylabel('Normalized DeltaF/F')
     xlabel('Time (s)')
     xticks([4,8,12,16])
     xticklabels({'1','2','3','4'})
     set(gca, 'Box', 'off')
     subplot(2,4,5)
+    plot(onIdx,onBar,'k','LineWidth',3)
+    hold on
+    plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+    legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
     shadedErrorBar([1:18],popWin16trace,2*popWin16traceSE,{'Color',colormap(5,:)},1)
+    hold off
     title(['16 kHz'])
-    ylim([min(min(min(min(winTraces)))) max(max(max(max(winTraces))))])
-    ylabel('Relative DeltaF/F')
+    ylim([min(min(min(min(winTraces))))-0.1 max(max(max(max(winTraces))))+0.2])
+    ylabel('Normalized DeltaF/F')
     xlabel('Time (s)')
     xticks([4,8,12,16])
     xticklabels({'1','2','3','4'})
     set(gca, 'Box', 'off')
     subplot(2,4,6)
+    plot(onIdx,onBar,'k','LineWidth',3)
+    hold on
+    plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+    legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
     shadedErrorBar([1:18],popWin22trace,2*popWin22traceSE,{'Color',colormap(6,:)},1)
+    hold off
     title(['22.6 kHz'])
-    ylim([min(min(min(min(winTraces)))) max(max(max(max(winTraces))))])
-    ylabel('Relative DeltaF/F')
+    ylim([min(min(min(min(winTraces))))-0.1 max(max(max(max(winTraces))))+0.2])
+    ylabel('Normalized DeltaF/F')
     xlabel('Time (s)')
     xticks([4,8,12,16])
     xticklabels({'1','2','3','4'})
     set(gca, 'Box', 'off')
     subplot(2,4,7)
+    plot(onIdx,onBar,'k','LineWidth',3)
+    hold on
+    plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+    legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
     shadedErrorBar([1:18],popWin32trace,2*popWin32traceSE,{'Color',colormap(7,:)},1)
+    hold off
     title(['32 kHz'])
-    ylim([min(min(min(min(winTraces)))) max(max(max(max(winTraces))))])
-    ylabel('Relative DeltaF/F')
+    ylim([min(min(min(min(winTraces))))-0.1 max(max(max(max(winTraces))))+0.2])
+    ylabel('Normalized DeltaF/F')
     xlabel('Time (s)')
     xticks([4,8,12,16])
     xticklabels({'1','2','3','4'})
     set(gca, 'Box', 'off')
     subplot(2,4,8)
+    plot(onIdx,onBar,'k','LineWidth',3)
+    hold on
+    plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+    legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
     shadedErrorBar([1:18],popWin45trace,2*popWin45traceSE,{'Color',colormap(8,:)},1)
+    hold off
     title(['45 kHz'])
-    ylim([min(min(min(min(winTraces)))) max(max(max(max(winTraces))))])
-    ylabel('Relative DeltaF/F')
+    ylim([min(min(min(min(winTraces))))-0.1 max(max(max(max(winTraces))))+0.2])
+    ylabel('Normalized DeltaF/F')
     xlabel('Time (s)')
     xticks([4,8,12,16])
     xticklabels({'1','2','3','4'})
     set(gca, 'Box', 'off')
-%     set(gcf, 'WindowStyle', 'Docked')
-    figSave = fullfile(file_loc,ctl,fig2);
+    figSave = fullfile(file_loc,ctl,fig3);
     savefig(figSave);
     
     %calculate average post-onset DeltaF/F%
@@ -1906,8 +1968,10 @@ if numAnimals > 1
     
     %plot average post-onset DeltaF/F%
     figure
-    b = bar(popWinMus)
-    title(['Population Frequency-Specific, Whole-Window Average Post-Onset DeltaF/F'])
+    set(gcf, 'WindowStyle', 'Docked')
+    suptitle('Population: Whole Window')
+    b = bar(popWinMus);
+    title(['Frequency-Specific Average Post-Onset DeltaF/F'])
     hold on
     nbars = size(popWinMus,2);
     x = [];
@@ -1919,17 +1983,13 @@ if numAnimals > 1
         err(n).Color = [0 0 0];
         err(n).LineStyle = 'None';
     end
-%     err = errorbar(popWinMus,popWinMuSE);
-%     err.Color = [0 0 0];
-%     err.LineStyle = 'None';
-    ylabel('Relative DeltaF/F')
+    ylabel('Normalized DeltaF/F')
     xlabel('Frequency (kHz)')
     xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
     ylim([min(min(popWinMus))-0.1 max(max(popWinMus))+0.1])
     hold off
     set(gca, 'Box', 'off')
-%     set(gcf, 'WindowStyle', 'Docked')
-    figSave = fullfile(file_loc,ctl,fig3);
+    figSave = fullfile(file_loc,ctl,fig4);
     savefig(figSave);
 
     %%% Tonotopic BF ROI Analysis %%%
@@ -2034,82 +2094,131 @@ if numAnimals > 1
         popROI45traceSE = nanstd(popROI45traces{f}')/sqrt(sum(animalExps));
         
         %plot average frequency-specific BF ROI traces%
+        if isnan(nanmean(popROItraceMin))
+            onBar = repmat([-0.1],1,5);
+            offBar = repmat([-0.1],1,5);
+        else
+            onBar = repmat((min(popROItraceMin)-0.05),1,5);
+            offBar = repmat((min(popROItraceMin)-0.05),1,5);
+        end
+        onIdx = [4:8];
+        offIdx = [8:12];
         figure                                                                 %each trace shaded by the error bar = 2 SEM of all experiment average traces for specific frequency
+        set(gcf, 'WindowStyle', 'Docked')
         suptitle(['Population ', Freqs{f}, ' ROI Average Fluorescence Traces'])
         subplot(2,4,1)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],popROI4trace,2*popROI4traceSE,{'Color',colormap(1,:)},1)
+        hold off
         title(['4 kHz'])
         ylim([min(popROItraceMin)-0.1 max(popROItraceMax)+0.1])
-        ylabel('Relative DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,2)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],popROI5trace,2*popROI5traceSE,{'Color',colormap(2,:)},1)
+        hold off
         title(['5.6 kHz'])
         ylim([min(popROItraceMin)-0.1 max(popROItraceMax)+0.1])
-        ylabel('Relative DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,3)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],popROI8trace,2*popROI8traceSE,{'Color',colormap(3,:)},1)
+        hold off
         title(['8 kHz'])
         ylim([min(popROItraceMin)-0.1 max(popROItraceMax)+0.1])
-        ylabel('Relative DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,4)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],popROI11trace,2*popROI11traceSE,{'Color',colormap(4,:)},1)
+        hold off
         title(['11.3 kHz'])
         ylim([min(popROItraceMin)-0.1 max(popROItraceMax)+0.1])
-        ylabel('Relative DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,5)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],popROI16trace,2*popROI16traceSE,{'Color',colormap(5,:)},1)
+        hold off
         title(['16 kHz'])
         ylim([min(popROItraceMin)-0.1 max(popROItraceMax)+0.1])
-        ylabel('Relative DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,6)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],popROI22trace,2*popROI22traceSE,{'Color',colormap(6,:)},1)
+        hold off
         title(['22.6 kHz'])
         ylim([min(popROItraceMin)-0.1 max(popROItraceMax)+0.1])
-        ylabel('Relative DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,7)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],popROI32trace,2*popROI32traceSE,{'Color',colormap(7,:)},1)
+        hold off
         title(['32 kHz'])
         ylim([min(popROItraceMin)-0.1 max(popROItraceMax)+0.1])
-        ylabel('Relative DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
         subplot(2,4,8)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
         shadedErrorBar([1:18],popROI45trace,2*popROI45traceSE,{'Color',colormap(8,:)},1)
+        hold off
         title(['45 kHz'])
         ylim([min(popROItraceMin)-0.1 max(popROItraceMax)+0.1])
-        ylabel('Relative DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         xlabel('Time (s)')
         xticks([4,8,12,16])
         xticklabels({'1','2','3','4'})
         set(gca, 'Box', 'off')
-%         set(gcf, 'WindowStyle', 'Docked')
-        figSave = fullfile(file_loc,ctl,fig4{f});
+        figSave = fullfile(file_loc,ctl,fig5{f});
         savefig(figSave);
         
         %average PODF calculations%
@@ -2186,12 +2295,12 @@ if numAnimals > 1
         
         %plot average frequency-specific BF ROI PODF%
         figure
-        title(['Population ', Freqs{f}, ' ROI Average Fluorescence Post-Onset DeltaF/F'])
+        set(gcf, 'WindowStyle', 'Docked')
+        title(['Population: ', Freqs{f}, ' ROI'])
         hold on
-        b = bar(BARpopROImus(:,:,f))
-%         title(strcat(animal{j},': Frequency-Specific, Whole-Window Average Post-Onset DeltaF/F'))
+        b = bar(BARpopROImus(:,:,f));
+        title('Frequency-Specific Average Post-Onset DeltaF/F')
         hold on
-    %     err = errorbar(BARwinPODFs,BARwinPODFses);
         nbars = size(BARpopROImus(:,:,f),2);
         x = [];
         for n = 1:nbars
@@ -2208,14 +2317,13 @@ if numAnimals > 1
 %         sigstar(ROIpairs,ROIsigVals)
 %         sigstar(ROIpairsON,ROIsigValsON)
 %         sigstar(ROIpairsOFF,ROIsigValsOFF)
-        ylabel('Relative DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         xlabel('Frequency (kHz)')
         xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
         ylim([min(min(BARpopROImus(:,:,f)))-0.05 max(max(BARpopROImus(:,:,f)))+0.1])
         hold off
         set(gca, 'Box', 'off')
-%         set(gcf, 'WindowStyle', 'Docked')
-        figSave = fullfile(file_loc,ctl,fig5{f});
+        figSave = fullfile(file_loc,ctl,fig6{f});
         savefig(figSave);
     end
     
@@ -2223,257 +2331,268 @@ if numAnimals > 1
     
     %setting variables%
     %average traces
-    popAEROI4traces = cell(length(ACregs),2);
-    popAEROI5traces = cell(length(ACregs),2);
-    popAEROI8traces = cell(length(ACregs),2);
-    popAEROI11traces = cell(length(ACregs),2);
-    popAEROI16traces = cell(length(ACregs),2);
-    popAEROI22traces = cell(length(ACregs),2);
-    popAEROI32traces = cell(length(ACregs),2);
-    popAEROI45traces = cell(length(ACregs),2);
+    popAEROI4traces = cell(length(ACregs),1);
+    popAEROI5traces = cell(length(ACregs),1);
+    popAEROI8traces = cell(length(ACregs),1);
+    popAEROI11traces = cell(length(ACregs),1);
+    popAEROI16traces = cell(length(ACregs),1);
+    popAEROI22traces = cell(length(ACregs),1);
+    popAEROI32traces = cell(length(ACregs),1);
+    popAEROI45traces = cell(length(ACregs),1);
     %average PODF
-    popAEROI4mus = cell(length(ACregs),2);
-    popAEROI5mus = cell(length(ACregs),2);
-    popAEROI8mus = cell(length(ACregs),2);
-    popAEROI11mus = cell(length(ACregs),2);
-    popAEROI16mus = cell(length(ACregs),2);
-    popAEROI22mus = cell(length(ACregs),2);
-    popAEROI32mus = cell(length(ACregs),2);
-    popAEROI45mus = cell(length(ACregs),2);
-    popAEROI4musON = cell(length(ACregs),2);
-    popAEROI5musON = cell(length(ACregs),2);
-    popAEROI8musON = cell(length(ACregs),2);
-    popAEROI11musON = cell(length(ACregs),2);
-    popAEROI16musON = cell(length(ACregs),2);
-    popAEROI22musON = cell(length(ACregs),2);
-    popAEROI32musON = cell(length(ACregs),2);
-    popAEROI45musON = cell(length(ACregs),2);
-    popAEROI4musOFF = cell(length(ACregs),2);
-    popAEROI5musOFF = cell(length(ACregs),2);
-    popAEROI8musOFF = cell(length(ACregs),2);
-    popAEROI11musOFF = cell(length(ACregs),2);
-    popAEROI16musOFF = cell(length(ACregs),2);
-    popAEROI22musOFF = cell(length(ACregs),2);
-    popAEROI32musOFF = cell(length(ACregs),2);
-    popAEROI45musOFF = cell(length(ACregs),2);
+    popAEROI4mus = cell(length(ACregs),1);
+    popAEROI5mus = cell(length(ACregs),1);
+    popAEROI8mus = cell(length(ACregs),1);
+    popAEROI11mus = cell(length(ACregs),1);
+    popAEROI16mus = cell(length(ACregs),1);
+    popAEROI22mus = cell(length(ACregs),1);
+    popAEROI32mus = cell(length(ACregs),1);
+    popAEROI45mus = cell(length(ACregs),1);
+    popAEROI4musON = cell(length(ACregs),1);
+    popAEROI5musON = cell(length(ACregs),1);
+    popAEROI8musON = cell(length(ACregs),1);
+    popAEROI11musON = cell(length(ACregs),1);
+    popAEROI16musON = cell(length(ACregs),1);
+    popAEROI22musON = cell(length(ACregs),1);
+    popAEROI32musON = cell(length(ACregs),1);
+    popAEROI45musON = cell(length(ACregs),1);
+    popAEROI4musOFF = cell(length(ACregs),1);
+    popAEROI5musOFF = cell(length(ACregs),1);
+    popAEROI8musOFF = cell(length(ACregs),1);
+    popAEROI11musOFF = cell(length(ACregs),1);
+    popAEROI16musOFF = cell(length(ACregs),1);
+    popAEROI22musOFF = cell(length(ACregs),1);
+    popAEROI32musOFF = cell(length(ACregs),1);
+    popAEROI45musOFF = cell(length(ACregs),1);
     for f = 1:length(ACregs)
         %combining population vairables%
         for i = 1:numAnimals
-            onCheck = ~isempty(onACregTraces{f,i});
-            if onCheck
-                popAEROI4traces{f,1} = [popAEROI4traces{f,1} squeeze(onACregTraces{f,i}(:,:,1))];
-                popAEROI5traces{f,1} = [popAEROI5traces{f,1} squeeze(onACregTraces{f,i}(:,:,2))];
-                popAEROI8traces{f,1} = [popAEROI8traces{f,1} squeeze(onACregTraces{f,i}(:,:,3))];
-                popAEROI11traces{f,1} = [popAEROI11traces{f,1} squeeze(onACregTraces{f,i}(:,:,4))];
-                popAEROI16traces{f,1} = [popAEROI16traces{f,1} squeeze(onACregTraces{f,i}(:,:,5))];
-                popAEROI22traces{f,1} = [popAEROI22traces{f,1} squeeze(onACregTraces{f,i}(:,:,6))];
-                popAEROI32traces{f,1} = [popAEROI32traces{f,1} squeeze(onACregTraces{f,i}(:,:,7))];
-                popAEROI45traces{f,1} = [popAEROI45traces{f,1} squeeze(onACregTraces{f,i}(:,:,8))];
+            check = ~isempty(ACregTraces{f,i});
+            if check
+                popAEROI4traces{f,1} = [popAEROI4traces{f,1} squeeze(ACregTraces{f,i}(:,1,:))];
+                popAEROI5traces{f,1} = [popAEROI5traces{f,1} squeeze(ACregTraces{f,i}(:,2,:))];
+                popAEROI8traces{f,1} = [popAEROI8traces{f,1} squeeze(ACregTraces{f,i}(:,3,:))];
+                popAEROI11traces{f,1} = [popAEROI11traces{f,1} squeeze(ACregTraces{f,i}(:,4,:))];
+                popAEROI16traces{f,1} = [popAEROI16traces{f,1} squeeze(ACregTraces{f,i}(:,5,:))];
+                popAEROI22traces{f,1} = [popAEROI22traces{f,1} squeeze(ACregTraces{f,i}(:,6,:))];
+                popAEROI32traces{f,1} = [popAEROI32traces{f,1} squeeze(ACregTraces{f,i}(:,7,:))];
+                popAEROI45traces{f,1} = [popAEROI45traces{f,1} squeeze(ACregTraces{f,i}(:,8,:))];
                 %post-onset all
-                popAEROI4mus{f,1} = [popAEROI4mus{f,1}; squeeze(onACregMu{f,i}(:,1))];
-                popAEROI5mus{f,1} = [popAEROI5mus{f,1}; squeeze(onACregMu{f,i}(:,2))];
-                popAEROI8mus{f,1} = [popAEROI8mus{f,1}; squeeze(onACregMu{f,i}(:,3))];
-                popAEROI11mus{f,1} = [popAEROI11mus{f,1}; squeeze(onACregMu{f,i}(:,4))];
-                popAEROI16mus{f,1} = [popAEROI16mus{f,1}; squeeze(onACregMu{f,i}(:,5))];
-                popAEROI22mus{f,1} = [popAEROI22mus{f,1}; squeeze(onACregMu{f,i}(:,6))];
-                popAEROI32mus{f,1} = [popAEROI32mus{f,1}; squeeze(onACregMu{f,i}(:,7))];
-                popAEROI45mus{f,1} = [popAEROI45mus{f,1}; squeeze(onACregMu{f,i}(:,8))];
+                popAEROI4mus{f,1} = [popAEROI4mus{f,1}; squeeze(ACregMu{f,i}(:,1))];
+                popAEROI5mus{f,1} = [popAEROI5mus{f,1}; squeeze(ACregMu{f,i}(:,2))];
+                popAEROI8mus{f,1} = [popAEROI8mus{f,1}; squeeze(ACregMu{f,i}(:,3))];
+                popAEROI11mus{f,1} = [popAEROI11mus{f,1}; squeeze(ACregMu{f,i}(:,4))];
+                popAEROI16mus{f,1} = [popAEROI16mus{f,1}; squeeze(ACregMu{f,i}(:,5))];
+                popAEROI22mus{f,1} = [popAEROI22mus{f,1}; squeeze(ACregMu{f,i}(:,6))];
+                popAEROI32mus{f,1} = [popAEROI32mus{f,1}; squeeze(ACregMu{f,i}(:,7))];
+                popAEROI45mus{f,1} = [popAEROI45mus{f,1}; squeeze(ACregMu{f,i}(:,8))];
                 %tone-onset
-                popAEROI4musON{f,1} = [popAEROI4musON{f,1}; squeeze(onACregMuON{f,i}(:,1))];
-                popAEROI5musON{f,1} = [popAEROI5musON{f,1}; squeeze(onACregMuON{f,i}(:,2))];
-                popAEROI8musON{f,1} = [popAEROI8musON{f,1}; squeeze(onACregMuON{f,i}(:,3))];
-                popAEROI11musON{f,1} = [popAEROI11musON{f,1}; squeeze(onACregMuON{f,i}(:,4))];
-                popAEROI16musON{f,1} = [popAEROI16musON{f,1}; squeeze(onACregMuON{f,i}(:,5))];
-                popAEROI22musON{f,1} = [popAEROI22musON{f,1}; squeeze(onACregMuON{f,i}(:,6))];
-                popAEROI32musON{f,1} = [popAEROI32musON{f,1}; squeeze(onACregMuON{f,i}(:,7))];
-                popAEROI45musON{f,1} = [popAEROI45musON{f,1}; squeeze(onACregMuON{f,i}(:,8))];
+                popAEROI4musON{f,1} = [popAEROI4musON{f,1}; squeeze(ACregMuON{f,i}(:,1))];
+                popAEROI5musON{f,1} = [popAEROI5musON{f,1}; squeeze(ACregMuON{f,i}(:,2))];
+                popAEROI8musON{f,1} = [popAEROI8musON{f,1}; squeeze(ACregMuON{f,i}(:,3))];
+                popAEROI11musON{f,1} = [popAEROI11musON{f,1}; squeeze(ACregMuON{f,i}(:,4))];
+                popAEROI16musON{f,1} = [popAEROI16musON{f,1}; squeeze(ACregMuON{f,i}(:,5))];
+                popAEROI22musON{f,1} = [popAEROI22musON{f,1}; squeeze(ACregMuON{f,i}(:,6))];
+                popAEROI32musON{f,1} = [popAEROI32musON{f,1}; squeeze(ACregMuON{f,i}(:,7))];
+                popAEROI45musON{f,1} = [popAEROI45musON{f,1}; squeeze(ACregMuON{f,i}(:,8))];
                 %tone-offset
-                popAEROI4musOFF{f,1} = [popAEROI4musOFF{f,1}; squeeze(onACregMuOFF{f,i}(:,1))];
-                popAEROI5musOFF{f,1} = [popAEROI5musOFF{f,1}; squeeze(onACregMuOFF{f,i}(:,2))];
-                popAEROI8musOFF{f,1} = [popAEROI8musOFF{f,1}; squeeze(onACregMuOFF{f,i}(:,3))];
-                popAEROI11musOFF{f,1} = [popAEROI11musOFF{f,1}; squeeze(onACregMuOFF{f,i}(:,4))];
-                popAEROI16musOFF{f,1} = [popAEROI16musOFF{f,1}; squeeze(onACregMuOFF{f,i}(:,5))];
-                popAEROI22musOFF{f,1} = [popAEROI22musOFF{f,1}; squeeze(onACregMuOFF{f,i}(:,6))];
-                popAEROI32musOFF{f,1} = [popAEROI32musOFF{f,1}; squeeze(onACregMuOFF{f,i}(:,7))];
-                popAEROI45musOFF{f,1} = [popAEROI45musOFF{f,1}; squeeze(onACregMuOFF{f,i}(:,8))];
-            end
-            offCheck = ~isempty(offACregTraces{f,i});
-            if offCheck
-                popAEROI4traces{f,2} = [popAEROI4traces{f,2} squeeze(offACregTraces{f,i}(:,:,1))];
-                popAEROI5traces{f,2} = [popAEROI5traces{f,2} squeeze(offACregTraces{f,i}(:,:,2))];
-                popAEROI8traces{f,2} = [popAEROI8traces{f,2} squeeze(offACregTraces{f,i}(:,:,3))];
-                popAEROI11traces{f,2} = [popAEROI11traces{f,2} squeeze(offACregTraces{f,i}(:,:,4))];
-                popAEROI16traces{f,2} = [popAEROI16traces{f,2} squeeze(offACregTraces{f,i}(:,:,5))];
-                popAEROI22traces{f,2} = [popAEROI22traces{f,2} squeeze(offACregTraces{f,i}(:,:,6))];
-                popAEROI32traces{f,2} = [popAEROI32traces{f,2} squeeze(offACregTraces{f,i}(:,:,7))];
-                popAEROI45traces{f,2} = [popAEROI45traces{f,2} squeeze(offACregTraces{f,i}(:,:,8))];
-                %post-onset all
-                popAEROI4mus{f,2} = [popAEROI4mus{f,2}; squeeze(offACregMu{f,i}(:,1))];
-                popAEROI5mus{f,2} = [popAEROI5mus{f,2}; squeeze(offACregMu{f,i}(:,2))];
-                popAEROI8mus{f,2} = [popAEROI8mus{f,2}; squeeze(offACregMu{f,i}(:,3))];
-                popAEROI11mus{f,2} = [popAEROI11mus{f,2}; squeeze(offACregMu{f,i}(:,4))];
-                popAEROI16mus{f,2} = [popAEROI16mus{f,2}; squeeze(offACregMu{f,i}(:,5))];
-                popAEROI22mus{f,2} = [popAEROI22mus{f,2}; squeeze(offACregMu{f,i}(:,6))];
-                popAEROI32mus{f,2} = [popAEROI32mus{f,2}; squeeze(offACregMu{f,i}(:,7))];
-                popAEROI45mus{f,2} = [popAEROI45mus{f,2}; squeeze(offACregMu{f,i}(:,8))];
-                %tone-onset
-                popAEROI4musON{f,2} = [popAEROI4musON{f,2}; squeeze(offACregMuON{f,i}(:,1))];
-                popAEROI5musON{f,2} = [popAEROI5musON{f,2}; squeeze(offACregMuON{f,i}(:,2))];
-                popAEROI8musON{f,2} = [popAEROI8musON{f,2}; squeeze(offACregMuON{f,i}(:,3))];
-                popAEROI11musON{f,2} = [popAEROI11musON{f,2}; squeeze(offACregMuON{f,i}(:,4))];
-                popAEROI16musON{f,2} = [popAEROI16musON{f,2}; squeeze(offACregMuON{f,i}(:,5))];
-                popAEROI22musON{f,2} = [popAEROI22musON{f,2}; squeeze(offACregMuON{f,i}(:,6))];
-                popAEROI32musON{f,2} = [popAEROI32musON{f,2}; squeeze(offACregMuON{f,i}(:,7))];
-                popAEROI45musON{f,2} = [popAEROI45musON{f,2}; squeeze(offACregMuON{f,i}(:,8))];
-                %tone-offset
-                popAEROI4musOFF{f,2} = [popAEROI4musOFF{f,2}; squeeze(offACregMuOFF{f,i}(:,1))];
-                popAEROI5musOFF{f,2} = [popAEROI5musOFF{f,2}; squeeze(offACregMuOFF{f,i}(:,2))];
-                popAEROI8musOFF{f,2} = [popAEROI8musOFF{f,2}; squeeze(offACregMuOFF{f,i}(:,3))];
-                popAEROI11musOFF{f,2} = [popAEROI11musOFF{f,2}; squeeze(offACregMuOFF{f,i}(:,4))];
-                popAEROI16musOFF{f,2} = [popAEROI16musOFF{f,2}; squeeze(offACregMuOFF{f,i}(:,5))];
-                popAEROI22musOFF{f,2} = [popAEROI22musOFF{f,2}; squeeze(offACregMuOFF{f,i}(:,6))];
-                popAEROI32musOFF{f,2} = [popAEROI32musOFF{f,2}; squeeze(offACregMuOFF{f,i}(:,7))];
-                popAEROI45musOFF{f,2} = [popAEROI45musOFF{f,2}; squeeze(offACregMuOFF{f,i}(:,8))];
+                popAEROI4musOFF{f,1} = [popAEROI4musOFF{f,1}; squeeze(ACregMuOFF{f,i}(:,1))];
+                popAEROI5musOFF{f,1} = [popAEROI5musOFF{f,1}; squeeze(ACregMuOFF{f,i}(:,2))];
+                popAEROI8musOFF{f,1} = [popAEROI8musOFF{f,1}; squeeze(ACregMuOFF{f,i}(:,3))];
+                popAEROI11musOFF{f,1} = [popAEROI11musOFF{f,1}; squeeze(ACregMuOFF{f,i}(:,4))];
+                popAEROI16musOFF{f,1} = [popAEROI16musOFF{f,1}; squeeze(ACregMuOFF{f,i}(:,5))];
+                popAEROI22musOFF{f,1} = [popAEROI22musOFF{f,1}; squeeze(ACregMuOFF{f,i}(:,6))];
+                popAEROI32musOFF{f,1} = [popAEROI32musOFF{f,1}; squeeze(ACregMuOFF{f,i}(:,7))];
+                popAEROI45musOFF{f,1} = [popAEROI45musOFF{f,1}; squeeze(ACregMuOFF{f,i}(:,8))];
             end
         end
         
-        tempTune = {'onset','offset'};
-        for i = 1:2
-            if ~isempty(popAEROI4traces{f,i})
+%         tempTune = {'onset','offset'};
+%         for i = 1:2
+            if ~isempty(popAEROI4traces{f,1})
                 %calculate number of AE ROIs tuned to current frequency%
-                numAEROIs = size(popAEROI4traces{f,i},2);
+                numExps = size(popAEROI4traces{f,1},2);
                 %average trace calculations%
-                popAEROI4trace = nanmean(popAEROI4traces{f,i},2);
-                popAEROI5trace = nanmean(popAEROI5traces{f,i},2);
-                popAEROI8trace = nanmean(popAEROI8traces{f,i},2);
-                popAEROI11trace = nanmean(popAEROI11traces{f,i},2);
-                popAEROI16trace = nanmean(popAEROI16traces{f,i},2);
-                popAEROI22trace = nanmean(popAEROI22traces{f,i},2);
-                popAEROI32trace = nanmean(popAEROI32traces{f,i},2);
-                popAEROI45trace = nanmean(popAEROI45traces{f,i},2);
+                popAEROI4trace = nanmean(popAEROI4traces{f,1},2);
+                popAEROI5trace = nanmean(popAEROI5traces{f,1},2);
+                popAEROI8trace = nanmean(popAEROI8traces{f,1},2);
+                popAEROI11trace = nanmean(popAEROI11traces{f,1},2);
+                popAEROI16trace = nanmean(popAEROI16traces{f,1},2);
+                popAEROI22trace = nanmean(popAEROI22traces{f,1},2);
+                popAEROI32trace = nanmean(popAEROI32traces{f,1},2);
+                popAEROI45trace = nanmean(popAEROI45traces{f,1},2);
                 popAEROItraceMax = [max(popAEROI4trace) max(popAEROI5trace) max(popAEROI8trace) max(popAEROI11trace)...
                     max(popAEROI16trace) max(popAEROI22trace) max(popAEROI32trace) max(popAEROI45trace)];
                 popAEROItraceMin = [min(popAEROI4trace) min(popAEROI5trace) min(popAEROI8trace) min(popAEROI11trace)...
                     min(popAEROI16trace) min(popAEROI22trace) min(popAEROI32trace) min(popAEROI45trace)];
 
                 %average trace standard error%
-                popAEROI4traceSE = nanstd(popAEROI4traces{f,i}')/sqrt(numAEROIs);
-                popAEROI5traceSE = nanstd(popAEROI5traces{f,i}')/sqrt(numAEROIs);
-                popAEROI8traceSE = nanstd(popAEROI8traces{f,i}')/sqrt(numAEROIs);
-                popAEROI11traceSE = nanstd(popAEROI11traces{f,i}')/sqrt(numAEROIs);
-                popAEROI16traceSE = nanstd(popAEROI16traces{f,i}')/sqrt(numAEROIs);
-                popAEROI22traceSE = nanstd(popAEROI22traces{f,i}')/sqrt(numAEROIs);
-                popAEROI32traceSE = nanstd(popAEROI32traces{f,i}')/sqrt(numAEROIs);
-                popAEROI45traceSE = nanstd(popAEROI45traces{f,i}')/sqrt(numAEROIs);
+                popAEROI4traceSE = nanstd(popAEROI4traces{f,1}')/sqrt(numExps);
+                popAEROI5traceSE = nanstd(popAEROI5traces{f,1}')/sqrt(numExps);
+                popAEROI8traceSE = nanstd(popAEROI8traces{f,1}')/sqrt(numExps);
+                popAEROI11traceSE = nanstd(popAEROI11traces{f,1}')/sqrt(numExps);
+                popAEROI16traceSE = nanstd(popAEROI16traces{f,1}')/sqrt(numExps);
+                popAEROI22traceSE = nanstd(popAEROI22traces{f,1}')/sqrt(numExps);
+                popAEROI32traceSE = nanstd(popAEROI32traces{f,1}')/sqrt(numExps);
+                popAEROI45traceSE = nanstd(popAEROI45traces{f,1}')/sqrt(numExps);
 
                 %plot average frequency-specific BF ROI traces%
+                if isnan(nanmean(popAEROItraceMin))
+                    onBar = repmat([-0.1],1,5);
+                    onBar = repmat([-0.1],1,5);
+                else
+                    onBar = repmat((min(popAEROItraceMin)-0.05),1,5);
+                    offBar = repmat((min(popAEROItraceMin)-0.05),1,5);
+                end
+                onIdx = [4:8];
+                offIdx = [8:12];
                 figure                                                                 %each trace shaded by the error bar = 2 SEM of all experiment average traces for specific frequency
-                suptitle(['Population ',ACregs{f},': ',tempTune{i},'-tuned AE ROI Average Fluorescence Traces'])
+                set(gcf, 'WindowStyle', 'Docked')
+                suptitle(['Population ',ACregs{f},' AE ROI Average Fluorescence Traces'])
                 subplot(2,4,1)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
                 shadedErrorBar([1:18],popAEROI4trace,2*popAEROI4traceSE,{'Color',colormap(1,:)},1)
+                hold off
                 title(['4 kHz'])
                 ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,2)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
                 shadedErrorBar([1:18],popAEROI5trace,2*popAEROI5traceSE,{'Color',colormap(2,:)},1)
+                hold off
                 title(['5.6 kHz'])
                 ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,3)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
                 shadedErrorBar([1:18],popAEROI8trace,2*popAEROI8traceSE,{'Color',colormap(3,:)},1)
+                hold off
                 title(['8 kHz'])
                 ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,4)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
                 shadedErrorBar([1:18],popAEROI11trace,2*popAEROI11traceSE,{'Color',colormap(4,:)},1)
+                hold off
                 title(['11.3 kHz'])
                 ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,5)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
                 shadedErrorBar([1:18],popAEROI16trace,2*popAEROI16traceSE,{'Color',colormap(5,:)},1)
+                hold off
                 title(['16 kHz'])
                 ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,6)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
                 shadedErrorBar([1:18],popAEROI22trace,2*popAEROI22traceSE,{'Color',colormap(6,:)},1)
+                hold off
                 title(['22.6 kHz'])
                 ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,7)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
                 shadedErrorBar([1:18],popAEROI32trace,2*popAEROI32traceSE,{'Color',colormap(7,:)},1)
+                hold off
                 title(['32 kHz'])
                 ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
                 subplot(2,4,8)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
                 shadedErrorBar([1:18],popAEROI45trace,2*popAEROI45traceSE,{'Color',colormap(8,:)},1)
+                hold off
                 title(['45 kHz'])
                 ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Time (s)')
                 xticks([4,8,12,16])
                 xticklabels({'1','2','3','4'})
                 set(gca, 'Box', 'off')
-%                 set(gcf, 'WindowStyle', 'Docked')
-                figName = strcat(ACregs{f},'_',tempTune{i},'_AEROI_frequency-specific_traces.fig');
+                figName = strcat(ACregs{f},fig7);
                 figSave = fullfile(file_loc,ctl,figName);
                 savefig(figSave);
 
                 %average PODF calculations%
                 %post-onset all
-                popAEROI4mu = nanmean(popAEROI4mus{f,i});
-                popAEROI5mu = nanmean(popAEROI5mus{f,i});
-                popAEROI8mu = nanmean(popAEROI8mus{f,i});
-                popAEROI11mu = nanmean(popAEROI11mus{f,i});
-                popAEROI16mu = nanmean(popAEROI16mus{f,i});
-                popAEROI22mu = nanmean(popAEROI22mus{f,i});
-                popAEROI32mu = nanmean(popAEROI32mus{f,i});
-                popAEROI45mu = nanmean(popAEROI45mus{f,i});
+                popAEROI4mu = nanmean(popAEROI4mus{f,1});
+                popAEROI5mu = nanmean(popAEROI5mus{f,1});
+                popAEROI8mu = nanmean(popAEROI8mus{f,1});
+                popAEROI11mu = nanmean(popAEROI11mus{f,1});
+                popAEROI16mu = nanmean(popAEROI16mus{f,1});
+                popAEROI22mu = nanmean(popAEROI22mus{f,1});
+                popAEROI32mu = nanmean(popAEROI32mus{f,1});
+                popAEROI45mu = nanmean(popAEROI45mus{f,1});
                 %tone-onset
-                popAEROI4muON = nanmean(popAEROI4musON{f,i});
-                popAEROI5muON = nanmean(popAEROI5musON{f,i});
-                popAEROI8muON = nanmean(popAEROI8musON{f,i});
-                popAEROI11muON = nanmean(popAEROI11musON{f,i});
-                popAEROI16muON = nanmean(popAEROI16musON{f,i});
-                popAEROI22muON = nanmean(popAEROI22musON{f,i});
-                popAEROI32muON = nanmean(popAEROI32musON{f,i});
-                popAEROI45muON = nanmean(popAEROI45musON{f,i});
+                popAEROI4muON = nanmean(popAEROI4musON{f,1});
+                popAEROI5muON = nanmean(popAEROI5musON{f,1});
+                popAEROI8muON = nanmean(popAEROI8musON{f,1});
+                popAEROI11muON = nanmean(popAEROI11musON{f,1});
+                popAEROI16muON = nanmean(popAEROI16musON{f,1});
+                popAEROI22muON = nanmean(popAEROI22musON{f,1});
+                popAEROI32muON = nanmean(popAEROI32musON{f,1});
+                popAEROI45muON = nanmean(popAEROI45musON{f,1});
                 %tone-offset
-                popAEROI4muOFF = nanmean(popAEROI4musOFF{f,i});
-                popAEROI5muOFF = nanmean(popAEROI5musOFF{f,i});
-                popAEROI8muOFF = nanmean(popAEROI8musOFF{f,i});
-                popAEROI11muOFF = nanmean(popAEROI11musOFF{f,i});
-                popAEROI16muOFF = nanmean(popAEROI16musOFF{f,i});
-                popAEROI22muOFF = nanmean(popAEROI22musOFF{f,i});
-                popAEROI32muOFF = nanmean(popAEROI32musOFF{f,i});
-                popAEROI45muOFF = nanmean(popAEROI45musOFF{f,i});
+                popAEROI4muOFF = nanmean(popAEROI4musOFF{f,1});
+                popAEROI5muOFF = nanmean(popAEROI5musOFF{f,1});
+                popAEROI8muOFF = nanmean(popAEROI8musOFF{f,1});
+                popAEROI11muOFF = nanmean(popAEROI11musOFF{f,1});
+                popAEROI16muOFF = nanmean(popAEROI16musOFF{f,1});
+                popAEROI22muOFF = nanmean(popAEROI22musOFF{f,1});
+                popAEROI32muOFF = nanmean(popAEROI32musOFF{f,1});
+                popAEROI45muOFF = nanmean(popAEROI45musOFF{f,1});
                 %combining values for plotting%
                 BARpopAEROImus(:,1,f) = [popAEROI4mu popAEROI5mu popAEROI8mu popAEROI11mu...
                     popAEROI16mu popAEROI22mu popAEROI32mu popAEROI45mu];
@@ -2484,32 +2603,32 @@ if numAnimals > 1
 
                 %calculate standard error%
                 %post-onset all
-                popAEROI4muSE = nanstd(popAEROI4mus{f,i})/sqrt(numAEROIs);
-                popAEROI5muSE = nanstd(popAEROI5mus{f,i})/sqrt(numAEROIs);
-                popAEROI8muSE = nanstd(popAEROI8mus{f,i})/sqrt(numAEROIs);
-                popAEROI11muSE = nanstd(popAEROI11mus{f,i})/sqrt(numAEROIs);
-                popAEROI16muSE = nanstd(popAEROI16mus{f,i})/sqrt(numAEROIs);
-                popAEROI22muSE = nanstd(popAEROI22mus{f,i})/sqrt(numAEROIs);
-                popAEROI32muSE = nanstd(popAEROI32mus{f,i})/sqrt(numAEROIs);
-                popAEROI45muSE = nanstd(popAEROI45mus{f,i})/sqrt(numAEROIs);
+                popAEROI4muSE = nanstd(popAEROI4mus{f,1})/sqrt(numExps);
+                popAEROI5muSE = nanstd(popAEROI5mus{f,1})/sqrt(numExps);
+                popAEROI8muSE = nanstd(popAEROI8mus{f,1})/sqrt(numExps);
+                popAEROI11muSE = nanstd(popAEROI11mus{f,1})/sqrt(numExps);
+                popAEROI16muSE = nanstd(popAEROI16mus{f,1})/sqrt(numExps);
+                popAEROI22muSE = nanstd(popAEROI22mus{f,1})/sqrt(numExps);
+                popAEROI32muSE = nanstd(popAEROI32mus{f,1})/sqrt(numExps);
+                popAEROI45muSE = nanstd(popAEROI45mus{f,1})/sqrt(numExps);
                 %tone-onset
-                popAEROI4muSEon = nanstd(popAEROI4musON{f,i})/sqrt(numAEROIs);
-                popAEROI5muSEon = nanstd(popAEROI5musON{f,i})/sqrt(numAEROIs);
-                popAEROI8muSEon = nanstd(popAEROI8musON{f,i})/sqrt(numAEROIs);
-                popAEROI11muSEon = nanstd(popAEROI11musON{f,i})/sqrt(numAEROIs);
-                popAEROI16muSEon = nanstd(popAEROI16musON{f,i})/sqrt(numAEROIs);
-                popAEROI22muSEon = nanstd(popAEROI22musON{f,i})/sqrt(numAEROIs);
-                popAEROI32muSEon = nanstd(popAEROI32musON{f,i})/sqrt(numAEROIs);
-                popAEROI45muSEon = nanstd(popAEROI45musON{f,i})/sqrt(numAEROIs);
+                popAEROI4muSEon = nanstd(popAEROI4musON{f,1})/sqrt(numExps);
+                popAEROI5muSEon = nanstd(popAEROI5musON{f,1})/sqrt(numExps);
+                popAEROI8muSEon = nanstd(popAEROI8musON{f,1})/sqrt(numExps);
+                popAEROI11muSEon = nanstd(popAEROI11musON{f,1})/sqrt(numExps);
+                popAEROI16muSEon = nanstd(popAEROI16musON{f,1})/sqrt(numExps);
+                popAEROI22muSEon = nanstd(popAEROI22musON{f,1})/sqrt(numExps);
+                popAEROI32muSEon = nanstd(popAEROI32musON{f,1})/sqrt(numExps);
+                popAEROI45muSEon = nanstd(popAEROI45musON{f,1})/sqrt(numExps);
                 %tone-offset
-                popAEROI4muSEoff = nanstd(popAEROI4musOFF{f,i})/sqrt(numAEROIs);
-                popAEROI5muSEoff = nanstd(popAEROI5musOFF{f,i})/sqrt(numAEROIs);
-                popAEROI8muSEoff = nanstd(popAEROI8musOFF{f,i})/sqrt(numAEROIs);
-                popAEROI11muSEoff = nanstd(popAEROI11musOFF{f,i})/sqrt(numAEROIs);
-                popAEROI16muSEoff = nanstd(popAEROI16musOFF{f,i})/sqrt(numAEROIs);
-                popAEROI22muSEoff = nanstd(popAEROI22musOFF{f,i})/sqrt(numAEROIs);
-                popAEROI32muSEoff = nanstd(popAEROI32musOFF{f,i})/sqrt(numAEROIs);
-                popAEROI45muSEoff = nanstd(popAEROI45musOFF{f,i})/sqrt(numAEROIs);
+                popAEROI4muSEoff = nanstd(popAEROI4musOFF{f,1})/sqrt(numExps);
+                popAEROI5muSEoff = nanstd(popAEROI5musOFF{f,1})/sqrt(numExps);
+                popAEROI8muSEoff = nanstd(popAEROI8musOFF{f,1})/sqrt(numExps);
+                popAEROI11muSEoff = nanstd(popAEROI11musOFF{f,1})/sqrt(numExps);
+                popAEROI16muSEoff = nanstd(popAEROI16musOFF{f,1})/sqrt(numExps);
+                popAEROI22muSEoff = nanstd(popAEROI22musOFF{f,1})/sqrt(numExps);
+                popAEROI32muSEoff = nanstd(popAEROI32musOFF{f,1})/sqrt(numExps);
+                popAEROI45muSEoff = nanstd(popAEROI45musOFF{f,1})/sqrt(numExps);
                 %combining values for plotting%
                 BARpopAEROImuSEs(:,1,f) = [popAEROI4muSE popAEROI5muSE popAEROI8muSE popAEROI11muSE...
                     popAEROI16muSE popAEROI22muSE popAEROI32muSE popAEROI45muSE];
@@ -2520,12 +2639,12 @@ if numAnimals > 1
 
                 %plot average frequency-specific BF ROI PODF%
                 figure
-                title(['Population ',ACregs{f},': ',tempTune{i},'-tuned AE ROI Average Fluorescence Post-Onset DeltaF/F'])
+                set(gcf, 'WindowStyle', 'Docked')
+                suptitle(['Population: ',ACregs{f},' AE ROI'])
                 hold on
-                b = bar(BARpopAEROImus(:,:,f))
-        %         title(strcat(animal{j},': Frequency-Specific, Whole-Window Average Post-Onset DeltaF/F'))
+                b = bar(BARpopAEROImus(:,:,f));
+                title('Frequency-Specific Average Post-Onset DeltaF/F')
                 hold on
-            %     err = errorbar(BARwinPODFs,BARwinPODFses);
                 nbars = size(BARpopAEROImus(:,:,f),2);
                 x = [];
                 for n = 1:nbars
@@ -2536,24 +2655,20 @@ if numAnimals > 1
                     err(n).Color = [0 0 0];
                     err(n).LineStyle = 'None';
                 end
-        %         err = errorbar(BARroiPODFs,BARroiPODFses);
-        %         err.Color = [0 0 0];
-        %         err.LineStyle = 'None';
         %         sigstar(ROIpairs,ROIsigVals)
         %         sigstar(ROIpairsON,ROIsigValsON)
         %         sigstar(ROIpairsOFF,ROIsigValsOFF)
-                ylabel('Relative DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 xlabel('Frequency (kHz)')
                 xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
                 ylim([min(min(BARpopAEROImus(:,:,f)))-0.05 max(max(BARpopAEROImus(:,:,f)))+0.1])
                 hold off
                 set(gca, 'Box', 'off')
-%                 set(gcf, 'WindowStyle', 'Docked')
-                figName = strcat(ACregs{f},'_',tempTune{i},'_AEROI_frequency-specific_PODF.fig');
+                figName = strcat(ACregs{f},fig8);
                 figSave = fullfile(file_loc,ctl,figName);
                 savefig(figSave);
             end
-        end
+%         end
     end
     %% Saving Results (for population) %%
     saveName = 'popStats.mat';
@@ -2580,5 +2695,6 @@ if numAnimals > 1
         'popAEROI8musON','popAEROI11musON','popAEROI16musON','popAEROI22musON',...
         'popAEROI32musON','popAEROI45musON','popAEROI4musOFF','popAEROI5musOFF',...
         'popAEROI8musOFF','popAEROI11musOFF','popAEROI16musOFF','popAEROI22musOFF',...
-        'popAEROI32musOFF','popAEROI45musOFF');
+        'popAEROI32musOFF','popAEROI45musOFF','totalACfreqDist','freqDistSig');
+    disp('Saved Data')
 end

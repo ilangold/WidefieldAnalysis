@@ -9,122 +9,40 @@ alpha = 0.05;
 Freqs = {'4 kHz','5.6 kHz','8 kHz','11.3 kHz','16 kHz','22.6 kHz','32 kHz','45.2 kHz'};
 dubFreqs = [4000;5657;8000;11314;16000;22627;32000;45255];
 totalFreqDist = [];
-ACregs = {'A1','A2','AAF','ACnon'};                                        %AC regions defined in "AC_parcellation"
-fig1 = 'frequency-tuning_distribution.fig';
-fig2 = 'passive_behavior_frequency_traces.fig';
-fig3 = 'unadjusted_post-onset_DF.fig';
-fig4 = 'adjusted_post-onset_DF.fig';
-fig5 = {'passive_behvavior_4kHz_ROI_traces.fig' 'passive_behvavior_5.6kHz_ROI_traces.fig' 'passive_behvavior_8kHz_ROI_traces.fig'...
+ACregs = {'A1','A2','AAF','ACnon'};%'DAF','UF','DP','VP'};                                        %AC regions defined in "AC_parcellation"
+fig1 = 'avg_frequency-tuning_distribution.fig';
+fig2 = '_frequency-tuning_distribution.fig';
+fig3 = 'passive_behavior_frequency_traces.fig';
+fig4 = 'unadjusted_post-onset_DF.fig';
+fig5 = 'adjusted_post-onset_DF.fig';
+fig6 = {'passive_behvavior_4kHz_ROI_traces.fig' 'passive_behvavior_5.6kHz_ROI_traces.fig' 'passive_behvavior_8kHz_ROI_traces.fig'...
     'passive_behvavior_11.3kHz_ROI_traces.fig' 'passive_behvavior_16kHz_ROI_traces.fig' 'passive_behvavior_22.6kHz_ROI_traces.fig'...
     'passive_behvavior_32kHz_ROI_traces.fig' 'passive_behvavior_45.2kHz_ROI_traces.fig'};
-fig6 = {'unadjusted_4kHz_ROI_post-onset_DF.fig' 'unadjusted_5.6kHz_ROI_post-onset_DF.fig' 'unadjusted_8kHz_ROI_post-onset_DF.fig'...
+fig7 = {'unadjusted_4kHz_ROI_post-onset_DF.fig' 'unadjusted_5.6kHz_ROI_post-onset_DF.fig' 'unadjusted_8kHz_ROI_post-onset_DF.fig'...
     'unadjusted_11.3kHz_ROI_post-onset_DF.fig' 'unadjusted_16kHz_ROI_post-onset_DF.fig' 'unadjusted_22.6kHz_ROI_post-onset_DF.fig'...
     'unadjusted_32kHz_ROI_post-onset_DF.fig' 'unadjusted_45.2kHz_ROI_post-onset_DF.fig'};
-fig7 = {'adjusted_4kHz_ROI_post-onset_DF.fig' 'adjusted_5.6kHz_ROI_post-onset_DF.fig' 'adjusted_8kHz_ROI_post-onset_DF.fig'...
+fig8 = {'adjusted_4kHz_ROI_post-onset_DF.fig' 'adjusted_5.6kHz_ROI_post-onset_DF.fig' 'adjusted_8kHz_ROI_post-onset_DF.fig'...
     'adjusted_11.3kHz_ROI_post-onset_DF.fig' 'adjusted_16kHz_ROI_post-onset_DF.fig' 'adjusted_22.6kHz_ROI_post-onset_DF.fig'...
     'adjusted_32kHz_ROI_post-onset_DF.fig' 'adjusted_45.2kHz_ROI_post-onset_DF.fig'};
-fig8 = 'onset_AEROI_passive_behavior_traces.fig';
-fig9 = 'onset_AEROI_passive_behavior_PODF.fig';
-fig10 = 'onset_AEROI_adjusted_behavior_PODF.fig';
-fig11 = 'offset_AEROI_passive_behavior_traces.fig';
-fig12 = 'offset_AEROI_passive_behavior_PODF.fig';
-fig13 = 'offset_AEROI_adjusted_behavior_PODF.fig';
-onACregTraces = cell(4,numAnimals);
-onACregMu = cell(4,numAnimals);
-onACregMuON = cell(4,numAnimals);
-onACregMuOFF = cell(4,numAnimals);
-onadjACregMu = cell(4,numAnimals);
-onadjACregMuON = cell(4,numAnimals);
-onadjACregMuOFF = cell(4,numAnimals);
-onPassACregTraces = cell(4,numAnimals);
-onPassACregMu = cell(4,numAnimals);
-onPassACregMuON = cell(4,numAnimals);
-onPassACregMuOFF = cell(4,numAnimals);
-offACregTraces = cell(4,numAnimals);
-offACregMu = cell(4,numAnimals);
-offACregMuON = cell(4,numAnimals);
-offACregMuOFF = cell(4,numAnimals);
-offadjACregMu = cell(4,numAnimals);
-offadjACregMuON = cell(4,numAnimals);
-offadjACregMuOFF = cell(4,numAnimals);
-offPassACregTraces = cell(4,numAnimals);
-offPassACregMu = cell(4,numAnimals);
-offPassACregMuON = cell(4,numAnimals);
-offPassACregMuOFF = cell(4,numAnimals);
-AEstatTableON = cell(4,2,numAnimals);
-AEstatTableOFF = cell(4,2,numAnimals);
-
-% onACregHitTraces = cell(4,2);
-% onACregMissTraces = cell(4,2);
-% onACregNonTraces = cell(4,2);
-% onACregFalarmTraces = cell(4,2);
-% onACregCorrejTraces = cell(4,2);
-% onACregTarMus = cell(4,2);
-% onACregHitMus = cell(4);
-% onACregMissMus = cell(4);
-% onACregNonMus = cell(4);
-% onACregFalarmMus = cell(4);
-% onACregCorrejMus = cell(4);
-% onACregTarMusON = cell(4);
-% onACregHitMusON = cell(4);
-% onACregMissMusON = cell(4);
-% onACregNonMusON = cell(4);
-% onACregFalarmMusON = cell(4);
-% onACregCorrejMusON = cell(4);
-% onACregTarMusOFF = cell(4);
-% onACregHitMusOFF = cell(4);
-% onACregMissMusOFF = cell(4);
-% onACregNonMusOFF = cell(4);
-% onACregFalarmMusOFF = cell(4);
-% onACregCorrejMusOFF = cell(4);
-% onadjACregHitMus = cell(4);
-% onadjACregMissMus = cell(4);
-% onadjACregFalarmMus = cell(4);
-% onadjACregCorrejMus = cell(4);
-% onadjACregHitMusON = cell(4);
-% onadjACregMissMusON = cell(4);
-% onadjACregFalarmMusON = cell(4);
-% onadjACregCorrejMusON = cell(4);
-% onadjACregHitMusOFF = cell(4);
-% onadjACregMissMusOFF = cell(4);
-% onadjACregFalarmMusOFF = cell(4);
-% onadjACregCorrejMusOFF = cell(4);
-% offACregTarTraces = cell(4);
-% offACregHitTraces = cell(4);
-% offACregMissTraces = cell(4);
-% offACregNonTraces = cell(4);
-% offACregFalarmTraces = cell(4);
-% offACregCorrejTraces = cell(4);
-% offACregTarMus = cell(4);
-% offACregHitMus = cell(4);
-% offACregMissMus = cell(4);
-% offACregNonMus = cell(4);
-% offACregFalarmMus = cell(4);
-% offACregCorrejMus = cell(4);
-% offACregTarMusON = cell(4);
-% offACregHitMusON = cell(4);
-% offACregMissMusON = cell(4);
-% offACregNonMusON = cell(4);
-% offACregFalarmMusON = cell(4);
-% offACregCorrejMusON = cell(4);
-% offACregTarMusOFF = cell(4);
-% offACregHitMusOFF = cell(4);
-% offACregMissMusOFF = cell(4);
-% offACregNonMusOFF = cell(4);
-% offACregFalarmMusOFF = cell(4);
-% offACregCorrejMusOFF = cell(4);
-% offadjACregHitMus = cell(4);
-% offadjACregMissMus = cell(4);
-% offadjACregFalarmMus = cell(4);
-% offadjACregCorrejMus = cell(4);
-% offadjACregHitMusON = cell(4);
-% offadjACregMissMusON = cell(4);
-% offadjACregFalarmMusON = cell(4);
-% offadjACregCorrejMusON = cell(4);
-% offadjACregHitMusOFF = cell(4);
-% offadjACregMissMusOFF = cell(4);
-% offadjACregFalarmMusOFF = cell(4);
-% offadjACregCorrejMusOFF = cell(4);
+fig9 = '_AEROI_passive_behavior_traces.fig';
+fig10 = '_AEROI_passive_behavior_PODF.fig';
+fig11 = '_AEROI_adjusted_behavior_PODF.fig';
+% fig12 = 'offset_AEROI_passive_behavior_traces.fig';
+% fig13 = 'offset_AEROI_passive_behavior_PODF.fig';
+% fig14 = 'offset_AEROI_adjusted_behavior_PODF.fig';
+ACregTntDist = struct([]);
+ACregTraces = cell(4,numAnimals);
+ACregMu = cell(4,numAnimals);
+ACregMuON = cell(4,numAnimals);
+ACregMuOFF = cell(4,numAnimals);
+adjACregMu = cell(4,numAnimals);
+adjACregMuON = cell(4,numAnimals);
+adjACregMuOFF = cell(4,numAnimals);
+PassACregTraces = cell(4,numAnimals);
+PassACregMu = cell(4,numAnimals);
+PassACregMuON = cell(4,numAnimals);
+PassACregMuOFF = cell(4,numAnimals);
+AEstatTable = cell(4,2,numAnimals);
 distSigPoints = {[0.85,1.15],[1.85,2.15],[2.85,3.15],[3.85,4.15],...
     [4.85,5.15],[5.85,6.15],[6.85,7.15],[7.85,8.15]};
 passSigPoints = {[.7778 1.7778],[1 2],[1.2222 2.2222],[.7778 2.7778],[1 3],[1.2222 3.2222],...
@@ -140,6 +58,10 @@ for j = 1:numAnimals
     load(file_name);
     animalExps(j) = length(mouseBehavior);
     animalPass(j) = length(mousePassive);
+    bacNum = [0 0 0];
+    pacNum = [0 0 0];
+    BACfreqDist = [];
+    PACfreqDist = [];
     
     %Combine expert data across animals and experiments into singular matrices%
     for i = 1:(animalExps(j))
@@ -161,6 +83,14 @@ for j = 1:numAnimals
         adjBFROImuOFF(:,:,i,j) = mouseBehavior(i).adjROImeansOFF;
         %tonotopic best-frequency distribution%
         BfreqDist(:,i,j) = mouseBehavior(i).tonotopicDist;
+        for n = 1:size(mouseBehavior(i).ACregions,2)
+            if sum(mouseBehavior(i).ACregions(n).tonotopicDist) == 0
+                BACfreqDist(i,:,n) = nan(1,8);
+            else
+                BACfreqDist(i,:,n) = mouseBehavior(i).ACregions(n).tonotopicDist;
+                bacNum(n) = bacNum(n) + 1;
+            end
+        end
     end
     
     %% animal tonotopy frequency-distribution plots %%
@@ -175,8 +105,20 @@ for j = 1:numAnimals
         PassBFROImu(:,:,i,j) = mousePassive(i).freqROImeansALL;                %BF ROI post-onset all DeltaF/F (frequency ROI x frequency presented x experiment x animal)
         PassBFROImuON(:,:,i,j) = mousePassive(i).freqROImeansON;               %BF ROI tone-onset DeltaF/F (frequency ROI x frequency presented x experiment x animal)
         PassBFROImuOFF(:,:,i,j) = mousePassive(i).freqROImeansOFF;             %BF ROI tone-offset DeltaF/F (frequency ROI x frequency presented x experiment x animal)
+        for n = 1:size(mousePassive(i).ACregions,2)
+            if sum(mousePassive(i).ACregions(n).tonotopicDist) == 0
+                PACfreqDist(i,:,n) = nan(1,8);
+            else
+                PACfreqDist(i,:,n) = mousePassive(i).ACregions(n).tonotopicDist;
+                pacNum(n) = pacNum(n) + 1;
+            end
+        end
     end
-    %Frequency distribution standard error%
+    ACregTntDist(j).bacNum = bacNum;
+    ACregTntDist(j).pacNum = pacNum;
+    ACregTntDist(j).BACdist = BACfreqDist;
+    ACregTntDist(j).PACdist = PACfreqDist;
+    %Whole window frequency distribution standard error%
     %expert
     b4se = nanstd(BfreqDist(1,:,j))/sqrt(animalExps(j));
     b5se = nanstd(BfreqDist(2,:,j))/sqrt(animalExps(j));
@@ -204,28 +146,44 @@ for j = 1:numAnimals
     [H22 P22] = kstest2(PfreqDist(6,:,j),BfreqDist(6,:,j),alpha);
     [H32 P32] = kstest2(PfreqDist(7,:,j),BfreqDist(7,:,j),alpha);
     [H45 P45] = kstest2(PfreqDist(8,:,j),BfreqDist(8,:,j),alpha);
+    freqDistSig(:,1,j) = [P4; P5; P8; P11; P16; P22; P32; P45];
     %combining for plotting
     compFreqDistSE = [p4se b4se; p5se b5se; p8se b8se; p11se b11se;...
         p16se b16se; p22se b22se; p32se b32se; p45se b45se];
     compFreqDist(:,1) = mean(PfreqDist(:,:,j),2);
     compFreqDist(:,2) = mean(BfreqDist(:,:,j),2);
-%     barFreqDist = compFreqDist;
+    barFreqDist = [PfreqDist(:,:,j) BfreqDist(:,:,j)]';
+    stackBardates = {};
+    for i = 1:animalPass(j)
+        stackBardates{i} = ['novice:',mousePassive(i).date];
+    end
+    for i = 1:animalExps(j)
+        stackBardates{i+animalPass(j)} = ['expert:',mouseBehavior(i).date];
+    end
     totalFreqDist(:,:,j) = compFreqDist';
     %plot animal frequency representation distribution%
     if figON
+        %stacked frequency distribution over time
         figure
-        suptitle([animal{j}])
-        ax1 = subplot(1,2,1);
-        bar(totalFreqDist(:,:,j), 'stacked');
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle([animal{j},': Whole Window'])
+        bar(barFreqDist,'stacked')
         legend('4kHz','5.6kHz','8kHz','11.3kHz','16kHz','22.6kHz','32kHz','45.2kHz')
-        title(['Best-Frequency-Tuning Distribution'])
-        xticklabels({'Novice','Expert'})
-        ylabel('Percent of Pixels')
+        title('BF-Tuning Distribution Across Learning')
+        xticklabels(stackBardates)
+        xtickangle(-15)
+        ylabel('Percent of Tuned Pixels')
         ylim([0 1])
-        set(gca, 'Box', 'off')
-        subplot(1,2,2)
-        b = bar(compFreqDist)
+        set(gca, 'Box', 'on')
+        figSave = fullfile(file_loc,animal{j},'stacked_frequency-tuning_distribution.fig');
+        savefig(figSave)
+        %novice vs. expert average freqency distributions
+        figure
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle([animal{j},': Whole Window'])
+        b = bar(compFreqDist);
         legend('Novice','Expert','AutoUpdate','off')
+        title('Novice vs. Expert : Average BF-Tuning Distribution')
         hold on
         x = [];
         nbars = size(compFreqDist,2);
@@ -238,17 +196,137 @@ for j = 1:numAnimals
             err(n).LineStyle = 'None';
         end
         sigstar(distSigPoints,[P4,P5,P8,P11,P16,P22,P32,P45])
-        title({'Novice vs. Expert', 'Best Frequency-Tuning Distribution'})
         xticks([1:8])
         xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
         xlabel('Frequency (kHz)')
-        ylabel('Percent of Pixels')
+        ylabel('Percent of Tuned Pixels')
         ylim([-0.1 1])
         set(gca, 'Box', 'off')
         hold off
-        set(gcf, 'WindowStyle', 'Docked')
         figSave1 = fullfile(file_loc,animal{j},fig1);
         savefig(figSave1);
+    end
+    
+    %AC region-specific frequency distribution%
+    for i = 1:(length(ACregs)-1)
+        %combining distribution values across experiments%
+        %expert
+        bac4 = squeeze(BACfreqDist(1:animalExps(j),1,i));
+        bac5 = squeeze(BACfreqDist(1:animalExps(j),2,i));
+        bac8 = squeeze(BACfreqDist(1:animalExps(j),3,i));
+        bac11 = squeeze(BACfreqDist(1:animalExps(j),4,i));
+        bac16 = squeeze(BACfreqDist(1:animalExps(j),5,i));
+        bac22 = squeeze(BACfreqDist(1:animalExps(j),6,i));
+        bac32 = squeeze(BACfreqDist(1:animalExps(j),7,i));
+        bac45 = squeeze(BACfreqDist(1:animalExps(j),8,i));
+        %novice
+        pac4 = squeeze(PACfreqDist(1:animalPass(j),1,i));
+        pac5 = squeeze(PACfreqDist(1:animalPass(j),2,i));
+        pac8 = squeeze(PACfreqDist(1:animalPass(j),3,i));
+        pac11 = squeeze(PACfreqDist(1:animalPass(j),4,i));
+        pac16 = squeeze(PACfreqDist(1:animalPass(j),5,i));
+        pac22 = squeeze(PACfreqDist(1:animalPass(j),6,i));
+        pac32 = squeeze(PACfreqDist(1:animalPass(j),7,i));
+        pac45 = squeeze(PACfreqDist(1:animalPass(j),8,i));
+        %calculating standard error%
+        %expert
+        bac4se = nanstd(bac4)/sqrt(bacNum(i));
+        bac5se = nanstd(bac5)/sqrt(bacNum(i));
+        bac8se = nanstd(bac8)/sqrt(bacNum(i));
+        bac11se = nanstd(bac11)/sqrt(bacNum(i));
+        bac16se = nanstd(bac16)/sqrt(bacNum(i));
+        bac22se = nanstd(bac22)/sqrt(bacNum(i));
+        bac32se = nanstd(bac32)/sqrt(bacNum(i));
+        bac45se = nanstd(bac45)/sqrt(bacNum(i));
+        %novice
+        pac4se = nanstd(pac4)/sqrt(pacNum(i));
+        pac5se = nanstd(pac5)/sqrt(pacNum(i));
+        pac8se = nanstd(pac8)/sqrt(pacNum(i));
+        pac11se = nanstd(pac11)/sqrt(pacNum(i));
+        pac16se = nanstd(pac16)/sqrt(pacNum(i));
+        pac22se = nanstd(pac22)/sqrt(pacNum(i));
+        pac32se = nanstd(pac32)/sqrt(pacNum(i));
+        pac45se = nanstd(pac45)/sqrt(pacNum(i));
+        %checking for statistically significant differences%
+        if ~bacNum(i) || ~pacNum(i)
+            Pac4 = 1;
+            Pac5 = 1;
+            Pac8 = 1;
+            Pac11 = 1;
+            Pac16 = 1;
+            Pac22 = 1;
+            Pac32 = 1;
+            Pac45 = 1;
+        else
+            [Hac4 Pac4] = kstest2(bac4,pac4,alpha);
+            [Hac5 Pac5] = kstest2(bac5,pac5,alpha);
+            [Hac8 Pac8] = kstest2(bac8,pac8,alpha);
+            [Hac11 Pac11] = kstest2(bac11,pac11,alpha);
+            [Hac16 Pac16] = kstest2(bac16,pac16,alpha);
+            [Hac22, Pac22] = kstest2(bac22,pac22,alpha);
+            [Hac32 Pac32] = kstest2(bac32,pac32,alpha);
+            [Hac45 Pac45] = kstest2(bac45,pac45,alpha);
+        end
+        freqDistSig(:,i+1,j) = [Pac4; Pac5; Pac8; Pac11; Pac16; Pac22; Pac32; Pac45];
+        %combine for plotting
+        compACdist = [nanmean(pac4) nanmean(bac4); nanmean(pac5) nanmean(bac5);... 
+            nanmean(pac8) nanmean(bac8); nanmean(pac11) nanmean(bac11);...
+            nanmean(pac16) nanmean(bac16); nanmean(pac22) nanmean(bac22);... 
+            nanmean(pac32) nanmean(bac32); nanmean(pac45) nanmean(bac45)];
+        compACdistSE = [pac4se bac4se; pac5se bac5se; pac8se bac8se; pac11se bac11se;...
+            pac16se bac16se; pac22se bac22se; pac32se bac32se; pac45se bac45se];
+        barACfreqDist = [PACfreqDist(:,:,i); BACfreqDist(:,:,i)];
+        stackBardates = {};
+        for ii = 1:animalPass(j)
+            stackBardates{ii} = ['novice:',mousePassive(ii).date];
+        end
+        for ii = 1:animalExps(j)
+            stackBardates{ii+animalPass(j)} = ['expert:',mouseBehavior(ii).date];
+        end
+        totalACfreqDist(:,:,i,j) = compACdist';
+        %plot AC regional frequency distribution%
+        if figON
+            figure
+            set(gcf, 'WindowStyle', 'Docked')
+            suptitle([animal{j},': ',ACregs{i}])
+            bar(barACfreqDist, 'stacked')
+            legend('4kHz','5.6kHz','8kHz','11.3kHz','16kHz','22.6kHz','32kHz','45.2kHz')
+            title('BF-Tuning Distribution Across Learning')
+            xticklabels({'Novice','Expert'})
+            ylabel('Percent of Tuned Pixels')
+            ylim([0 1])
+            set(gca, 'Box', 'on')
+            figSave = fullfile(file_loc,animal{j},[ACregs{i},'_stacked_frequency-tuning_distribution.fig']);
+            savefig(figSave)
+            %novice vs. expert average freqency distributions
+            figure
+            set(gcf, 'WindowStyle', 'Docked')
+            suptitle([animal{j},': ',ACregs{i}])
+            b = bar(compACdist);
+            legend('Novice','Expert','AutoUpdate','off')
+            title('Novice vs. Expert : Average BF-Tuning Distribution')
+            hold on
+            x = [];
+            nbars = size(compACdist,2);
+            for n = 1:nbars
+                x = [x; b(n).XEndPoints];
+            end
+            err = errorbar(x',compACdist,2*compACdistSE);
+            for n = 1:nbars
+                err(n).Color = [0 0 0];
+                err(n).LineStyle = 'None';
+            end
+            sigstar(distSigPoints,[Pac4,Pac5,Pac8,Pac11,Pac16,Pac22,Pac32,Pac45])
+            xticks([1:8])
+            xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
+            xlabel('Frequency (kHz)')
+            ylabel('Percent of Tuned Pixels')
+            ylim([-0.1 1])
+            set(gca, 'Box', 'off')
+            hold off
+            figSave2 = fullfile(file_loc,animal{j},[ACregs{i},fig2]);
+            savefig(figSave2);
+        end
     end
     
     %% animal average whole-window traces and post-onset DeltaF/F %%
@@ -286,12 +364,20 @@ for j = 1:numAnimals
         nonTraceSE = zeros(1,18);
     end
     %plot target tone w/ behavior%
+    onBar = repmat((min(winTraceMin(j,:))-0.05),1,5);
+    offBar = repmat((min(winTraceMin(j,:))-0.05),1,5);
+    onIdx = [4:8];
+    offIdx = [8:12];
     if figON
         figure
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle([animal{j},': Whole Window'])
         subplot(1,2,1)
-        suptitle([animal{j}])
-        shadedErrorBar([1:18],winTarTrace,2*tarTraceSE,'-g',1);
+        plot(onIdx,onBar,'k','LineWidth',3)
         hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+        shadedErrorBar([1:18],winTarTrace,2*tarTraceSE,'-g',1);
         shadedErrorBar([1:18],winHitTrace,2*hitTraceSE,'-b',1);
         shadedErrorBar([1:18],winMissTrace,2*missTraceSE,'-r',1);
         set(gca, 'Box', 'off')
@@ -305,22 +391,24 @@ for j = 1:numAnimals
         ylim([min(winTraceMin(j,:))-0.1 max(winTraceMax(j,:))+0.2])
         %plot nontarget tone w/ behavior%
         subplot(1,2,2)
-        shadedErrorBar([1:18],winNonTrace,2*nonTraceSE,'-g',1);
+        plot(onIdx,onBar,'k','LineWidth',3)
         hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+        shadedErrorBar([1:18],winNonTrace,2*nonTraceSE,'-g',1);
         shadedErrorBar([1:18],winFalarmTrace,2*falarmTraceSE,'-r',1);
         shadedErrorBar([1:18],winCorrejTrace,2*correjTraceSE,'-b',1);
         set(gca, 'Box', 'off')
         hold off
-        title({'{\color{red}False \color{red}Alarm} vs. {\color{blue}Correct} '... 
-            '{\color{blue}Reject} vs. {\color{green}Passive}', '{\color{green}Nontarget} Fluorescence Traces'})
+        title({'{\color{red}False Alarm} vs. {\color{blue}Correct Reject} vs. {\color{green}Passive}',... 
+            '{\color{green}Nontarget} Fluorescence Traces'})
         xticks([4, 8, 12, 16])
         xticklabels({'1', '2', '3', '4'})
         xlabel('Time (s)')
-        ylabel('DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         ylim([min(winTraceMin(j,:))-0.1 max(winTraceMax(j,:))+0.2])
-        set(gcf, 'WindowStyle', 'Docked')
-        figSave2 = fullfile(file_loc,animal{j},fig2);
-        savefig(figSave2);
+        figSave3 = fullfile(file_loc,animal{j},fig3);
+        savefig(figSave3);
     end
     
     %separate mouse average post-onset DeltaF/F by response categories and average across experiments%
@@ -430,10 +518,11 @@ for j = 1:numAnimals
     %plot passive and unadjusted-behavior post-onset DeltaF/F with significance%
     if figON
         figure
-        suptitle([animal{j}])
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle([animal{j},': Whole Window'])
         hold on
         b = bar(BARavgWinMu(:,:,j),'grouped');
-        title({'Passive and Unadjusted Behavior','Post-onset DeltaF/F'})
+        title({'Passive and Unadjusted Behavior : Post-onset DeltaF/F'})
         nbars = size(BARavgWinMu(:,:,j),2);
         x = [];
         for n = 1:nbars
@@ -450,17 +539,18 @@ for j = 1:numAnimals
         xticks([1:6])
         xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
         xtickangle(-15)
+        ylabel('Normalized DeltaF/F')
         set(gca, 'Box', 'off')
         hold off
-        figSave3 = fullfile(file_loc,animal{j},fig3);
-        savefig(figSave3);
-        set(gcf, 'WindowStyle', 'Docked')
+        figSave4 = fullfile(file_loc,animal{j},fig4);
+        savefig(figSave4);
         %plot passive-adjusted behavior post-onset DeltaF/F with significance%
         figure
-        suptitle([animal{j}])
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle([animal{j},': Whole Window'])
         hold on
         b = bar(BARavgAdjWinMu(:,:,j));
-        title({'Passive-adjusted Behavior','Post-onset DeltaF/F'})
+        title({'Passive-adjusted Behavior : Post-onset DeltaF/F'})
         nbars = size(BARavgAdjWinMu(:,:,j),2);
         x = [];
         for n = 1:nbars
@@ -476,11 +566,11 @@ for j = 1:numAnimals
         xticks([1:4])
         xticklabels({'hit','miss','false alarm','correct reject'})
         xtickangle(-15)
+        ylabel('Normalized DeltaF/F')
         set(gca, 'Box', 'off')
         hold off
-        figSave4 = fullfile(file_loc,animal{j},fig4);
-        savefig(figSave4);
-        set(gcf, 'WindowStyle', 'Docked')
+        figSave5 = fullfile(file_loc,animal{j},fig5);
+        savefig(figSave5);
     end
     
     %% animal average tonotopic-ROI traces and post-onset DeltaF/F %%
@@ -519,12 +609,20 @@ for j = 1:numAnimals
             BFROInonTraceSE = zeros(1,18);
         end
         %plot current BF ROI target tone response w/ passive and behavior%
+        onBar = repmat((min(BFROItraceMin(i,:,j))-0.05),1,5);
+        offBar = repmat((min(BFROItraceMin(i,:,j))-0.05),1,5);
+        onIdx = [4:8];
+        offIdx = [8:12];
         if figON
             figure
+            set(gcf, 'WindowStyle', 'Docked')
+            suptitle([animal{j},': ',Freqs{i},' ROI'])
             subplot(1,2,1)
-            suptitle([animal{j},' ',Freqs{i},' ROI'])
-            shadedErrorBar([1:18],BFROItarTrace,2*BFROItarTraceSE,'-g',1);
+            plot(onIdx,onBar,'k','LineWidth',3)
             hold on
+            plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+            legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+            shadedErrorBar([1:18],BFROItarTrace,2*BFROItarTraceSE,'-g',1);
             shadedErrorBar([1:18],BFROIhitTrace,2*BFROIhitTraceSE,'-b',1);
             shadedErrorBar([1:18],BFROImissTrace,2*BFROImissTraceSE,'-r',1);
             set(gca, 'Box', 'off')
@@ -534,7 +632,7 @@ for j = 1:numAnimals
             xticks([4, 8, 12, 16])
             xticklabels({'1', '2', '3', '4'})
             xlabel('Time (s)')
-            ylabel('DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             if isnan(nanmean(BFROItraceMin(i,:,j))) || isnan(nanmean(BFROItraceMax(i,:,j)))
                 ylim([-1 1])
             else
@@ -542,26 +640,28 @@ for j = 1:numAnimals
             end
             %plot nontarget tone w/ behavior%
             subplot(1,2,2)
-            shadedErrorBar([1:18],BFROInonTrace,2*BFROInonTraceSE,'-g',1);
+            plot(onIdx,onBar,'k','LineWidth',3)
             hold on
+            plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+            legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+            shadedErrorBar([1:18],BFROInonTrace,2*BFROInonTraceSE,'-g',1);
             shadedErrorBar([1:18],BFROIfalarmTrace,2*BFROIfalarmTraceSE,'-r',1);
             shadedErrorBar([1:18],BFROIcorrejTrace,2*BFROIcorrejTraceSE,'-b',1);
             set(gca, 'Box', 'off')
             hold off
-            title({'{\color{red}False \color{red}Alarm} vs. {\color{blue}Correct} '... 
-                '{\color{blue}Reject} vs. {\color{green}Passive}', '{\color{green}Nontarget} Fluorescence Traces'})
+            title({'{\color{red}False \color{red}Alarm} vs. {\color{blue}Correct Reject} vs. {\color{green}Passive}',... 
+                '{\color{green}Nontarget} Fluorescence Traces'})
             xticks([4, 8, 12, 16])
             xticklabels({'1', '2', '3', '4'})
             xlabel('Time (s)')
-            ylabel('DeltaF/F')
+            ylabel('Normalized DeltaF/F')
             if isnan(nanmean(BFROItraceMin(i,:,j))) || isnan(nanmean(BFROItraceMax(i,:,j)))
                 ylim([-1 1])
             else
                 ylim([min(BFROItraceMin(i,:,j))-0.1 max(BFROItraceMax(i,:,j))+0.2])
             end
-            set(gcf, 'WindowStyle', 'Docked')
-            figSave5 = fullfile(file_loc,animal{j},fig5{i});
-            savefig(figSave5);
+            figSave6 = fullfile(file_loc,animal{j},fig6{i});
+            savefig(figSave6);
         end
         
         %separate mouse average post-onset DeltaF/F by response categories for current BF ROI and average across experiments%
@@ -743,10 +843,11 @@ for j = 1:numAnimals
         %plot unadjusted post-onset BF ROI DeltaF/F with significance%
         if figON
             figure
-            suptitle([animal{j},' ',Freqs{i},' ROI'])
+            set(gcf, 'WindowStyle', 'Docked')
+            suptitle([animal{j},': ',Freqs{i},' ROI'])
             hold on
             b = bar(BARavgBFROImu(:,:,i,j),'grouped');
-            title({'Unadjusted Passive and Behavior','Post-onset DeltaF/F'})
+            title({'Passive and Unadjusted Behavior : Post-onset DeltaF/F'})
             nbars = size(BARavgBFROImu(:,:,i,j),2);
             x = [];
             for n = 1:nbars
@@ -763,17 +864,18 @@ for j = 1:numAnimals
             xticks([1:6])
             xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
             xtickangle(-15)
+            ylabel('Normalized DeltaF/F')
             set(gca, 'Box', 'off')
             hold off
-            figSave6 = fullfile(file_loc,animal{j},fig6{i});
-            savefig(figSave6);
-            set(gcf, 'WindowStyle', 'Docked')
+            figSave7 = fullfile(file_loc,animal{j},fig7{i});
+            savefig(figSave7);
             %plot adjusted post-onset BF ROI DeltaF/F with significance%
             figure
-            suptitle([animal{j},' ',Freqs{i},' ROI'])
+            set(gcf, 'WindowStyle', 'Docked')
+            suptitle([animal{j},': ',Freqs{i},' ROI'])
             hold on
             b = bar(BARavgAdjBFROImu(:,:,i,j));
-            title({'Passive-adjusted Behavior','Post-onset DeltaF/F'})
+            title({'Passive-adjusted Behavior : Post-onset DeltaF/F'})
             nbars = size(BARavgAdjBFROImu(:,:,i,j),2);
             x = [];
             for n = 1:nbars
@@ -784,1208 +886,480 @@ for j = 1:numAnimals
                 err(n).Color = [0 0 0];
                 err(n).LineStyle = 'None';
             end
+            legend('post-onset all','tone onset','tone offset','AutoUpdate','Off')
             sigstar(behavSigPoints,[Pahm,PahmON,PahmOFF,Pafc,PafcON,PafcOFF])
             xticks([1:4])
             xticklabels({'hit','miss','false alarm','correct reject'})
             xtickangle(-15)
+            ylabel('Normalized DeltaF/F')
             set(gca, 'Box', 'off')
             hold off
-            figSave7 = fullfile(file_loc,animal{j},fig7{i});
-            savefig(figSave7);
-            set(gcf, 'WindowStyle', 'Docked')
+            figSave8 = fullfile(file_loc,animal{j},fig8{i});
+            savefig(figSave8);
         end
     end
     
     %% autoencoder ROI analysis %%
-    AEROItarTraces = cell(4,2);
-    AEROIhitTraces = cell(4,2);
-    AEROImissTraces = cell(4,2);
-    AEROInonTraces = cell(4,2);
-    AEROIfalarmTraces = cell(4,2);
-    AEROIcorrejTraces = cell(4,2);
-    AEROItarPODF = cell(4,2);
-    AEROIhitPODF = cell(4,2);
-    AEROImissPODF = cell(4,2);
-    AEROInonPODF = cell(4,2);
-    AEROIfalarmPODF = cell(4,2);
-    AEROIcorrejPODF = cell(4,2);
-    AEROItarPODFon = cell(4,2);
-    AEROIhitPODFon = cell(4,2);
-    AEROImissPODFon = cell(4,2);
-    AEROInonPODFon = cell(4,2);
-    AEROIfalarmPODFon = cell(4,2);
-    AEROIcorrejPODFon = cell(4,2);
-    AEROItarPODFoff = cell(4,2);
-    AEROIhitPODFoff = cell(4,2);
-    AEROImissPODFoff = cell(4,2);
-    AEROInonPODFoff = cell(4,2);
-    AEROIfalarmPODFoff = cell(4,2);
-    AEROIcorrejPODFoff = cell(4,2);
-    adjAEROIhitPODF = cell(4,2);
-    adjAEROImissPODF = cell(4,2);
-    adjAEROIfalarmPODF = cell(4,2);
-    adjAEROIcorrejPODF = cell(4,2);
-    adjAEROIhitPODFon = cell(4,2);
-    adjAEROImissPODFon = cell(4,2);
-    adjAEROIfalarmPODFon = cell(4,2);
-    adjAEROIcorrejPODFon = cell(4,2);
-    adjAEROIhitPODFoff = cell(4,2);
-    adjAEROImissPODFoff = cell(4,2);
-    adjAEROIfalarmPODFoff = cell(4,2);
-    adjAEROIcorrejPODFoff = cell(4,2);
+    AEROItarTraces = cell(4,1);
+    AEROIhitTraces = cell(4,1);
+    AEROImissTraces = cell(4,1);
+    AEROInonTraces = cell(4,1);
+    AEROIfalarmTraces = cell(4,1);
+    AEROIcorrejTraces = cell(4,1);
+    AEROItarPODF = cell(4,1);
+    AEROIhitPODF = cell(4,1);
+    AEROImissPODF = cell(4,1);
+    AEROInonPODF = cell(4,1);
+    AEROIfalarmPODF = cell(4,1);
+    AEROIcorrejPODF = cell(4,1);
+    AEROItarPODFon = cell(4,1);
+    AEROIhitPODFon = cell(4,1);
+    AEROImissPODFon = cell(4,1);
+    AEROInonPODFon = cell(4,1);
+    AEROIfalarmPODFon = cell(4,1);
+    AEROIcorrejPODFon = cell(4,1);
+    AEROItarPODFoff = cell(4,1);
+    AEROIhitPODFoff = cell(4,1);
+    AEROImissPODFoff = cell(4,1);
+    AEROInonPODFoff = cell(4,1);
+    AEROIfalarmPODFoff = cell(4,1);
+    AEROIcorrejPODFoff = cell(4,1);
+    adjAEROIhitPODF = cell(4,1);
+    adjAEROImissPODF = cell(4,1);
+    adjAEROIfalarmPODF = cell(4,1);
+    adjAEROIcorrejPODF = cell(4,1);
+    adjAEROIhitPODFon = cell(4,1);
+    adjAEROImissPODFon = cell(4,1);
+    adjAEROIfalarmPODFon = cell(4,1);
+    adjAEROIcorrejPODFon = cell(4,1);
+    adjAEROIhitPODFoff = cell(4,1);
+    adjAEROImissPODFoff = cell(4,1);
+    adjAEROIfalarmPODFoff = cell(4,1);
+    adjAEROIcorrejPODFoff = cell(4,1);
     for n = 1:length(ACregs)
-        %separate average AEROI traces and PODF by ROI BF (freq)%
-%         count = [1;1;1;1;1;1;1;1];
-        onroiCounter = 1;
-        offroiCounter = 1;
-        for i = 1:animalExps(j)
-            roiCount = size(mouseBehavior(i).AEROItraces{n},3);
-            for ii = 1:roiCount
-                onVals = [mouseBehavior(i).AEROImeansON{n}(ii,1) mouseBehavior(i).AEROImeansON{n}(ii,4)];
-                onVal = sum(onVals);
-                offVals = [mouseBehavior(i).AEROImeansOFF{n}(ii,1) mouseBehavior(i).AEROImeansOFF{n}(ii,4)];
-                offVal = sum(offVals);
-                if onVal > offVal
-                    onACregTraces{n,j}(:,:,onroiCounter) = mouseBehavior(i).AEROItraces{n}(:,:,ii);
-                    onACregMu{n,j} = [onACregMu{n,j}; mouseBehavior(i).AEROImeansALL{n}(ii,:)];
-                    onACregMuON{n,j} = [onACregMuON{n,j}; mouseBehavior(i).AEROImeansON{n}(ii,:)];
-                    onACregMuOFF{n,j} = [onACregMuOFF{n,j}; mouseBehavior(i).AEROImeansOFF{n}(ii,:)];
-                    onadjACregMu{n,j} = [onadjACregMu{n,j}; mouseBehavior(i).adjAEROImeansALL{n}(ii,:)];
-                    onadjACregMuON{n,j} = [onadjACregMuON{n,j}; mouseBehavior(i).adjAEROImeansON{n}(ii,:)];
-                    onadjACregMuOFF{n,j} = [onadjACregMuOFF{n,j}; mouseBehavior(i).adjAEROImeansOFF{n}(ii,:)];
-                    onroiCounter = onroiCounter + 1;
-                else
-                    offACregTraces{n,j}(:,:,offroiCounter) = mouseBehavior(i).AEROItraces{n}(:,:,ii);
-                    offACregMu{n,j} = [offACregMu{n,j}; mouseBehavior(i).AEROImeansALL{n}(ii,:)];
-                    offACregMuON{n,j} = [offACregMuON{n,j}; mouseBehavior(i).AEROImeansON{n}(ii,:)];
-                    offACregMuOFF{n,j} = [offACregMuOFF{n,j}; mouseBehavior(i).AEROImeansOFF{n}(ii,:)];
-                    offadjACregMu{n,j} = [offadjACregMu{n,j}; mouseBehavior(i).adjAEROImeansALL{n}(ii,:)];
-                    offadjACregMuON{n,j} = [offadjACregMuON{n,j}; mouseBehavior(i).adjAEROImeansON{n}(ii,:)];
-                    offadjACregMuOFF{n,j} = [offadjACregMuOFF{n,j}; mouseBehavior(i).adjAEROImeansOFF{n}(ii,:)];
-                    offroiCounter = offroiCounter + 1;
-                end
-%             for ii = 1:size(mouseBehavior(i).AEROItraces,3)
-%                 BF = mouseBehavior(i).AEROIidx{ii,3}(1);
-%                 BFidx = find(dubFreqs == BF);
-%                 AEROIfreqTraces{BFidx,j}(:,:,count(BFidx)) = mouseBehavior(i).AEROItraces(:,:,ii);
-%                 AEROIfreqMu{BFidx,j}(count(BFidx),:) = mouseBehavior(i).AEROImeansALL(ii,:);
-%                 AEROIfreqMuON{BFidx,j}(count(BFidx),:) = mouseBehavior(i).AEROImeansON(ii,:);
-%                 AEROIfreqMuOFF{BFidx,j}(count(BFidx),:) = mouseBehavior(i).AEROImeansOFF(ii,:);
-%                 adjAEROIfreqTraces{BFidx,j}(:,:,count(BFidx)) = mouseBehavior(i).adjAEROItraces(:,:,ii);
-%                 adjAEROIfreqMu{BFidx,j}(count(BFidx),:) = mouseBehavior(i).adjAEROImeansALL(ii,:);
-%                 adjAEROIfreqMuON{BFidx,j}(count(BFidx),:) = mouseBehavior(i).adjAEROImeansON(ii,:);
-%                 adjAEROIfreqMuOFF{BFidx,j}(count(BFidx),:) = mouseBehavior(i).adjAEROImeansOFF(ii,:);
-%                 count(BFidx) = count(BFidx) + 1;
-%             end
+        for i = 1:animalExps(j)    
+            if isnan(mouseBehavior(i).AEROItraces{n})
+                continue
+            else
+                ACregTraces{n,j} = cat(3,ACregTraces{n,j},nanmean(mouseBehavior(i).AEROItraces{n},3));
+                ACregMu{n,j} = [ACregMu{n,j}; nanmean(mouseBehavior(i).AEROImeansALL{n},1)];
+                ACregMuON{n,j} = [ACregMuON{n,j}; nanmean(mouseBehavior(i).AEROImeansON{n},1)];
+                ACregMuOFF{n,j} = [ACregMuOFF{n,j}; nanmean(mouseBehavior(i).AEROImeansOFF{n},1)];
+                adjACregMu{n,j} = [adjACregMu{n,j}; nanmean(mouseBehavior(i).adjAEROImeansALL{n},1)];
+                adjACregMuON{n,j} = [adjACregMuON{n,j}; nanmean(mouseBehavior(i).adjAEROImeansON{n},1)];
+                adjACregMuOFF{n,j} = [adjACregMuOFF{n,j}; nanmean(mouseBehavior(i).adjAEROImeansOFF{n},1)];
             end
         end
-%         count = [1;1;1;1;1;1;1;1];
-        PonroiCounter = 1;
-        PoffroiCounter = 1;
         for i = 1:animalPass(j)
-            ProiCount = size(mousePassive(i).avgAEROItraces{n},2);
-            for ii = 1:ProiCount
-                onVals = [mousePassive(i).AEROImeansON{n}(ii,:)];
-                onVal = sum(onVals);
-                offVals = [mousePassive(i).AEROImeansOFF{n}(ii,:)];
-                offVal = sum(offVals);
-                if onVal > offVal
-                    onPassACregTraces{n,j}(:,:,PonroiCounter) = squeeze(mousePassive(i).avgAEROItraces{n}(:,ii,:));
-                    onPassACregMu{n,j} = [onPassACregMu{n,j}; mousePassive(i).AEROImeansALL{n}(ii,:)];
-                    onPassACregMuON{n,j} = [onPassACregMuON{n,j}; mousePassive(i).AEROImeansON{n}(ii,:)];
-                    onPassACregMuOFF{n,j} = [onPassACregMuOFF{n,j}; mousePassive(i).AEROImeansOFF{n}(ii,:)];
-                    PonroiCounter = PonroiCounter + 1;
-                else
-                    offPassACregTraces{n,j}(:,:,PoffroiCounter) = squeeze(mousePassive(i).avgAEROItraces{n}(:,ii,:));
-                    offPassACregMu{n,j} = [offPassACregMu{n,j}; mousePassive(i).AEROImeansALL{n}(ii,:)];
-                    offPassACregMuON{n,j} = [offPassACregMuON{n,j}; mousePassive(i).AEROImeansON{n}(ii,:)];
-                    offPassACregMuOFF{n,j} = [offPassACregMuOFF{n,j}; mousePassive(i).AEROImeansOFF{n}(ii,:)];
-                    PoffroiCounter = PoffroiCounter + 1;
-                end
-%             for ii = 1:size(mousePassive(i).avgAEROItraces,2)
-%                 BF = mousePassive(i).AEROIidx{ii,2}(1);
-%                 BFidx = find(dubFreqs == BF);
-%                 PassAEROIfreqTraces{BFidx,j}(:,:,count(BFidx)) = mousePassive(i).avgAEROItraces(:,ii,:);
-%                 PassAEROIfreqMu{BFidx,j}(count(BFidx),:) = mousePassive(i).AEROImeansALL(ii,:);
-%                 PassAEROIfreqMuON{BFidx,j}(count(BFidx),:) = mousePassive(i).AEROImeansON(ii,:);
-%                 PassAEROIfreqMuOFF{BFidx,j}(count(BFidx),:) = mousePassive(i).AEROImeansOFF(ii,:);
-%                 count(BFidx) = count(BFidx) + 1;
-%             end
+            if isnan(mousePassive(i).avgAEROItraces{n})
+                continue
+            else
+                PassACregTraces{n,j} = cat(2,PassACregTraces{n,j},squeeze(nanmean(mousePassive(i).avgAEROItraces{n},2)));
+                PassACregMu{n,j} = [PassACregMu{n,j}; nanmean(mousePassive(i).AEROImeansALL{n},1)];
+                PassACregMuON{n,j} = [PassACregMuON{n,j}; nanmean(mousePassive(i).AEROImeansON{n},1)];
+                PassACregMuOFF{n,j} = [PassACregMuOFF{n,j}; nanmean(mousePassive(i).AEROImeansOFF{n},1)];
             end
         end
-        
-        %%% ONSET AE ROI ANALYSIS%%%
-        if onroiCounter > 1
+        if isempty(ACregTraces{n,j})
+            continue
+        else
+            roiCount = size(ACregTraces{n,j},3);
             %AC regional traces%
-            AEROItarTraces{n,1} = squeeze(onACregTraces{n,j}(:,1,:));
-            AEROIhitTraces{n,1} = squeeze(onACregTraces{n,j}(:,2,:));
-            AEROImissTraces{n,1} = squeeze(onACregTraces{n,j}(:,3,:));
-            AEROInonTraces{n,1} = squeeze(onACregTraces{n,j}(:,4,:));
-            AEROIfalarmTraces{n,1} = squeeze(onACregTraces{n,j}(:,5,:));
-            AEROIcorrejTraces{n,1} = squeeze(onACregTraces{n,j}(:,6,:));
-            onACregTarTrace = nanmean(AEROItarTraces{n,1},2);
-            onACregHitTrace = nanmean(AEROIhitTraces{n,1},2);
-            onACregMissTrace = nanmean(AEROImissTraces{n,1},2);
-            onACregNonTrace = nanmean(AEROInonTraces{n,1},2);
-            onACregFalarmTrace = nanmean(AEROIfalarmTraces{n,1},2);
-            onACregCorrejTrace = nanmean(AEROIcorrejTraces{n,1},2);
-            onACregTarTraceSE = nanstd(AEROItarTraces{n,1}',0,1)/sqrt(onroiCounter-1);
-            onACregHitTraceSE = nanstd(AEROIhitTraces{n,1}',0,1)/sqrt(onroiCounter-1);
-            onACregMissTraceSE = nanstd(AEROImissTraces{n,1}',0,1)/sqrt(onroiCounter-1);
-            onACregNonTraceSE = nanstd(AEROInonTraces{n,1}',0,1)/sqrt(onroiCounter-1);
-            onACregFalarmTraceSE = nanstd(AEROIfalarmTraces{n,1}',0,1)/sqrt(onroiCounter-1);
-            onACregCorrejTraceSE = nanstd(AEROIcorrejTraces{n,1}',0,1)/sqrt(onroiCounter-1);
+            AEROItarTraces{n} = squeeze(ACregTraces{n,j}(:,1,:));
+            AEROIhitTraces{n} = squeeze(ACregTraces{n,j}(:,2,:));
+            AEROImissTraces{n} = squeeze(ACregTraces{n,j}(:,3,:));
+            AEROInonTraces{n} = squeeze(ACregTraces{n,j}(:,4,:));
+            AEROIfalarmTraces{n} = squeeze(ACregTraces{n,j}(:,5,:));
+            AEROIcorrejTraces{n} = squeeze(ACregTraces{n,j}(:,6,:));
+            ACregTarTrace = nanmean(AEROItarTraces{n},2);
+            ACregHitTrace = nanmean(AEROIhitTraces{n},2);
+            ACregMissTrace = nanmean(AEROImissTraces{n},2);
+            ACregNonTrace = nanmean(AEROInonTraces{n},2);
+            ACregFalarmTrace = nanmean(AEROIfalarmTraces{n},2);
+            ACregCorrejTrace = nanmean(AEROIcorrejTraces{n},2);
+            ACregTarTraceSE = nanstd(AEROItarTraces{n}',0,1)/sqrt(animalExps(j));
+            ACregHitTraceSE = nanstd(AEROIhitTraces{n}',0,1)/sqrt(animalExps(j));
+            ACregMissTraceSE = nanstd(AEROImissTraces{n}',0,1)/sqrt(animalExps(j));
+            ACregNonTraceSE = nanstd(AEROInonTraces{n}',0,1)/sqrt(animalExps(j));
+            ACregFalarmTraceSE = nanstd(AEROIfalarmTraces{n}',0,1)/sqrt(animalExps(j));
+            ACregCorrejTraceSE = nanstd(AEROIcorrejTraces{n}',0,1)/sqrt(animalExps(j));
             %plot AC regional traces%
+            AEROItraceMax = max(max(max(ACregTraces{n,j})));
+            AEROItraceMin = min(min(min(ACregTraces{n,j})));
+            onBar = repmat((min(AEROItraceMin)-0.05),1,5);
+            offBar = repmat((min(AEROItraceMin)-0.05),1,5);
+            onIdx = [4:8];
+            offIdx = [8:12];
             if figON
                 figure
-                suptitle([animal{j},' ',ACregs{n},' onset AE ROI'])
-                subplot(1,2,1)
-                shadedErrorBar([1:18],onACregTarTrace,2*onACregTarTraceSE,'-g',1);
-                hold on
-                shadedErrorBar([1:18],onACregHitTrace,2*onACregHitTraceSE,'-b',1);
-                shadedErrorBar([1:18],onACregMissTrace,2*onACregMissTraceSE,'-r',1);
-                set(gca, 'Box', 'off')
-                hold off
-                title({'{\color{blue}Hit} vs. {\color{red}Miss} vs. {\color{green}Passive} ',...
-                    '{\color{green}Target} Fluorescence Traces'})
-                xticks([4, 8, 12, 16])
-                xticklabels({'1', '2', '3', '4'})
-                xlabel('Time (s)')
-                ylabel('DeltaF/F')
-                subplot(1,2,2)
-                shadedErrorBar([1:18],onACregNonTrace,2*onACregNonTraceSE,'-g',1);
-                hold on
-                shadedErrorBar([1:18],onACregFalarmTrace,2*onACregFalarmTraceSE,'-r',1);
-                shadedErrorBar([1:18],onACregCorrejTrace,2*onACregCorrejTraceSE,'-b',1);
-                set(gca, 'Box', 'off')
-                hold off
-                title({'{\color{blue}Hit} vs. {\color{red}Miss} vs. {\color{green}Passive} ',...
-                    '{\color{green}Target} Fluorescence Traces'})
-                xticks([4, 8, 12, 16])
-                xticklabels({'1', '2', '3', '4'})
-                xlabel('Time (s)')
-                ylabel('DeltaF/F')
                 set(gcf, 'WindowStyle', 'Docked')
-                figSave8 = fullfile(file_loc,animal{j},strcat(ACregs{n},'_',fig8));
-                savefig(figSave8);
+                suptitle([animal{j},': ',ACregs{n},' AE ROI'])
+                subplot(1,2,1)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+                shadedErrorBar([1:18],ACregTarTrace,2*ACregTarTraceSE,'-g',1);
+                shadedErrorBar([1:18],ACregHitTrace,2*ACregHitTraceSE,'-b',1);
+                shadedErrorBar([1:18],ACregMissTrace,2*ACregMissTraceSE,'-r',1);
+                set(gca, 'Box', 'off')
+                hold off
+                title({'{\color{blue}Hit} vs. {\color{red}Miss} vs. {\color{green}Passive} ',...
+                    '{\color{green}Target} Fluorescence Traces'})
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                xlabel('Time (s)')
+                ylabel('Normalized DeltaF/F')
+                ylim([min(AEROItraceMin)-0.1 max(AEROItraceMax)+0.3])
+                subplot(1,2,2)
+                plot(onIdx,onBar,'k','LineWidth',3)
+                hold on
+                plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+                legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+                shadedErrorBar([1:18],ACregNonTrace,2*ACregNonTraceSE,'-g',1);
+                shadedErrorBar([1:18],ACregFalarmTrace,2*ACregFalarmTraceSE,'-r',1);
+                shadedErrorBar([1:18],ACregCorrejTrace,2*ACregCorrejTraceSE,'-b',1);
+                set(gca, 'Box', 'off')
+                hold off
+                title({'{\color{blue}Correct Reject} vs. {\color{red}False Alarm} vs. {\color{green}Passive} ',...
+                    '{\color{green}Nontarget} Fluorescence Traces'})
+                xticks([4, 8, 12, 16])
+                xticklabels({'1', '2', '3', '4'})
+                xlabel('Time (s)')
+                ylabel('Normalized DeltaF/F')
+                ylim([min(AEROItraceMin)-0.1 max(AEROItraceMax)+0.3])
+                figSave9 = fullfile(file_loc,animal{j},[ACregs{n},'_',fig9]);
+                savefig(figSave9);
             end
 
             %AC regional post-onset deltaF/F%
             %post-onset all
-            AEROItarPODF{n,1} = onACregMu{n,j}(:,1);
-            AEROIhitPODF{n,1} = onACregMu{n,j}(:,2);
-            AEROImissPODF{n,1} = onACregMu{n,j}(:,3);
-            AEROInonPODF{n,1} = onACregMu{n,j}(:,4);
-            AEROIfalarmPODF{n,1} = onACregMu{n,j}(:,5);
-            AEROIcorrejPODF{n,1} = onACregMu{n,j}(:,6);
-            onACregTarMu = nanmean(AEROItarPODF{n,1});
-            onACregHitMu = nanmean(AEROIhitPODF{n,1});
-            onACregMissMu = nanmean(AEROImissPODF{n,1});
-            onACregNonMu = nanmean(AEROInonPODF{n,1});
-            onACregFalarmMu = nanmean(AEROIfalarmPODF{n,1});
-            onACregCorrejMu = nanmean(AEROIcorrejPODF{n,1});
-            onACregTarMuSE = nanstd(AEROItarPODF{n,1})/sqrt(onroiCounter-1);
-            onACregHitMuSE = nanstd(AEROIhitPODF{n,1})/sqrt(onroiCounter-1);
-            onACregMissMuSE = nanstd(AEROImissPODF{n,1})/sqrt(onroiCounter-1);
-            onACregNonMuSE = nanstd(AEROInonPODF{n,1})/sqrt(onroiCounter-1);
-            onACregFalarmMuSE = nanstd(AEROIfalarmPODF{n,1})/sqrt(onroiCounter-1);
-            onACregCorrejMuSE = nanstd(AEROIcorrejPODF{n,1})/sqrt(onroiCounter-1);
+            AEROItarPODF{n} = ACregMu{n,j}(:,1);
+            AEROIhitPODF{n} = ACregMu{n,j}(:,2);
+            AEROImissPODF{n} = ACregMu{n,j}(:,3);
+            AEROInonPODF{n} = ACregMu{n,j}(:,4);
+            AEROIfalarmPODF{n} = ACregMu{n,j}(:,5);
+            AEROIcorrejPODF{n} = ACregMu{n,j}(:,6);
+            ACregTarMu = nanmean(AEROItarPODF{n});
+            ACregHitMu = nanmean(AEROIhitPODF{n});
+            ACregMissMu = nanmean(AEROImissPODF{n});
+            ACregNonMu = nanmean(AEROInonPODF{n});
+            ACregFalarmMu = nanmean(AEROIfalarmPODF{n});
+            ACregCorrejMu = nanmean(AEROIcorrejPODF{n});
+            ACregTarMuSE = nanstd(AEROItarPODF{n})/sqrt(animalExps(j));
+            ACregHitMuSE = nanstd(AEROIhitPODF{n})/sqrt(animalExps(j));
+            ACregMissMuSE = nanstd(AEROImissPODF{n})/sqrt(animalExps(j));
+            ACregNonMuSE = nanstd(AEROInonPODF{n})/sqrt(animalExps(j));
+            ACregFalarmMuSE = nanstd(AEROIfalarmPODF{n})/sqrt(animalExps(j));
+            ACregCorrejMuSE = nanstd(AEROIcorrejPODF{n})/sqrt(animalExps(j));
             %tone-onset
-            AEROItarPODFon{n,1} = onACregMuON{n,j}(:,1);
-            AEROIhitPODFon{n,1} = onACregMuON{n,j}(:,2);
-            AEROImissPODFon{n,1} = onACregMuON{n,j}(:,3);
-            AEROInonPODFon{n,1} = onACregMuON{n,j}(:,4);
-            AEROIfalarmPODFon{n,1} = onACregMuON{n,j}(:,5);
-            AEROIcorrejPODFon{n,1} = onACregMuON{n,j}(:,6);
-            onACregTarMuON = nanmean(AEROItarPODFon{n,1});
-            onACregHitMuON = nanmean(AEROIhitPODFon{n,1});
-            onACregMissMuON = nanmean(AEROImissPODFon{n,1});
-            onACregNonMuON = nanmean(AEROInonPODFon{n,1});
-            onACregFalarmMuON = nanmean(AEROIfalarmPODFon{n,1});
-            onACregCorrejMuON = nanmean(AEROIcorrejPODFon{n,1});
-            onACregTarMuSEon = nanstd(AEROItarPODFon{n,1})/sqrt(onroiCounter-1);
-            onACregHitMuSEon = nanstd(AEROIhitPODFon{n,1})/sqrt(onroiCounter-1);
-            onACregMissMuSEon = nanstd(AEROImissPODFon{n,1})/sqrt(onroiCounter-1);
-            onACregNonMuSEon = nanstd(AEROInonPODFon{n,1})/sqrt(onroiCounter-1);
-            onACregFalarmMuSEon = nanstd(AEROIfalarmPODFon{n,1})/sqrt(onroiCounter-1);
-            onACregCorrejMuSEon = nanstd(AEROIcorrejPODFon{n,1})/sqrt(onroiCounter-1);
+            AEROItarPODFon{n} = ACregMuON{n,j}(:,1);
+            AEROIhitPODFon{n} = ACregMuON{n,j}(:,2);
+            AEROImissPODFon{n} = ACregMuON{n,j}(:,3);
+            AEROInonPODFon{n} = ACregMuON{n,j}(:,4);
+            AEROIfalarmPODFon{n} = ACregMuON{n,j}(:,5);
+            AEROIcorrejPODFon{n} = ACregMuON{n,j}(:,6);
+            ACregTarMuON = nanmean(AEROItarPODFon{n});
+            ACregHitMuON = nanmean(AEROIhitPODFon{n});
+            ACregMissMuON = nanmean(AEROImissPODFon{n});
+            ACregNonMuON = nanmean(AEROInonPODFon{n});
+            ACregFalarmMuON = nanmean(AEROIfalarmPODFon{n});
+            ACregCorrejMuON = nanmean(AEROIcorrejPODFon{n});
+            ACregTarMuSEon = nanstd(AEROItarPODFon{n})/sqrt(animalExps(j));
+            ACregHitMuSEon = nanstd(AEROIhitPODFon{n})/sqrt(animalExps(j));
+            ACregMissMuSEon = nanstd(AEROImissPODFon{n})/sqrt(animalExps(j));
+            ACregNonMuSEon = nanstd(AEROInonPODFon{n})/sqrt(animalExps(j));
+            ACregFalarmMuSEon = nanstd(AEROIfalarmPODFon{n})/sqrt(animalExps(j));
+            ACregCorrejMuSEon = nanstd(AEROIcorrejPODFon{n})/sqrt(animalExps(j));
             %tone-offset
-            AEROItarPODFoff{n,1} = onACregMuOFF{n,j}(:,1);
-            AEROIhitPODFoff{n,1} = onACregMuOFF{n,j}(:,2);
-            AEROImissPODFoff{n,1} = onACregMuOFF{n,j}(:,3);
-            AEROInonPODFoff{n,1} = onACregMuOFF{n,j}(:,4);
-            AEROIfalarmPODFoff{n,1} = onACregMuOFF{n,j}(:,5);
-            AEROIcorrejPODFoff{n,1} = onACregMuOFF{n,j}(:,6);
-            onACregTarMuOFF = nanmean(AEROItarPODFoff{n,1});
-            onACregHitMuOFF = nanmean(AEROIhitPODFoff{n,1});
-            onACregMissMuOFF = nanmean(AEROImissPODFoff{n,1});
-            onACregNonMuOFF = nanmean(AEROInonPODFoff{n,1});
-            onACregFalarmMuOFF = nanmean(AEROIfalarmPODFoff{n,1});
-            onACregCorrejMuOFF = nanmean(AEROIcorrejPODFoff{n,1});
-            onACregTarMuSEoff = nanstd(AEROItarPODFoff{n,1})/sqrt(onroiCounter-1);
-            onACregHitMuSEoff = nanstd(AEROIhitPODFoff{n,1})/sqrt(onroiCounter-1);
-            onACregMissMuSEoff = nanstd(AEROImissPODFoff{n,1})/sqrt(onroiCounter-1);
-            onACregNonMuSEoff = nanstd(AEROInonPODFoff{n,1})/sqrt(onroiCounter-1);
-            onACregFalarmMuSEoff = nanstd(AEROIfalarmPODFoff{n,1})/sqrt(onroiCounter-1);
-            onACregCorrejMuSEoff = nanstd(AEROIcorrejPODFoff{n,1})/sqrt(onroiCounter-1);
+            AEROItarPODFoff{n} = ACregMuOFF{n,j}(:,1);
+            AEROIhitPODFoff{n} = ACregMuOFF{n,j}(:,2);
+            AEROImissPODFoff{n} = ACregMuOFF{n,j}(:,3);
+            AEROInonPODFoff{n} = ACregMuOFF{n,j}(:,4);
+            AEROIfalarmPODFoff{n} = ACregMuOFF{n,j}(:,5);
+            AEROIcorrejPODFoff{n} = ACregMuOFF{n,j}(:,6);
+            ACregTarMuOFF = nanmean(AEROItarPODFoff{n});
+            ACregHitMuOFF = nanmean(AEROIhitPODFoff{n});
+            ACregMissMuOFF = nanmean(AEROImissPODFoff{n});
+            ACregNonMuOFF = nanmean(AEROInonPODFoff{n});
+            ACregFalarmMuOFF = nanmean(AEROIfalarmPODFoff{n});
+            ACregCorrejMuOFF = nanmean(AEROIcorrejPODFoff{n});
+            ACregTarMuSEoff = nanstd(AEROItarPODFoff{n})/sqrt(animalExps(j));
+            ACregHitMuSEoff = nanstd(AEROIhitPODFoff{n})/sqrt(animalExps(j));
+            ACregMissMuSEoff = nanstd(AEROImissPODFoff{n})/sqrt(animalExps(j));
+            ACregNonMuSEoff = nanstd(AEROInonPODFoff{n})/sqrt(animalExps(j));
+            ACregFalarmMuSEoff = nanstd(AEROIfalarmPODFoff{n})/sqrt(animalExps(j));
+            ACregCorrejMuSEoff = nanstd(AEROIcorrejPODFoff{n})/sqrt(animalExps(j));
             %checking for statistically significant differences%
-            if isnan(onACregTarMu) || isnan(onACregHitMu)
-                Paeon(1) = nan;
+%             [Haeon(1) Paeon(1)] = kstest2(AEROItarPODF{n,1},AEROIhitPODF{n,1},alpha);
+%             [Haeon(2) Paeon(2)] = kstest2(AEROItarPODFon{n,1},AEROIhitPODFon{n,1},alpha);
+%             [Haeon(3) Paeon(3)] = kstest2(AEROItarPODFoff{n,1},AEROIhitPODFoff{n,1},alpha);
+%             [Haeon(4) Paeon(4)] = kstest2(AEROItarPODF{n,1},AEROImissPODF{n,1},alpha);
+%             [Haeon(5) Paeon(5)] = kstest2(AEROItarPODFon{n,1},AEROImissPODFon{n,1},alpha);
+%             [Haeon(6) Paeon(6)] = kstest2(AEROItarPODFoff{n,1},AEROIhitPODFoff{n,1},alpha);
+%             [Haeon(7) Paeon(7)] = kstest2(AEROInonPODF{n,1},AEROIfalarmPODF{n,1},alpha);
+%             [Haeon(8) Paeon(8)] = kstest2(AEROInonPODFon{n,1},AEROIfalarmPODFon{n,1},alpha);
+%             [Haeon(9) Paeon(9)] = kstest2(AEROInonPODFoff{n,1},AEROIfalarmPODFoff{n,1},alpha);
+%             [Haeon(10) Paeon(10)] = kstest2(AEROInonPODF{n,1},AEROIcorrejPODF{n,1},alpha);
+%             [Haeon(11) Paeon(11)] = kstest2(AEROInonPODFon{n,1},AEROIcorrejPODFon{n,1},alpha);
+%             [Haeon(12) Paeon(12)] = kstest2(AEROInonPODFoff{n,1},AEROIcorrejPODFoff{n,1},alpha);
+            if isnan(ACregTarMu) || isnan(ACregHitMu)
+                Pae(1) = nan;
             else
-                [Haeon(1) Paeon(1)] = kstest2(AEROItarPODF{n,1},AEROIhitPODF{n,1},alpha);
+                [Hae(1) Pae(1)] = kstest2(AEROItarPODF{n},AEROIhitPODF{n},alpha);
             end
-            if isnan(onACregTarMuON) || isnan(onACregHitMuON)
-                Paeon(2) = nan;
+            if isnan(ACregTarMuON) || isnan(ACregHitMuON)
+                Pae(2) = nan;
             else
-                [Haeon(2) Paeon(2)] = kstest2(AEROItarPODFon{n,1},AEROIhitPODFon{n,1},alpha);
+                [Hae(2) Pae(2)] = kstest2(AEROItarPODFon{n},AEROIhitPODFon{n},alpha);
             end
-            if isnan(onACregTarMuOFF) || isnan(onACregHitMuOFF)
-                Paeon(3) = nan;
+            if isnan(ACregTarMuOFF) || isnan(ACregHitMuOFF)
+                Pae(3) = nan;
             else
-                [Haeon(3) Paeon(3)] = kstest2(AEROItarPODFoff{n,1},AEROIhitPODFoff{n,1},alpha);
+                [Hae(3) Pae(3)] = kstest2(AEROItarPODFoff{n},AEROIhitPODFoff{n},alpha);
             end
-            if isnan(onACregTarMu) || isnan(onACregMissMu)
-                Paeon(4) = nan;
+            if isnan(ACregTarMu) || isnan(ACregMissMu)
+                Pae(4) = nan;
             else
-                [Haeon(4) Paeon(4)] = kstest2(AEROItarPODF{n,1},AEROImissPODF{n,1},alpha);
+                [Hae(4) Pae(4)] = kstest2(AEROItarPODF{n},AEROImissPODF{n},alpha);
             end
-            if isnan(onACregTarMuON) || isnan(onACregMissMuON)
-                Paeon(5) = nan;
+            if isnan(ACregTarMuON) || isnan(ACregMissMuON)
+                Pae(5) = nan;
             else
-                [Haeon(5) Paeon(5)] = kstest2(AEROItarPODFon{n,1},AEROImissPODFon{n,1},alpha);
+                [Hae(5) Pae(5)] = kstest2(AEROItarPODFon{n},AEROImissPODFon{n},alpha);
             end
-            if isnan(onACregTarMuOFF) || isnan(onACregMissMuOFF)
-                Paeon(6) = nan;
+            if isnan(ACregTarMuOFF) || isnan(ACregMissMuOFF)
+                Pae(6) = nan;
             else
-                [Haeon(6) Paeon(6)] = kstest2(AEROItarPODFoff{n,1},AEROIhitPODFoff{n,1},alpha);
+                [Hae(6) Pae(6)] = kstest2(AEROItarPODFoff{n},AEROIhitPODFoff{n},alpha);
             end
-            if isnan(onACregNonMu) || isnan(onACregFalarmMu)
-                Paeon(7) = nan;
+            if isnan(ACregNonMu) || isnan(ACregFalarmMu)
+                Pae(7) = nan;
             else
-                [Haeon(7) Paeon(7)] = kstest2(AEROInonPODF{n,1},AEROIfalarmPODF{n,1},alpha);
+                [Hae(7) Pae(7)] = kstest2(AEROInonPODF{n},AEROIfalarmPODF{n},alpha);
             end
-            if isnan(onACregNonMuON) || isnan(onACregFalarmMuON)
-                Paeon(8) = nan;
+            if isnan(ACregNonMuON) || isnan(ACregFalarmMuON)
+                Pae(8) = nan;
             else
-                [Haeon(8) Paeon(8)] = kstest2(AEROInonPODFon{n,1},AEROIfalarmPODFon{n,1},alpha);
+                [Hae(8) Pae(8)] = kstest2(AEROInonPODFon{n},AEROIfalarmPODFon{n},alpha);
             end
-            if isnan(onACregNonMuOFF) || isnan(onACregFalarmMuOFF)
-                Paeon(9) = nan;
+            if isnan(ACregNonMuOFF) || isnan(ACregFalarmMuOFF)
+                Pae(9) = nan;
             else
-                [Haeon(9) Paeon(9)] = kstest2(AEROInonPODFoff{n,1},AEROIfalarmPODFoff{n,1},alpha);
+                [Hae(9) Pae(9)] = kstest2(AEROInonPODFoff{n},AEROIfalarmPODFoff{n},alpha);
             end
-            if isnan(onACregNonMu) || isnan(onACregCorrejMu)
-                Paeon(10) = nan;
+            if isnan(ACregNonMu) || isnan(ACregCorrejMu)
+                Pae(10) = nan;
             else
-                [Haeon(10) Paeon(10)] = kstest2(AEROInonPODF{n,1},AEROIcorrejPODF{n,1},alpha);
+                [Hae(10) Pae(10)] = kstest2(AEROInonPODF{n},AEROIcorrejPODF{n},alpha);
             end
-            if isnan(onACregNonMuON) || isnan(onACregCorrejMuON)
-                Paeon(11) = nan;
+            if isnan(ACregNonMuON) || isnan(ACregCorrejMuON)
+                Pae(11) = nan;
             else
-                [Haeon(11) Paeon(11)] = kstest2(AEROInonPODFon{n,1},AEROIcorrejPODFon{n,1},alpha);
+                [Hae(11) Pae(11)] = kstest2(AEROInonPODFon{n},AEROIcorrejPODFon{n},alpha);
             end
-            if isnan(onACregNonMuOFF) || isnan(onACregCorrejMuOFF)
-                Paeon(12) = nan;
+            if isnan(ACregNonMuOFF) || isnan(ACregCorrejMuOFF)
+                Pae(12) = nan;
             else
-                [Haeon(12) Paeon(12)] = kstest2(AEROInonPODFoff{n,1},AEROIcorrejPODFoff{n,1},alpha);
+                [Hae(12) Pae(12)] = kstest2(AEROInonPODFoff{n},AEROIcorrejPODFoff{n},alpha);
             end
-            AEstatTableON{n,1,j} = Paeon';
+            AEstatTable{n,1,j} = Pae';
             %plotting AC regional PODF%
-            onbarACregMu = [onACregTarMu onACregTarMuON onACregTarMuOFF;... 
-                onACregHitMu onACregHitMuON onACregHitMuOFF;...
-                onACregMissMu onACregMissMuON onACregMissMuOFF;...
-                onACregNonMu onACregNonMuON onACregNonMuOFF;...
-                onACregFalarmMu onACregFalarmMuON onACregFalarmMuOFF;...
-                onACregCorrejMu onACregCorrejMuON onACregCorrejMuOFF];
-            onbarACregMuSE = [onACregTarMuSE onACregTarMuSEon onACregTarMuSEoff;...
-                onACregHitMuSE onACregHitMuSEon onACregHitMuSEoff;...
-                onACregMissMuSE onACregMissMuSEon onACregMissMuSEoff;...
-                onACregNonMuSE onACregNonMuSEon onACregNonMuSEoff;...
-                onACregFalarmMuSE onACregFalarmMuSEon onACregFalarmMuSEoff;...
-                onACregCorrejMuSE onACregCorrejMuSEon onACregCorrejMuSEoff];
+            barACregMu = [ACregTarMu ACregTarMuON ACregTarMuOFF;... 
+                ACregHitMu ACregHitMuON ACregHitMuOFF;...
+                ACregMissMu ACregMissMuON ACregMissMuOFF;...
+                ACregNonMu ACregNonMuON ACregNonMuOFF;...
+                ACregFalarmMu ACregFalarmMuON ACregFalarmMuOFF;...
+                ACregCorrejMu ACregCorrejMuON ACregCorrejMuOFF];
+            barACregMuSE = [ACregTarMuSE ACregTarMuSEon ACregTarMuSEoff;...
+                ACregHitMuSE ACregHitMuSEon ACregHitMuSEoff;...
+                ACregMissMuSE ACregMissMuSEon ACregMissMuSEoff;...
+                ACregNonMuSE ACregNonMuSEon ACregNonMuSEoff;...
+                ACregFalarmMuSE ACregFalarmMuSEon ACregFalarmMuSEoff;...
+                ACregCorrejMuSE ACregCorrejMuSEon ACregCorrejMuSEoff];
            if figON
                 figure
-                title([animal{j},' Passive and Behavior ',ACregs{n},' onset AE ROI'])
+                set(gcf, 'WindowStyle', 'Docked')
+                suptitle([animal{j},': ',ACregs{n},' AE ROI'])
                 hold on
-                b = bar(onbarACregMu,'grouped');
-                nbars = size(onbarACregMu,2);
+                title('Passive and Unadjusted Behavior : Post-onset DeltaF/F')
+                b = bar(barACregMu,'grouped');
+                nbars = size(barACregMu,2);
                 x = [];
                 for m = 1:nbars
                     x = [x; b(m).XEndPoints];
                 end
-                err = errorbar(x',onbarACregMu,2*onbarACregMuSE);
+                err = errorbar(x',barACregMu,2*barACregMuSE);
                 for m = 1:nbars
                     err(m).Color = [0 0 0];
                     err(m).LineStyle = 'None';
                 end
                 legend('post-onset all','tone onset','tone offset','AutoUpdate','Off')
-                sigstar(passSigPoints,[Paeon(1),Paeon(2),Paeon(3),Paeon(4),Paeon(5),Paeon(6),...
-                    Paeon(7),Paeon(8),Paeon(9),Paeon(10),Paeon(11),Paeon(12)])
+                sigstar(passSigPoints,[Pae(1),Pae(2),Pae(3),Pae(4),Pae(5),Pae(6),...
+                    Pae(7),Pae(8),Pae(9),Pae(10),Pae(11),Pae(12)])
                 xticks([1, 2, 3, 4, 5, 6])
                 xticklabels({'target', 'hit', 'miss', 'nontarget', 'false alarm', 'correct reject'})
                 xtickangle(-15)
-                xlabel('Time (s)')
-                ylabel('DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 set(gca, 'Box', 'off')
-                set(gcf, 'WindowStyle', 'Docked')
-                figSave9 = fullfile(file_loc,animal{j},strcat(ACregs{n},'_',fig9));
-                savefig(figSave9);
+                figSave10 = fullfile(file_loc,animal{j},[ACregs{n},'_',fig10]);
+                savefig(figSave10);
            end
 
             %AC regional adjusted behavior post-onset DeltaF/F%
             %post-onset all
-            adjAEROIhitPODF{n,1} = onadjACregMu{n,j}(:,1);
-            adjAEROImissPODF{n,1} = onadjACregMu{n,j}(:,2);
-            adjAEROIfalarmPODF{n,1} = onadjACregMu{n,j}(:,3);
-            adjAEROIcorrejPODF{n,1} = onadjACregMu{n,j}(:,4);
-            onadjACregHitMu = nanmean(adjAEROIhitPODF{n,1});
-            onadjACregMissMu = nanmean(adjAEROImissPODF{n,1});
-            onadjACregFalarmMu = nanmean(adjAEROIfalarmPODF{n,1});
-            onadjACregCorrejMu = nanmean(adjAEROIcorrejPODF{n,1});
-            onadjACregHitMuSE = nanstd(adjAEROIhitPODF{n,1})/sqrt(onroiCounter-1);
-            onadjACregMissMuSE = nanstd(adjAEROImissPODF{n,1})/sqrt(onroiCounter-1);
-            onadjACregCorrejMuSE = nanstd(adjAEROIfalarmPODF{n,1})/sqrt(onroiCounter-1);
-            onadjACregFalarmMuSE = nanstd(adjAEROIcorrejPODF{n,1})/sqrt(onroiCounter-1);
+            adjAEROIhitPODF{n} = adjACregMu{n,j}(:,1);
+            adjAEROImissPODF{n} = adjACregMu{n,j}(:,2);
+            adjAEROIfalarmPODF{n} = adjACregMu{n,j}(:,3);
+            adjAEROIcorrejPODF{n} = adjACregMu{n,j}(:,4);
+            adjACregHitMu = nanmean(adjAEROIhitPODF{n});
+            adjACregMissMu = nanmean(adjAEROImissPODF{n});
+            adjACregFalarmMu = nanmean(adjAEROIfalarmPODF{n});
+            adjACregCorrejMu = nanmean(adjAEROIcorrejPODF{n});
+            adjACregHitMuSE = nanstd(adjAEROIhitPODF{n})/sqrt(animalExps(j));
+            adjACregMissMuSE = nanstd(adjAEROImissPODF{n})/sqrt(animalExps(j));
+            adjACregCorrejMuSE = nanstd(adjAEROIfalarmPODF{n})/sqrt(animalExps(j));
+            adjACregFalarmMuSE = nanstd(adjAEROIcorrejPODF{n})/sqrt(animalExps(j));
             %post-onset all
-            adjAEROIhitPODFon{n,1} = onadjACregMuON{n,j}(:,1);
-            adjAEROImissPODFon{n,1} = onadjACregMuON{n,j}(:,2);
-            adjAEROIfalarmPODFon{n,1} = onadjACregMuON{n,j}(:,3);
-            adjAEROIcorrejPODFon{n,1} = onadjACregMuON{n,j}(:,4);
-            onadjACregHitMuON = nanmean(adjAEROIhitPODFon{n,1});
-            onadjACregMissMuON = nanmean(adjAEROImissPODFon{n,1});
-            onadjACregFalarmMuON = nanmean(adjAEROIfalarmPODFon{n,1});
-            onadjACregCorrejMuON = nanmean(adjAEROIcorrejPODFon{n,1});
-            onadjACregHitMuSEon = nanstd(adjAEROIhitPODFon{n,1})/sqrt(onroiCounter-1);
-            onadjACregMissMuSEon = nanstd(adjAEROImissPODFon{n,1})/sqrt(onroiCounter-1);
-            onadjACregCorrejMuSEon = nanstd(adjAEROIfalarmPODFon{n,1})/sqrt(onroiCounter-1);
-            onadjACregFalarmMuSEon = nanstd(adjAEROIcorrejPODFon{n,1})/sqrt(onroiCounter-1);
+            adjAEROIhitPODFon{n} = adjACregMuON{n,j}(:,1);
+            adjAEROImissPODFon{n} = adjACregMuON{n,j}(:,2);
+            adjAEROIfalarmPODFon{n} = adjACregMuON{n,j}(:,3);
+            adjAEROIcorrejPODFon{n} = adjACregMuON{n,j}(:,4);
+            adjACregHitMuON = nanmean(adjAEROIhitPODFon{n});
+            adjACregMissMuON = nanmean(adjAEROImissPODFon{n});
+            adjACregFalarmMuON = nanmean(adjAEROIfalarmPODFon{n});
+            adjACregCorrejMuON = nanmean(adjAEROIcorrejPODFon{n});
+            adjACregHitMuSEon = nanstd(adjAEROIhitPODFon{n})/sqrt(animalExps(j));
+            adjACregMissMuSEon = nanstd(adjAEROImissPODFon{n})/sqrt(animalExps(j));
+            adjACregCorrejMuSEon = nanstd(adjAEROIfalarmPODFon{n})/sqrt(animalExps(j));
+            adjACregFalarmMuSEon = nanstd(adjAEROIcorrejPODFon{n})/sqrt(animalExps(j));
             %post-onset all
-            adjAEROIhitPODFoff{n,1} = onadjACregMuOFF{n,j}(:,1);
-            adjAEROImissPODFoff{n,1} = onadjACregMuOFF{n,j}(:,2);
-            adjAEROIfalarmPODFoff{n,1} = onadjACregMuOFF{n,j}(:,3);
-            adjAEROIcorrejPODFoff{n,1} = onadjACregMuOFF{n,j}(:,4);
-            onadjACregHitMuOFF = nanmean(adjAEROIhitPODFoff{n,1});
-            onadjACregMissMuOFF = nanmean(adjAEROImissPODFoff{n,1});
-            onadjACregFalarmMuOFF = nanmean(adjAEROIfalarmPODFoff{n,1});
-            onadjACregCorrejMuOFF = nanmean(adjAEROIcorrejPODFoff{n,1});
-            onadjACregHitMuSEoff = nanstd(adjAEROIhitPODFoff{n,1})/sqrt(onroiCounter-1);
-            onadjACregMissMuSEoff = nanstd(adjAEROImissPODFoff{n,1})/sqrt(onroiCounter-1);
-            onadjACregCorrejMuSEoff = nanstd(adjAEROIfalarmPODFoff{n,1})/sqrt(onroiCounter-1);
-            onadjACregFalarmMuSEoff = nanstd(adjAEROIcorrejPODFoff{n,1})/sqrt(onroiCounter-1);
+            adjAEROIhitPODFoff{n} = adjACregMuOFF{n,j}(:,1);
+            adjAEROImissPODFoff{n} = adjACregMuOFF{n,j}(:,2);
+            adjAEROIfalarmPODFoff{n} = adjACregMuOFF{n,j}(:,3);
+            adjAEROIcorrejPODFoff{n} = adjACregMuOFF{n,j}(:,4);
+            adjACregHitMuOFF = nanmean(adjAEROIhitPODFoff{n});
+            adjACregMissMuOFF = nanmean(adjAEROImissPODFoff{n});
+            adjACregFalarmMuOFF = nanmean(adjAEROIfalarmPODFoff{n});
+            adjACregCorrejMuOFF = nanmean(adjAEROIcorrejPODFoff{n});
+            adjACregHitMuSEoff = nanstd(adjAEROIhitPODFoff{n})/sqrt(animalExps(j));
+            adjACregMissMuSEoff = nanstd(adjAEROImissPODFoff{n})/sqrt(animalExps(j));
+            adjACregCorrejMuSEoff = nanstd(adjAEROIfalarmPODFoff{n})/sqrt(animalExps(j));
+            adjACregFalarmMuSEoff = nanstd(adjAEROIcorrejPODFoff{n})/sqrt(animalExps(j));
             %checking for statistically significant differences%
-            if isnan(onadjACregHitMu) || isnan(onadjACregMissMu)
-                Paaeon(1) = nan;
+            if isnan(adjACregHitMu) || isnan(adjACregMissMu)
+                Paae(1) = nan;
             else
-                [Haaeon(1) Paaeon(1)] = kstest2(adjAEROIhitPODF{n,1},adjAEROImissPODF{n,1},alpha);
+                [Haae(1) Paae(1)] = kstest2(adjAEROIhitPODF{n},adjAEROImissPODF{n},alpha);
             end
-            if isnan(onadjACregHitMuON) || isnan(onadjACregMissMuON)
-                Paaeon(2) = nan;
+            if isnan(adjACregHitMuON) || isnan(adjACregMissMuON)
+                Paae(2) = nan;
             else
-                [Haaeon(2) Paaeon(2)] = kstest2(adjAEROIhitPODFon{n,1},adjAEROImissPODFon{n,1},alpha);
+                [Haae(2) Paae(2)] = kstest2(adjAEROIhitPODFon{n},adjAEROImissPODFon{n},alpha);
             end
-            if isnan(onadjACregHitMuOFF) || isnan(onadjACregMissMuOFF)
-                Paaeon(3) = nan;
+            if isnan(adjACregHitMuOFF) || isnan(adjACregMissMuOFF)
+                Paae(3) = nan;
             else
-                [Haaeon(3) Paaeon(3)] = kstest2(adjAEROIhitPODFoff{n,1},adjAEROImissPODFoff{n,1},alpha);
+                [Haae(3) Paae(3)] = kstest2(adjAEROIhitPODFoff{n},adjAEROImissPODFoff{n},alpha);
             end
-            if isnan(onadjACregHitMu) || isnan(onadjACregFalarmMu)
-                Paaeon(4) = nan;
+            if isnan(adjACregHitMu) || isnan(adjACregFalarmMu)
+                Paae(4) = nan;
             else
-                [Haaeon(4) Paaeon(4)] = kstest2(adjAEROIhitPODF{n,1},adjAEROIfalarmPODF{n,1},alpha);
+                [Haae(4) Paae(4)] = kstest2(adjAEROIhitPODF{n},adjAEROIfalarmPODF{n},alpha);
             end
-            if isnan(onadjACregHitMuON) || isnan(onadjACregFalarmMuON)
-                Paaeon(5) = nan;
+            if isnan(adjACregHitMuON) || isnan(adjACregFalarmMuON)
+                Paae(5) = nan;
             else
-                [Haaeon(5) Paaeon(5)] = kstest2(adjAEROIhitPODFon{n,1},adjAEROIfalarmPODFon{n,1},alpha);
+                [Haae(5) Paae(5)] = kstest2(adjAEROIhitPODFon{n},adjAEROIfalarmPODFon{n},alpha);
             end
-            if isnan(onadjACregHitMuOFF) || isnan(onadjACregFalarmMuOFF)
-                Paaeon(6) = nan;
+            if isnan(adjACregHitMuOFF) || isnan(adjACregFalarmMuOFF)
+                Paae(6) = nan;
             else
-                [Haaeon(6) Paaeon(6)] = kstest2(adjAEROIhitPODFoff{n,1},adjAEROIfalarmPODFoff{n,1},alpha);
+                [Haae(6) Paae(6)] = kstest2(adjAEROIhitPODFoff{n},adjAEROIfalarmPODFoff{n},alpha);
             end
-            if isnan(onadjACregFalarmMu) || isnan(onadjACregCorrejMu)
-                Paaeon(7) = nan;
+            if isnan(adjACregFalarmMu) || isnan(adjACregCorrejMu)
+                Paae(7) = nan;
             else
-                [Haaeon(7) Paaeon(7)] = kstest2(adjAEROIfalarmPODF{n,1},adjAEROIcorrejPODF{n,1},alpha);
+                [Haae(7) Paae(7)] = kstest2(adjAEROIfalarmPODF{n},adjAEROIcorrejPODF{n},alpha);
             end
-            if isnan(onadjACregFalarmMuON) || isnan(onadjACregCorrejMuON)
-                Paaeon(8) = nan;
+            if isnan(adjACregFalarmMuON) || isnan(adjACregCorrejMuON)
+                Paae(8) = nan;
             else
-                [Haaeon(8) Paaeon(8)] = kstest2(adjAEROIfalarmPODFon{n,1},adjAEROIcorrejPODFon{n,1},alpha);
+                [Haae(8) Paae(8)] = kstest2(adjAEROIfalarmPODFon{n},adjAEROIcorrejPODFon{n},alpha);
             end
-            if isnan(onadjACregFalarmMuOFF) || isnan(onadjACregCorrejMuOFF)
-                Paaeon(9) = nan;
+            if isnan(adjACregFalarmMuOFF) || isnan(adjACregCorrejMuOFF)
+                Paae(9) = nan;
             else
-                [Haaeon(9) Paaeon(9)] = kstest2(adjAEROIfalarmPODFoff{n,1},adjAEROIcorrejPODFoff{n,1},alpha);
+                [Haae(9) Paae(9)] = kstest2(adjAEROIfalarmPODFoff{n},adjAEROIcorrejPODFoff{n},alpha);
             end
-            if isnan(onadjACregCorrejMu) || isnan(onadjACregMissMu)
-                Paaeon(10) = nan;
+            if isnan(adjACregCorrejMu) || isnan(adjACregMissMu)
+                Paae(10) = nan;
             else
-                [Haaeon(10) Paaeon(10)] = kstest2(adjAEROIcorrejPODF{n,1},adjAEROImissPODF{n,1},alpha);
+                [Haae(10) Paae(10)] = kstest2(adjAEROIcorrejPODF{n},adjAEROImissPODF{n},alpha);
             end
-            if isnan(onadjACregCorrejMuON) || isnan(onadjACregMissMuON)
-                Paaeon(11) = nan;
+            if isnan(adjACregCorrejMuON) || isnan(adjACregMissMuON)
+                Paae(11) = nan;
             else
-                [Haaeon(11) Paaeon(11)] = kstest2(adjAEROIcorrejPODFon{n,1},adjAEROImissPODFon{n,1},alpha);
+                [Haae(11) Paae(11)] = kstest2(adjAEROIcorrejPODFon{n},adjAEROImissPODFon{n},alpha);
             end
-            if isnan(onadjACregCorrejMuOFF) || isnan(onadjACregMissMuOFF)
-                Paaeon(12) = nan;
+            if isnan(adjACregCorrejMuOFF) || isnan(adjACregMissMuOFF)
+                Paae(12) = nan;
             else
-                [Haaeon(12) Paaeon(12)] = kstest2(adjAEROIcorrejPODFoff{n,1},adjAEROImissPODFoff{n,1},alpha);
+                [Haae(12) Paae(12)] = kstest2(adjAEROIcorrejPODFoff{n},adjAEROImissPODFoff{n},alpha);
             end
-            AEstatTableON{n,2,j} = Paaeon';
+            AEstatTable{n,2,j} = Paae';
             %plotting AC regional adjusted behavior PODF%
-            onbarAdjACregMu = [onadjACregHitMu onadjACregHitMuON onadjACregHitMuOFF;...
-                onadjACregMissMu onadjACregMissMuON onadjACregMissMuOFF;...
-                onadjACregFalarmMu onadjACregFalarmMuON onadjACregFalarmMuOFF;...
-                onadjACregCorrejMu onadjACregCorrejMuON onadjACregCorrejMuOFF];
-            onbarAdjACregMuSE = [onadjACregHitMuSE onadjACregHitMuSEon onadjACregHitMuSEoff;...
-                onadjACregMissMuSE onadjACregMissMuSEon onadjACregMissMuSEoff;...
-                onadjACregFalarmMuSE onadjACregFalarmMuSEon onadjACregFalarmMuSEoff;...
-                onadjACregCorrejMuSE onadjACregCorrejMuSEon onadjACregCorrejMuSEoff];
+            barAdjACregMu = [adjACregHitMu adjACregHitMuON adjACregHitMuOFF;...
+                adjACregMissMu adjACregMissMuON adjACregMissMuOFF;...
+                adjACregFalarmMu adjACregFalarmMuON adjACregFalarmMuOFF;...
+                adjACregCorrejMu adjACregCorrejMuON adjACregCorrejMuOFF];
+            barAdjACregMuSE = [adjACregHitMuSE adjACregHitMuSEon adjACregHitMuSEoff;...
+                adjACregMissMuSE adjACregMissMuSEon adjACregMissMuSEoff;...
+                adjACregFalarmMuSE adjACregFalarmMuSEon adjACregFalarmMuSEoff;...
+                adjACregCorrejMuSE adjACregCorrejMuSEon adjACregCorrejMuSEoff];
             if figON    
                 figure
-                title([animal{j},' Passive-adjusted Behavior ',ACregs{n},' onset AE ROI'])
+                set(gcf, 'WindowStyle', 'Docked')
+                suptitle([animal{j},': ',ACregs{n},' AE ROI'])
                 hold on
-                b = bar(onbarAdjACregMu,'grouped');
-                nbars = size(onbarAdjACregMu,2);
+                title('Passive-adjusted Behavior : Post-onset DeltaF/F')
+                b = bar(barAdjACregMu,'grouped');
+                nbars = size(barAdjACregMu,2);
                 x = [];
                 for m = 1:nbars
                     x = [x; b(m).XEndPoints];
                 end
-                err = errorbar(x',onbarAdjACregMu,2*onbarAdjACregMuSE);
+                err = errorbar(x',barAdjACregMu,2*barAdjACregMuSE);
                 for m = 1:nbars
                     err(m).Color = [0 0 0];
                     err(m).LineStyle = 'None';
                 end
                 legend('post-onset all','tone onset','tone offset','AutoUpdate','Off')
-                sigstar(behavSigPoints,[Paaeon(1),Paaeon(2),Paaeon(3),Paaeon(7),Paaeon(8),Paaeon(9)])
+                sigstar(behavSigPoints,[Paae(1),Paae(2),Paae(3),Paae(7),Paae(8),Paae(9)])
                 xticks([1, 2, 3, 4])
                 xticklabels({'hit', 'miss', 'false alarm', 'correct reject'})
                 xtickangle(-15)
-                xlabel('Time (s)')
-                ylabel('DeltaF/F')
+                ylabel('Normalized DeltaF/F')
                 set(gca, 'Box', 'off')
-                set(gcf, 'WindowStyle', 'Docked')
-                figSave10 = fullfile(file_loc,animal{j},strcat(ACregs{n},'_',fig10));
-                savefig(figSave10);
-            end
-        end
-        
-        %%% OFFSET AE ROI ANALYSIS%%%
-        if offroiCounter > 1
-            %AC regional traces%
-            AEROItarTraces{n,2} = squeeze(offACregTraces{n,j}(:,1,:));
-            AEROIhitTraces{n,2} = squeeze(offACregTraces{n,j}(:,2,:));
-            AEROImissTraces{n,2} = squeeze(offACregTraces{n,j}(:,3,:));
-            AEROInonTraces{n,2} = squeeze(offACregTraces{n,j}(:,4,:));
-            AEROIfalarmTraces{n,2} = squeeze(offACregTraces{n,j}(:,5,:));
-            AEROIcorrejTraces{n,2} = squeeze(offACregTraces{n,j}(:,6,:));
-            offACregTarTrace = nanmean(AEROItarTraces{n,2},2);
-            offACregHitTrace = nanmean(AEROIhitTraces{n,2},2);
-            offACregMissTrace = nanmean(AEROImissTraces{n,2},2);
-            offACregNonTrace = nanmean(AEROInonTraces{n,2},2);
-            offACregFalarmTrace = nanmean(AEROIfalarmTraces{n,2},2);
-            offACregCorrejTrace = nanmean(AEROIcorrejTraces{n,2},2);
-            offACregTarTraceSE = nanstd(AEROItarTraces{n,2}',0,1)/sqrt(offroiCounter-1);
-            offACregHitTraceSE = nanstd(AEROIhitTraces{n,2}',0,1)/sqrt(offroiCounter-1);
-            offACregMissTraceSE = nanstd(AEROImissTraces{n,2}',0,1)/sqrt(offroiCounter-1);
-            offACregNonTraceSE = nanstd(AEROInonTraces{n,2}',0,1)/sqrt(offroiCounter-1);
-            offACregFalarmTraceSE = nanstd(AEROIfalarmTraces{n,2}',0,1)/sqrt(offroiCounter-1);
-            offACregCorrejTraceSE = nanstd(AEROIcorrejTraces{n,2}',0,1)/sqrt(offroiCounter-1);
-            %plot AC regional traces%
-            if figON
-                figure
-                suptitle([animal{j},' ',ACregs{n},' offset AE ROI'])
-                subplot(1,2,1)
-                shadedErrorBar([1:18],offACregTarTrace,2*offACregTarTraceSE,'-g',1);
-                hold on
-                shadedErrorBar([1:18],offACregHitTrace,2*offACregHitTraceSE,'-b',1);
-                shadedErrorBar([1:18],offACregMissTrace,2*offACregMissTraceSE,'-r',1);
-                set(gca, 'Box', 'off')
-                hold off
-                title({'{\color{blue}Hit} vs. {\color{red}Miss} vs. {\color{green}Passive} ',...
-                    '{\color{green}Target} Fluorescence Traces'})
-                xticks([4, 8, 12, 16])
-                xticklabels({'1', '2', '3', '4'})
-                xlabel('Time (s)')
-                ylabel('DeltaF/F')
-                subplot(1,2,2)
-                shadedErrorBar([1:18],offACregNonTrace,2*offACregNonTraceSE,'-g',1);
-                hold on
-                shadedErrorBar([1:18],offACregFalarmTrace,2*offACregFalarmTraceSE,'-r',1);
-                shadedErrorBar([1:18],offACregCorrejTrace,2*offACregCorrejTraceSE,'-b',1);
-                set(gca, 'Box', 'off')
-                hold off
-                title({'{\color{blue}Hit} vs. {\color{red}Miss} vs. {\color{green}Passive} ',...
-                    '{\color{green}Target} Fluorescence Traces'})
-                xticks([4, 8, 12, 16])
-                xticklabels({'1', '2', '3', '4'})
-                xlabel('Time (s)')
-                ylabel('DeltaF/F')
-                set(gcf, 'WindowStyle', 'Docked')
-                figSave11 = fullfile(file_loc,animal{j},strcat(ACregs{n},'_',fig11));
+                figSave11 = fullfile(file_loc,animal{j},[ACregs{n},'_',fig11]);
                 savefig(figSave11);
             end
-
-            %AC regional post-onset deltaF/F%
-            %post-onset all
-            AEROItarPODF{n,2} = offACregMu{n,j}(:,1);
-            AEROIhitPODF{n,2} = offACregMu{n,j}(:,2);
-            AEROImissPODF{n,2} = offACregMu{n,j}(:,3);
-            AEROInonPODF{n,2} = offACregMu{n,j}(:,4);
-            AEROIfalarmPODF{n,2} = offACregMu{n,j}(:,5);
-            AEROIcorrejPODF{n,2} = offACregMu{n,j}(:,6);
-            offACregTarMu = nanmean(AEROItarPODF{n,2});
-            offACregHitMu = nanmean(AEROIhitPODF{n,2});
-            offACregMissMu = nanmean(AEROImissPODF{n,2});
-            offACregNonMu = nanmean(AEROInonPODF{n,2});
-            offACregFalarmMu = nanmean(AEROIfalarmPODF{n,2});
-            offACregCorrejMu = nanmean(AEROIcorrejPODF{n,2});
-            offACregTarMuSE = nanstd(AEROItarPODF{n,2})/sqrt(offroiCounter-1);
-            offACregHitMuSE = nanstd(AEROIhitPODF{n,2})/sqrt(offroiCounter-1);
-            offACregMissMuSE = nanstd(AEROImissPODF{n,2})/sqrt(offroiCounter-1);
-            offACregNonMuSE = nanstd(AEROInonPODF{n,2})/sqrt(offroiCounter-1);
-            offACregFalarmMuSE = nanstd(AEROIfalarmPODF{n,2})/sqrt(offroiCounter-1);
-            offACregCorrejMuSE = nanstd(AEROIcorrejPODF{n,2})/sqrt(offroiCounter-1);
-            %tone-onset
-            AEROItarPODFon{n,2} = offACregMuON{n,j}(:,1);
-            AEROIhitPODFon{n,2} = offACregMuON{n,j}(:,2);
-            AEROImissPODFon{n,2} = offACregMuON{n,j}(:,3);
-            AEROInonPODFon{n,2} = offACregMuON{n,j}(:,4);
-            AEROIfalarmPODFon{n,2} = offACregMuON{n,j}(:,5);
-            AEROIcorrejPODFon{n,2} = offACregMuON{n,j}(:,6);
-            offACregTarMuON = nanmean(AEROItarPODFon{n,2});
-            offACregHitMuON = nanmean(AEROIhitPODFon{n,2});
-            offACregMissMuON = nanmean(AEROImissPODFon{n,2});
-            offACregNonMuON = nanmean(AEROInonPODFon{n,2});
-            offACregFalarmMuON = nanmean(AEROIfalarmPODFon{n,2});
-            offACregCorrejMuON = nanmean(AEROIcorrejPODFon{n,2});
-            offACregTarMuSEon = nanstd(AEROItarPODFon{n,2})/sqrt(offroiCounter-1);
-            offACregHitMuSEon = nanstd(AEROIhitPODFon{n,2})/sqrt(offroiCounter-1);
-            offACregMissMuSEon = nanstd(AEROImissPODFon{n,2})/sqrt(offroiCounter-1);
-            offACregNonMuSEon = nanstd(AEROInonPODFon{n,2})/sqrt(offroiCounter-1);
-            offACregFalarmMuSEon = nanstd(AEROIfalarmPODFon{n,2})/sqrt(offroiCounter-1);
-            offACregCorrejMuSEon = nanstd(AEROIcorrejPODFon{n,2})/sqrt(offroiCounter-1);
-            %tone-offset
-            AEROItarPODFoff{n,2} = offACregMuOFF{n,j}(:,1);
-            AEROIhitPODFoff{n,2} = offACregMuOFF{n,j}(:,2);
-            AEROImissPODFoff{n,2} = offACregMuOFF{n,j}(:,3);
-            AEROInonPODFoff{n,2} = offACregMuOFF{n,j}(:,4);
-            AEROIfalarmPODFoff{n,2} = offACregMuOFF{n,j}(:,5);
-            AEROIcorrejPODFoff{n,2} = offACregMuOFF{n,j}(:,6);
-            offACregTarMuOFF = nanmean(AEROItarPODFoff{n,2});
-            offACregHitMuOFF = nanmean(AEROIhitPODFoff{n,2});
-            offACregMissMuOFF = nanmean(AEROImissPODFoff{n,2});
-            offACregNonMuOFF = nanmean(AEROInonPODFoff{n,2});
-            offACregFalarmMuOFF = nanmean(AEROIfalarmPODFoff{n,2});
-            offACregCorrejMuOFF = nanmean(AEROIcorrejPODFoff{n,2});
-            offACregTarMuSEoff = nanstd(AEROItarPODFoff{n,2})/sqrt(offroiCounter-1);
-            offACregHitMuSEoff = nanstd(AEROIhitPODFoff{n,2})/sqrt(offroiCounter-1);
-            offACregMissMuSEoff = nanstd(AEROImissPODFoff{n,2})/sqrt(offroiCounter-1);
-            offACregNonMuSEoff = nanstd(AEROInonPODFoff{n,2})/sqrt(offroiCounter-1);
-            offACregFalarmMuSEoff = nanstd(AEROIfalarmPODFoff{n,2})/sqrt(offroiCounter-1);
-            offACregCorrejMuSEoff = nanstd(AEROIcorrejPODFoff{n,2})/sqrt(offroiCounter-1);
-            %checking for statistically significant differences%
-            if isnan(offACregTarMu) || isnan(offACregHitMu)
-                Paeoff(1) = nan;
-            else
-                [Haeoff(1) Paeoff(1)] = kstest2(AEROItarPODF{n,2},AEROIhitPODF{n,2},alpha);
-            end
-            if isnan(offACregTarMuON) || isnan(offACregHitMuON)
-                Paeoff(2) = nan;
-            else
-                [Haeoff(2) Paeoff(2)] = kstest2(AEROItarPODFon{n,2},AEROIhitPODFon{n,2},alpha);
-            end
-            if isnan(offACregTarMuOFF) || isnan(offACregHitMuOFF)
-                Paeoff(3) = nan;
-            else
-                [Haeoff(3) Paeoff(3)] = kstest2(AEROItarPODFoff{n,2},AEROIhitPODFoff{n,2},alpha);
-            end
-            if isnan(offACregTarMu) || isnan(offACregMissMu)
-                Paeoff(4) = nan;
-            else
-                [Haeoff(4) Paeoff(4)] = kstest2(AEROItarPODF{n,2},AEROImissPODF{n,2},alpha);
-            end
-            if isnan(offACregTarMuON) || isnan(offACregMissMuON)
-                Paeoff(5) = nan;
-            else
-                [Haeoff(5) Paeoff(5)] = kstest2(AEROItarPODFon{n,2},AEROImissPODFon{n,2},alpha);
-            end
-            if isnan(offACregTarMuOFF) || isnan(offACregMissMuOFF)
-                Paeoff(6) = nan;
-            else
-                [Haeoff(6) Paeoff(6)] = kstest2(AEROItarPODFoff{n,2},AEROIhitPODFoff{n,2},alpha);
-            end
-            if isnan(offACregNonMu) || isnan(offACregFalarmMu)
-                Paeoff(7) = nan;
-            else
-                [Haeoff(7) Paeoff(7)] = kstest2(AEROInonPODF{n,2},AEROIfalarmPODF{n,2},alpha);
-            end
-            if isnan(offACregNonMuON) || isnan(offACregFalarmMuON)
-                Paeoff(8) = nan;
-            else
-                [Haeoff(8) Paeoff(8)] = kstest2(AEROInonPODFon{n,2},AEROIfalarmPODFon{n,2},alpha);
-            end
-            if isnan(offACregNonMuOFF) || isnan(offACregFalarmMuOFF)
-                Paeoff(9) = nan;
-            else
-                [Haeoff(9) Paeoff(9)] = kstest2(AEROInonPODFoff{n,2},AEROIfalarmPODFoff{n,2},alpha);
-            end
-            if isnan(offACregNonMu) || isnan(offACregCorrejMu)
-                Paeoff(10) = nan;
-            else
-                [Haeoff(10) Paeoff(10)] = kstest2(AEROInonPODF{n,2},AEROIcorrejPODF{n,2},alpha);
-            end
-            if isnan(offACregNonMuON) || isnan(offACregCorrejMuON)
-                Paeoff(11) = nan;
-            else
-                [Haeoff(11) Paeoff(11)] = kstest2(AEROInonPODFon{n,2},AEROIcorrejPODFon{n,2},alpha);
-            end
-            if isnan(offACregNonMuOFF) || isnan(offACregCorrejMuOFF)
-                Paeoff(12) = nan;
-            else
-                [Haeoff(12) Paeoff(12)] = kstest2(AEROInonPODFoff{n,2},AEROIcorrejPODFoff{n,2},alpha);
-            end
-            AEstatTableOFF{n,1,j} = Paeoff';
-            %plotting AC regional PODF%
-            offbarACregMu = [offACregTarMu offACregTarMuON offACregTarMuOFF;... 
-                offACregHitMu offACregHitMuON offACregHitMuOFF;...
-                offACregMissMu offACregMissMuON offACregMissMuOFF;...
-                offACregNonMu offACregNonMuON offACregNonMuOFF;...
-                offACregFalarmMu offACregFalarmMuON offACregFalarmMuOFF;...
-                offACregCorrejMu offACregCorrejMuON offACregCorrejMuOFF];
-            offbarACregMuSE = [offACregTarMuSE offACregTarMuSEon offACregTarMuSEoff;...
-                offACregHitMuSE offACregHitMuSEon offACregHitMuSEoff;...
-                offACregMissMuSE offACregMissMuSEon offACregMissMuSEoff;...
-                offACregNonMuSE offACregNonMuSEon offACregNonMuSEoff;...
-                offACregFalarmMuSE offACregFalarmMuSEon offACregFalarmMuSEoff;...
-                offACregCorrejMuSE offACregCorrejMuSEon offACregCorrejMuSEoff];
-           if figON
-                figure
-                title([animal{j},' Passive and Behavior ',ACregs{n},' offset AE ROI'])
-                hold on
-                b = bar(offbarACregMu,'grouped');
-                nbars = size(offbarACregMu,2);
-                x = [];
-                for m = 1:nbars
-                    x = [x; b(m).XEndPoints];
-                end
-                err = errorbar(x',offbarACregMu,2*offbarACregMuSE);
-                for m = 1:nbars
-                    err(m).Color = [0 0 0];
-                    err(m).LineStyle = 'None';
-                end
-                legend('post-onset all','tone onset','tone offset','AutoUpdate','Off')
-                sigstar(passSigPoints,[Paeoff(1),Paeoff(2),Paeoff(3),Paeoff(4),Paeoff(5),Paeoff(6),...
-                    Paeoff(7),Paeoff(8),Paeoff(9),Paeoff(10),Paeoff(11),Paeoff(12)])
-                xticks([1, 2, 3, 4, 5, 6])
-                xticklabels({'target', 'hit', 'miss', 'nontarget', 'false alarm', 'correct reject'})
-                xtickangle(-15)
-                xlabel('Time (s)')
-                ylabel('DeltaF/F')
-                set(gca, 'Box', 'off')
-                set(gcf, 'WindowStyle', 'Docked')
-                figSave12 = fullfile(file_loc,animal{j},strcat(ACregs{n},'_',fig12));
-                savefig(figSave12);
-           end
-
-            %AC regional adjusted behavior post-onset DeltaF/F%
-            %post-onset all
-            adjAEROIhitPODF{n,2} = offadjACregMu{n,j}(:,1);
-            adjAEROImissPODF{n,2} = offadjACregMu{n,j}(:,2);
-            adjAEROIfalarmPODF{n,2} = offadjACregMu{n,j}(:,3);
-            adjAEROIcorrejPODF{n,2} = offadjACregMu{n,j}(:,4);
-            offadjACregHitMu = nanmean(adjAEROIhitPODF{n,2});
-            offadjACregMissMu = nanmean(adjAEROImissPODF{n,2});
-            offadjACregFalarmMu = nanmean(adjAEROIfalarmPODF{n,2});
-            offadjACregCorrejMu = nanmean(adjAEROIcorrejPODF{n,2});
-            offadjACregHitMuSE = nanstd(adjAEROIhitPODF{n,2})/sqrt(offroiCounter-1);
-            offadjACregMissMuSE = nanstd(adjAEROImissPODF{n,2})/sqrt(offroiCounter-1);
-            offadjACregCorrejMuSE = nanstd(adjAEROIfalarmPODF{n,2})/sqrt(offroiCounter-1);
-            offadjACregFalarmMuSE = nanstd(adjAEROIcorrejPODF{n,2})/sqrt(offroiCounter-1);
-            %post-onset all
-            adjAEROIhitPODFon{n,2} = offadjACregMuON{n,j}(:,1);
-            adjAEROImissPODFon{n,2} = offadjACregMuON{n,j}(:,2);
-            adjAEROIfalarmPODFon{n,2} = offadjACregMuON{n,j}(:,3);
-            adjAEROIcorrejPODFon{n,2} = offadjACregMuON{n,j}(:,4);
-            offadjACregHitMuON = nanmean(adjAEROIhitPODFon{n,2});
-            offadjACregMissMuON = nanmean(adjAEROImissPODFon{n,2});
-            offadjACregFalarmMuON = nanmean(adjAEROIfalarmPODFon{n,2});
-            offadjACregCorrejMuON = nanmean(adjAEROIcorrejPODFon{n,2});
-            offadjACregHitMuSEon = nanstd(adjAEROIhitPODFon{n,2})/sqrt(offroiCounter-1);
-            offadjACregMissMuSEon = nanstd(adjAEROImissPODFon{n,2})/sqrt(offroiCounter-1);
-            offadjACregCorrejMuSEon = nanstd(adjAEROIfalarmPODFon{n,2})/sqrt(offroiCounter-1);
-            offadjACregFalarmMuSEon = nanstd(adjAEROIcorrejPODFon{n,2})/sqrt(offroiCounter-1);
-            %post-onset all
-            adjAEROIhitPODFoff{n,2} = offadjACregMuOFF{n,j}(:,1);
-            adjAEROImissPODFoff{n,2} = offadjACregMuOFF{n,j}(:,2);
-            adjAEROIfalarmPODFoff{n,2} = offadjACregMuOFF{n,j}(:,3);
-            adjAEROIcorrejPODFoff{n,2} = offadjACregMuOFF{n,j}(:,4);
-            offadjACregHitMuOFF = nanmean(adjAEROIhitPODFoff{n,2});
-            offadjACregMissMuOFF = nanmean(adjAEROImissPODFoff{n,2});
-            offadjACregFalarmMuOFF = nanmean(adjAEROIfalarmPODFoff{n,2});
-            offadjACregCorrejMuOFF = nanmean(adjAEROIcorrejPODFoff{n,2});
-            offadjACregHitMuSEoff = nanstd(adjAEROIhitPODFoff{n,2})/sqrt(offroiCounter-1);
-            offadjACregMissMuSEoff = nanstd(adjAEROImissPODFoff{n,2})/sqrt(offroiCounter-1);
-            offadjACregCorrejMuSEoff = nanstd(adjAEROIfalarmPODFoff{n,2})/sqrt(offroiCounter-1);
-            offadjACregFalarmMuSEoff = nanstd(adjAEROIcorrejPODFoff{n,2})/sqrt(offroiCounter-1);
-            %checking for statistically significant differences%
-            if isnan(offadjACregHitMu) || isnan(offadjACregMissMu)
-                Paaeoff(1) = nan;
-            else
-                [Haaeoff(1) Paaeoff(1)] = kstest2(adjAEROIhitPODF{n,2},adjAEROImissPODF{n,2},alpha);
-            end
-            if isnan(offadjACregHitMuON) || isnan(offadjACregMissMuON)
-                Paaeoff(2) = nan;
-            else
-                [Haaeoff(2) Paaeoff(2)] = kstest2(adjAEROIhitPODFon{n,2},adjAEROImissPODFon{n,2},alpha);
-            end
-            if isnan(offadjACregHitMuOFF) || isnan(offadjACregMissMuOFF)
-                Paaeoff(3) = nan;
-            else
-                [Haaeoff(3) Paaeoff(3)] = kstest2(adjAEROIhitPODFoff{n,2},adjAEROImissPODFoff{n,2},alpha);
-            end
-            if isnan(offadjACregHitMu) || isnan(offadjACregFalarmMu)
-                Paaeoff(4) = nan;
-            else
-                [Haaeoff(4) Paaeoff(4)] = kstest2(adjAEROIhitPODF{n,2},adjAEROIfalarmPODF{n,2},alpha);
-            end
-            if isnan(offadjACregHitMuON) || isnan(offadjACregFalarmMuON)
-                Paaeoff(5) = nan;
-            else
-                [Haaeoff(5) Paaeoff(5)] = kstest2(adjAEROIhitPODFon{n,2},adjAEROIfalarmPODFon{n,2},alpha);
-            end
-            if isnan(offadjACregHitMuOFF) || isnan(offadjACregFalarmMuOFF)
-                Paaeoff(6) = nan;
-            else
-                [Haaeoff(6) Paaeoff(6)] = kstest2(adjAEROIhitPODFoff{n,2},adjAEROIfalarmPODFoff{n,2},alpha);
-            end
-            if isnan(offadjACregFalarmMu) || isnan(offadjACregCorrejMu)
-                Paaeoff(7) = nan;
-            else
-                [Haaeoff(7) Paaeoff(7)] = kstest2(adjAEROIfalarmPODF{n,2},adjAEROIcorrejPODF{n,2},alpha);
-            end
-            if isnan(offadjACregFalarmMuON) || isnan(offadjACregCorrejMuON)
-                Paaeoff(8) = nan;
-            else
-                [Haaeoff(8) Paaeoff(8)] = kstest2(adjAEROIfalarmPODFon{n,2},adjAEROIcorrejPODFon{n,2},alpha);
-            end
-            if isnan(offadjACregFalarmMuOFF) || isnan(offadjACregCorrejMuOFF)
-                Paaeoff(9) = nan;
-            else
-                [Haaeoff(9) Paaeoff(9)] = kstest2(adjAEROIfalarmPODFoff{n,2},adjAEROIcorrejPODFoff{n,2},alpha);
-            end
-            if isnan(offadjACregCorrejMu) || isnan(offadjACregMissMu)
-                Paaeoff(10) = nan;
-            else
-                [Haaeoff(10) Paaeoff(10)] = kstest2(adjAEROIcorrejPODF{n,2},adjAEROImissPODF{n,2},alpha);
-            end
-            if isnan(offadjACregCorrejMuON) || isnan(offadjACregMissMuON)
-                Paaeoff(11) = nan;
-            else
-                [Haaeoff(11) Paaeoff(11)] = kstest2(adjAEROIcorrejPODFon{n,2},adjAEROImissPODFon{n,2},alpha);
-            end
-            if isnan(offadjACregCorrejMuOFF) || isnan(offadjACregMissMuOFF)
-                Paaeoff(12) = nan;
-            else
-                [Haaeoff(12) Paaeoff(12)] = kstest2(adjAEROIcorrejPODFoff{n,2},adjAEROImissPODFoff{n,2},alpha);
-            end
-            AEstatTableOFF{n,2,j} = Paaeoff';
-            %plotting AC regional adjusted behavior PODF%
-            offbarAdjACregMu = [offadjACregHitMu offadjACregHitMuON offadjACregHitMuOFF;...
-                offadjACregMissMu offadjACregMissMuON offadjACregMissMuOFF;...
-                offadjACregFalarmMu offadjACregFalarmMuON offadjACregFalarmMuOFF;...
-                offadjACregCorrejMu offadjACregCorrejMuON offadjACregCorrejMuOFF];
-            offbarAdjACregMuSE = [offadjACregHitMuSE offadjACregHitMuSEon offadjACregHitMuSEoff;...
-                offadjACregMissMuSE offadjACregMissMuSEon offadjACregMissMuSEoff;...
-                offadjACregFalarmMuSE offadjACregFalarmMuSEon offadjACregFalarmMuSEoff;...
-                offadjACregCorrejMuSE offadjACregCorrejMuSEon offadjACregCorrejMuSEoff];
-            if figON    
-                figure
-                title([animal{j},' Passive-adjusted Behavior ',ACregs{n},' offset AE ROI'])
-                hold on
-                b = bar(offbarAdjACregMu,'grouped');
-                nbars = size(offbarAdjACregMu,2);
-                x = [];
-                for m = 1:nbars
-                    x = [x; b(m).XEndPoints];
-                end
-                err = errorbar(x',offbarAdjACregMu,2*offbarAdjACregMuSE);
-                for m = 1:nbars
-                    err(m).Color = [0 0 0];
-                    err(m).LineStyle = 'None';
-                end
-                legend('post-onset all','tone onset','tone offset','AutoUpdate','Off')
-                sigstar(behavSigPoints,[Paaeoff(1),Paaeoff(2),Paaeoff(3),Paaeoff(7),Paaeoff(8),Paaeoff(9)])
-                xticks([1, 2, 3, 4])
-                xticklabels({'hit', 'miss', 'false alarm', 'correct reject'})
-                xtickangle(-15)
-                xlabel('Time (s)')
-                ylabel('DeltaF/F')
-                set(gca, 'Box', 'off')
-                set(gcf, 'WindowStyle', 'Docked')
-                figSave13 = fullfile(file_loc,animal{j},strcat(ACregs{n},'_',fig13));
-                savefig(figSave13);
-            end
         end
-        
-%         for i = 1:length(Freqs)
-%             %fill in any empty values (no AE ROI's tuned to a certain frequency) with NaNs so that analysis does not break%
-%             if isempty(AEROIfreqTraces{i,j})
-%                 AEROIfreqTraces{i,j} = nan(18,6);
-%                 AEROIfreqMu{i,j} = nan(1,6);
-%                 AEROIfreqMuON{i,j} = nan(1,6);
-%                 AEROIfreqMuOFF{i,j} = nan(1,6);
-%                 adjAEROIfreqTraces{i,j} = nan(18,4);
-%                 adjAEROIfreqMu{i,j} = nan(1,4);
-%                 adjAEROIfreqMuON{i,j} = nan(1,4);
-%                 adjAEROIfreqMuOFF{i,j} = nan(1,4);
-%             end
-%             if isempty(PassAEROIfreqTraces{i,j})
-%                 PassAEROIfreqTraces{i,j} = nan(16,8); 
-%                 PassAEROIfreqMu{i,j} = nan(1,8);
-%                 PassAEROIfreqMuON{i,j} = nan(1,8);
-%                 PassAEROIfreqMuOFF{i,j} = nan(1,8);
-%             end
-%             %separate current freq AE ROI traces by response category%
-%             AEROItarTraces{i} = squeeze(AEROIfreqTraces{i,j}(:,1,:))';
-%             AEROIhitTraces{i} = squeeze(AEROIfreqTraces{i,j}(:,2,:))';
-%             AEROImissTraces{i} = squeeze(AEROIfreqTraces{i,j}(:,3,:))';
-%             AEROInonTraces{i} = squeeze(AEROIfreqTraces{i,j}(:,4,:))';
-%             AEROIfalarmTraces{i} = squeeze(AEROIfreqTraces{i,j}(:,5,:))';
-%             AEROIcorrejTraces{i} = squeeze(AEROIfreqTraces{i,j}(:,6,:))';
-%             %average across current BF ROI response categories%
-%             AEROItarTrace = nanmean(AEROItarTraces{i},1);
-%             AEROIhitTrace = nanmean(AEROIhitTraces{i},1);
-%             AEROImissTrace = nanmean(AEROImissTraces{i},1);
-%             AEROInonTrace = nanmean(AEROInonTraces{i},1);
-%             AEROIfalarmTrace = nanmean(AEROIfalarmTraces{i},1);
-%             AEROIcorrejTrace = nanmean(AEROIcorrejTraces{i},1);
-%             AEROItraceMax(i,:,j) = [max(AEROItarTrace) max(AEROIhitTrace) max(AEROImissTrace) max(AEROInonTrace) max(AEROIfalarmTrace) max(AEROIcorrejTrace)];
-%             AEROItraceMin(i,:,j) = [min(AEROItarTrace) min(AEROIhitTrace) min(AEROImissTrace) min(AEROInonTrace) min(AEROIfalarmTrace) min(AEROIcorrejTrace)];
-%             %standard error of response category traces for current BF ROI%
-%             if size(AEROIfreqTraces{i,j},3) > 1% && nanmean(nanmean(AEROItarTraces)) > 0
-%                 AEROItarTraceSE = nanstd(AEROItarTraces{i})/sqrt(size(AEROIfreqTraces{i,j},3));
-%                 AEROIhitTraceSE = nanstd(AEROIhitTraces{i})/sqrt(size(AEROIfreqTraces{i,j},3));
-%                 AEROImissTraceSE = nanstd(AEROImissTraces{i})/sqrt(size(AEROIfreqTraces{i,j},3));
-%                 AEROInonTraceSE = nanstd(AEROInonTraces{i})/sqrt(size(AEROIfreqTraces{i,j},3));
-%                 AEROIfalarmTraceSE = nanstd(AEROIfalarmTraces{i})/sqrt(size(AEROIfreqTraces{i,j},3));
-%                 AEROIcorrejTraceSE = nanstd(AEROIcorrejTraces{i})/sqrt(size(AEROIfreqTraces{i,j},3));
-%             else
-%                 AEROIhitTraceSE = zeros(1,18);                                   %creates usable standard error vectors for mice with only 1 experiment
-%                 AEROImissTraceSE = zeros(1,18);
-%                 AEROIfalarmTraceSE = zeros(1,18);
-%                 AEROIcorrejTraceSE = zeros(1,18);
-%                 AEROItarTraceSE = zeros(1,18);
-%                 AEROInonTraceSE = zeros(1,18);
-%             end
-%             %plot current freq AE ROI target tone response w/ passive and behavior%
-%             figure
-%             subplot(1,2,1)
-%             suptitle([animal{j},' ',Freqs{i},'AE ROI'])
-%             shadedErrorBar([1:18],AEROItarTrace,2*AEROItarTraceSE,'-g',1);
-%             hold on
-%             shadedErrorBar([1:18],AEROIhitTrace,2*AEROIhitTraceSE,'-b',1);
-%             shadedErrorBar([1:18],AEROImissTrace,2*AEROImissTraceSE,'-r',1);
-%             set(gca, 'Box', 'off')
-%             hold off
-%             title({'{\color{blue}Hit} vs. {\color{red}Miss} vs. {\color{green}Passive} ',...
-%                 '{\color{green}Target} Fluorescence Traces'})
-%             xticks([4, 8, 12, 16])
-%             xticklabels({'1', '2', '3', '4'})
-%             xlabel('Time (s)')
-%             ylabel('DeltaF/F')
-%             if isnan(nanmean(AEROItraceMin(i,:,j))) || isnan(nanmean(AEROItraceMax(i,:,j)))
-%                 ylim([-1 1])
-%             else
-%                 ylim([min(AEROItraceMin(i,:,j))-0.1 max(AEROItraceMax(i,:,j))+0.2])
-%             end
-%             %plot nontarget tone w/ behavior%
-%             subplot(1,2,2)
-%             shadedErrorBar([1:18],AEROInonTrace,2*AEROInonTraceSE,'-g',1);
-%             hold on
-%             shadedErrorBar([1:18],AEROIfalarmTrace,2*AEROIfalarmTraceSE,'-r',1);
-%             shadedErrorBar([1:18],AEROIcorrejTrace,2*AEROIcorrejTraceSE,'-b',1);
-%             set(gca, 'Box', 'off')
-%             hold off
-%             title({'{\color{red}False \color{red}Alarm} vs. {\color{blue}Correct} '... 
-%                 '{\color{blue}Reject} vs. {\color{green}Passive}', '{\color{green}Nontarget} Fluorescence Traces'})
-%             xticks([4, 8, 12, 16])
-%             xticklabels({'1', '2', '3', '4'})
-%             xlabel('Time (s)')
-%             ylabel('DeltaF/F')
-%             if isnan(nanmean(AEROItraceMin(i,:,j))) || isnan(nanmean(AEROItraceMax(i,:,j)))
-%                 ylim([-1 1])
-%             else
-%                 ylim([min(AEROItraceMin(i,:,j))-0.1 max(AEROItraceMax(i,:,j))+0.2])
-%             end
-%             set(gcf, 'WindowStyle', 'Docked')
-%             figSave8 = fullfile(file_loc,animal{j},fig8{i});
-%             savefig(figSave8);
-% 
-%             %separate mouse average post-onset DeltaF/F by response categories for current BF ROI and average across experiments%
-%             %passive and unadjusted behavior
-%             AEROItarPODF{i} = squeeze(AEROIfreqMu{i,j}(:,1));
-%             AEROIhitPODF{i} = squeeze(AEROIfreqMu{i,j}(:,2));
-%             AEROImissPODF{i} = squeeze(AEROIfreqMu{i,j}(:,3));
-%             AEROInonPODF{i} = squeeze(AEROIfreqMu{i,j}(:,4));
-%             AEROIfalarmPODF{i} = squeeze(AEROIfreqMu{i,j}(:,5));
-%             AEROIcorrejPODF{i} = squeeze(AEROIfreqMu{i,j}(:,6));
-%             AEROItarPODFon{i} = squeeze(AEROIfreqMuON{i,j}(:,1));
-%             AEROIhitPODFon{i} = squeeze(AEROIfreqMuON{i,j}(:,2));
-%             AEROImissPODFon{i} = squeeze(AEROIfreqMuON{i,j}(:,3));
-%             AEROInonPODFon{i} = squeeze(AEROIfreqMuON{i,j}(:,4));
-%             AEROIfalarmPODFon{i} = squeeze(AEROIfreqMuON{i,j}(:,5));
-%             AEROIcorrejPODFon{i} = squeeze(AEROIfreqMuON{i,j}(:,6));
-%             AEROItarPODFoff{i} = squeeze(AEROIfreqMuOFF{i,j}(:,1));
-%             AEROIhitPODFoff{i} = squeeze(AEROIfreqMuOFF{i,j}(:,2));
-%             AEROImissPODFoff{i} = squeeze(AEROIfreqMuOFF{i,j}(:,3));
-%             AEROInonPODFoff{i} = squeeze(AEROIfreqMuOFF{i,j}(:,4));
-%             AEROIfalarmPODFoff{i} = squeeze(AEROIfreqMuOFF{i,j}(:,5));
-%             AEROIcorrejPODFoff{i} = squeeze(AEROIfreqMuOFF{i,j}(:,6));
-%             avgAEROImu(i,:,j) = nanmean(AEROIfreqMu{i,j},1);
-%             avgAEROImuON(i,:,j) = nanmean(AEROIfreqMuON{i,j},1);
-%             avgAEROImuOFF(i,:,j) = nanmean(AEROIfreqMuOFF{i,j},1);
-%             BARavgAEROImu(1,:,i,j) = [avgAEROImu(i,1,j) avgAEROImuON(i,1,j) avgAEROImuOFF(i,1,j)];
-%             BARavgAEROImu(2,:,i,j) = [avgAEROImu(i,2,j) avgAEROImuON(i,2,j) avgAEROImuOFF(i,2,j)];
-%             BARavgAEROImu(3,:,i,j) = [avgAEROImu(i,3,j) avgAEROImuON(i,3,j) avgAEROImuOFF(i,3,j)];
-%             BARavgAEROImu(4,:,i,j) = [avgAEROImu(i,4,j) avgAEROImuON(i,4,j) avgAEROImuOFF(i,4,j)];
-%             BARavgAEROImu(5,:,i,j) = [avgAEROImu(i,5,j) avgAEROImuON(i,5,j) avgAEROImuOFF(i,5,j)];
-%             BARavgAEROImu(6,:,i,j) = [avgAEROImu(i,6,j) avgAEROImuON(i,6,j) avgAEROImuOFF(i,6,j)];
-%             %passive-adjusted behavior
-%             adjAEROIhitPODF{i} = squeeze(adjAEROIfreqMu{i,j}(:,1));
-%             adjAEROImissPODF{i} = squeeze(adjAEROIfreqMu{i,j}(:,2));
-%             adjAEROIfalarmPODF{i} = squeeze(adjAEROIfreqMu{i,j}(:,3));
-%             adjAEROIcorrejPODF{i} = squeeze(adjAEROIfreqMu{i,j}(:,4));
-%             adjAEROIhitPODFon{i} = squeeze(adjAEROIfreqMuON{i,j}(:,1));
-%             adjAEROImissPODFon{i} = squeeze(adjAEROIfreqMuON{i,j}(:,2));
-%             adjAEROIfalarmPODFon{i} = squeeze(adjAEROIfreqMuON{i,j}(:,3));
-%             adjAEROIcorrejPODFon{i} = squeeze(adjAEROIfreqMuON{i,j}(:,4));
-%             adjAEROIhitPODFoff{i} = squeeze(adjAEROIfreqMuOFF{i,j}(:,1));
-%             adjAEROImissPODFoff{i} = squeeze(adjAEROIfreqMuOFF{i,j}(:,2));
-%             adjAEROIfalarmPODFoff{i} = squeeze(adjAEROIfreqMuOFF{i,j}(:,3));
-%             adjAEROIcorrejPODFoff{i} = squeeze(adjAEROIfreqMuOFF{i,j}(:,4));
-%             avgAdjAEROImu(i,:,j) = nanmean(adjAEROIfreqMu{i,j},1);
-%             avgAdjAEROImuON(i,:,j) = nanmean(adjAEROIfreqMuON{i,j},1);
-%             avgAdjAEROImuOFF(i,:,j) = nanmean(adjAEROIfreqMuOFF{i,j},1);
-%             BARavgAdjAEROImu(1,:,i,j) = [avgAdjAEROImu(i,1,j) avgAdjAEROImuON(i,1,j) avgAdjAEROImuOFF(i,1,j)];
-%             BARavgAdjAEROImu(2,:,i,j) = [avgAdjAEROImu(i,2,j) avgAdjAEROImuON(i,2,j) avgAdjAEROImuOFF(i,2,j)];
-%             BARavgAdjAEROImu(3,:,i,j) = [avgAdjAEROImu(i,3,j) avgAdjAEROImuON(i,3,j) avgAdjAEROImuOFF(i,3,j)];
-%             BARavgAdjAEROImu(4,:,i,j) = [avgAdjAEROImu(i,4,j) avgAdjAEROImuON(i,4,j) avgAdjAEROImuOFF(i,4,j)];
-%             %calculate statistically significant differences between categorical post-onset DeltaF/F%
-%             if isnan(avgAEROImu(i,1,j)) || isnan(avgAEROImu(i,2,j))                %if statements are used to catch instances where a frequency was not
-%                 Pth = nan;                                                     %represented in the tonotopic map or if a response category was not
-%             else                                                               %represented in any of an animal's experiments (can happen with...
-%                 [Hth Pth] = kstest2(AEROItarPODF{i},AEROIhitPODF{i},alpha);              %(misses or false alarms)
-%             end
-%             if isnan(avgAEROImu(i,1,j)) || isnan(avgAEROImu(i,3,j))
-%                 Ptm = nan;
-%             else
-%                 [Htm Ptm] = kstest2(AEROItarPODF{i},AEROImissPODF{i},alpha);
-%             end
-%             if isnan(avgAEROImu(i,4,j)) || isnan(avgAEROImu(i,5,j))
-%                 Pnf = nan;
-%             else
-%                 [Hnf Pnf] = kstest2(AEROInonPODF{i},AEROIfalarmPODF{i},alpha);
-%             end
-%             if isnan(avgAEROImu(i,4,j)) || isnan(avgAEROImu(i,6,j))
-%                 Pnc = nan;
-%             else
-%                 [Hnc Pnc] = kstest2(AEROInonPODF{i},AEROIcorrejPODF{i},alpha);
-%             end
-%             if isnan(avgAdjAEROImu(i,1,j)) || isnan(avgAdjAEROImu(i,2,j))
-%                 Pahm = nan;
-%             else
-%                 [Hahm Pahm] = kstest2(adjAEROIhitPODF{i},adjAEROImissPODF{i},alpha);
-%             end
-%             if isnan(avgAdjAEROImu(i,3,j)) || isnan(avgAdjAEROImu(i,4,j))
-%                 Pafc = nan;
-%             else
-%                 [Hafc Pafc] = kstest2(adjAEROIfalarmPODF{i},adjAEROIcorrejPODF{i},alpha);
-%             end
-%             AEstatTable(:,i,j) = [Pth; Ptm; Pnf; Pnc; Pahm; Pafc];
-%             if isnan(avgAEROImuON(i,1,j)) || isnan(avgAEROImuON(i,2,j))        %tone-onset
-%                 PthON = nan;                                                    
-%             else                                                               
-%                 [HthON PthON] = kstest2(AEROItarPODFon{i},AEROIhitPODFon{i},alpha);             
-%             end
-%             if isnan(avgAEROImuON(i,1,j)) || isnan(avgAEROImuON(i,3,j))
-%                 PtmON = nan;
-%             else
-%                 [HtmON PtmON] = kstest2(AEROItarPODFon{i},AEROImissPODFon{i},alpha);
-%             end
-%             if isnan(avgAEROImuON(i,4,j)) || isnan(avgAEROImuON(i,5,j))
-%                 PnfON = nan;
-%             else
-%                 [HnfON PnfON] = kstest2(AEROInonPODFon{i},AEROIfalarmPODFon{i},alpha);
-%             end
-%             if isnan(avgAEROImuON(i,4,j)) || isnan(avgAEROImuON(i,6,j))
-%                 PncON = nan;
-%             else
-%                 [HncON PncON] = kstest2(AEROInonPODFon{i},AEROIcorrejPODFon{i},alpha);
-%             end
-%             if isnan(avgAdjAEROImuON(i,1,j)) || isnan(avgAdjAEROImuON(i,2,j))
-%                 PahmON = nan;
-%             else
-%                 [HahmON PahmON] = kstest2(adjAEROIhitPODFon{i},adjAEROImissPODFon{i},alpha);
-%             end
-%             if isnan(avgAdjAEROImuON(i,3,j)) || isnan(avgAdjAEROImuON(i,4,j))
-%                 PafcON = nan;
-%             else
-%                 [HafcON PafcON] = kstest2(adjAEROIfalarmPODFon{i},adjAEROIcorrejPODFon{i},alpha);
-%             end
-%             AEstatTableON(:,i,j) = [PthON; PtmON; PnfON; PncON; PahmON; PafcON];
-%             if isnan(avgAEROImuOFF(i,1,j)) || isnan(avgAEROImuOFF(i,2,j))      %tone-offset
-%                 PthOFF = nan;                                                  
-%             else                                                               
-%                 [HthOFF PthOFF] = kstest2(AEROItarPODF{i},AEROIhitPODF{i},alpha);     
-%             end
-%             if isnan(avgAEROImuOFF(i,1,j)) || isnan(avgAEROImuOFF(i,3,j))
-%                 PtmOFF = nan;
-%             else
-%                 [HtmOFF PtmOFF] = kstest2(AEROItarPODF{i},AEROImissPODF{i},alpha);
-%             end
-%             if isnan(avgAEROImuOFF(i,4,j)) || isnan(avgAEROImuOFF(i,5,j))
-%                 PnfOFF = nan;
-%             else
-%                 [HnfOFF PnfOFF] = kstest2(AEROInonPODF{i},AEROIfalarmPODF{i},alpha);
-%             end
-%             if isnan(avgAEROImuOFF(i,4,j)) || isnan(avgAEROImuOFF(i,6,j))
-%                 PncOFF = nan;
-%             else
-%                 [HncOFF PncOFF] = kstest2(AEROInonPODF{i},AEROIcorrejPODF{i},alpha);
-%             end
-%             if isnan(avgAdjAEROImuOFF(i,1,j)) || isnan(avgAdjAEROImuOFF(i,2,j))
-%                 PahmOFF = nan;
-%             else
-%                 [HahmOFF PahmOFF] = kstest2(adjAEROIhitPODF{i},adjAEROImissPODF{i},alpha);
-%             end
-%             if isnan(avgAdjAEROImuOFF(i,3,j)) || isnan(avgAdjAEROImuOFF(i,4,j))
-%                 PafcOFF = nan;
-%             else
-%                 [HafcOFF PafcOFF] = kstest2(adjAEROIfalarmPODF{i},adjAEROIcorrejPODF{i},alpha);
-%             end
-%             AEstatTableOFF(:,i,j) = [PthOFF; PtmOFF; PnfOFF; PncOFF; PahmOFF; PafcOFF];
-%             %calculate standard error for post-onset DeltaF/F%
-%             %passive and unadjusted behavior
-%             AEROItarMuSE = nanstd(AEROItarPODF{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROIhitMuSE = nanstd(AEROIhitPODF{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROImissMuSE = nanstd(AEROImissPODF{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROInonMuSE = nanstd(AEROInonPODF{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROIfalarmMuSE = nanstd(AEROIfalarmPODF{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROIcorrejMuSE = nanstd(AEROIcorrejPODF{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROItarMuSEon = nanstd(AEROItarPODFon{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROIhitMuSEon = nanstd(AEROIhitPODFon{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROImissMuSEon = nanstd(AEROImissPODFon{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROInonMuSEon = nanstd(AEROInonPODFon{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROIfalarmMuSEon = nanstd(AEROIfalarmPODFon{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROIcorrejMuSEon = nanstd(AEROIcorrejPODFon{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROItarMuSEoff = nanstd(AEROItarPODFoff{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROIhitMuSEoff = nanstd(AEROIhitPODFoff{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROImissMuSEoff = nanstd(AEROImissPODFoff{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROInonMuSEoff = nanstd(AEROInonPODFoff{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROIfalarmMuSEoff = nanstd(AEROIfalarmPODFoff{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROIcorrejMuSEoff = nanstd(AEROIcorrejPODFoff{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             AEROImuSEs(i,:,j) = [AEROItarMuSE AEROIhitMuSE AEROImissMuSE AEROInonMuSE AEROIfalarmMuSE AEROIcorrejMuSE];
-%             AEROImuSEsON(i,:,j) = [AEROItarMuSEon AEROIhitMuSEon AEROImissMuSEon AEROInonMuSEon AEROIfalarmMuSEon AEROIcorrejMuSEon];
-%             AEROImuSEsOFF(i,:,j) = [AEROItarMuSEoff AEROIhitMuSEoff AEROImissMuSEoff AEROInonMuSEoff AEROIfalarmMuSEoff AEROIcorrejMuSEoff];
-%             barAEROImuSEs(1,:,i,j) = [AEROImuSEs(i,1,j) AEROImuSEsON(i,1,j) AEROImuSEsOFF(i,1,j)];
-%             barAEROImuSEs(2,:,i,j) = [AEROImuSEs(i,2,j) AEROImuSEsON(i,2,j) AEROImuSEsOFF(i,2,j)];
-%             barAEROImuSEs(3,:,i,j) = [AEROImuSEs(i,3,j) AEROImuSEsON(i,3,j) AEROImuSEsOFF(i,3,j)];
-%             barAEROImuSEs(4,:,i,j) = [AEROImuSEs(i,4,j) AEROImuSEsON(i,4,j) AEROImuSEsOFF(i,4,j)];
-%             barAEROImuSEs(5,:,i,j) = [AEROImuSEs(i,5,j) AEROImuSEsON(i,5,j) AEROImuSEsOFF(i,5,j)];
-%             barAEROImuSEs(6,:,i,j) = [AEROImuSEs(i,6,j) AEROImuSEsON(i,6,j) AEROImuSEsOFF(i,6,j)];
-%             %passive-adjusted behavior
-%             adjAEROIhitMuSE = nanstd(adjAEROIhitPODF{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROImissMuSE = nanstd(adjAEROImissPODF{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROIfalarmMuSE = nanstd(adjAEROIfalarmPODF{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROIcorrejMuSE = nanstd(adjAEROIcorrejPODF{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROIhitMuSEon = nanstd(adjAEROIhitPODFon{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROImissMuSEon = nanstd(adjAEROImissPODFon{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROIfalarmMuSEon = nanstd(adjAEROIfalarmPODFon{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROIcorrejMuSEon = nanstd(adjAEROIcorrejPODFon{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROIhitMuSEoff = nanstd(adjAEROIhitPODFoff{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROImissMuSEoff = nanstd(adjAEROImissPODFoff{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROIfalarmMuSEoff = nanstd(adjAEROIfalarmPODFoff{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROIcorrejMuSEoff = nanstd(adjAEROIcorrejPODFoff{i})/sqrt(size(AEROIfreqMu{i,j},1));
-%             adjAEROImuSEs(i,:,j) = [adjAEROIhitMuSE adjAEROImissMuSE adjAEROIfalarmMuSE adjAEROIcorrejMuSE];
-%             adjAEROImuSEsON(i,:,j) = [adjAEROIhitMuSEon adjAEROImissMuSEon adjAEROIfalarmMuSEon adjAEROIcorrejMuSEon];
-%             adjAEROImuSEsOFF(i,:,j) = [adjAEROIhitMuSEoff adjAEROImissMuSEoff adjAEROIfalarmMuSEoff adjAEROIcorrejMuSEoff];
-%             barAdjAEROImuSEs(1,:,i,j) = [adjAEROImuSEs(i,1,j) adjAEROImuSEsON(i,1,j) adjAEROImuSEsOFF(i,1,j)];
-%             barAdjAEROImuSEs(2,:,i,j) = [adjAEROImuSEs(i,2,j) adjAEROImuSEsON(i,2,j) adjAEROImuSEsOFF(i,2,j)];
-%             barAdjAEROImuSEs(3,:,i,j) = [adjAEROImuSEs(i,3,j) adjAEROImuSEsON(i,3,j) adjAEROImuSEsOFF(i,3,j)];
-%             barAdjAEROImuSEs(4,:,i,j) = [adjAEROImuSEs(i,4,j) adjAEROImuSEsON(i,4,j) adjAEROImuSEsOFF(i,4,j)];
-%             %plot adjusted and unadjusted post-onset BF ROI DeltaF/F with significance%
-%             figure
-%             suptitle([animal{j},' ',Freqs{i},'AE ROI'])
-%             hold on
-%             b = bar(BARavgAEROImu(:,:,i,j),'grouped');
-%             title({'Unadjusted Passive and Behavior','Post-onset DeltaF/F'})
-%             nbars = size(BARavgAEROImu,2);
-%             x = [];
-%             for n = 1:nbars
-%                 x = [x; b(n).XEndPoints];
-%             end
-%             err = errorbar(x',BARavgAEROImu(:,:,i,j),2*barAEROImuSEs(:,:,i,j));
-%             for n = 1:nbars
-%                 err(n).Color = [0 0 0];
-%                 err(n).LineStyle = 'None';
-%             end
-%             legend('post-onset all','tone onset','tone offset','AutoUpdate','Off')
-%             sigstar({[.7778 1.7778],[1 2],[1.2222 2.2222],[.7778 2.7778],[1 3],[1.2222 3.2222],...
-%                 [3.7778 4.7778],[4 5],[4.2222 5.2222],[3.7778 5.7778],[4 6],[4.2222 6.2222]},...
-%                 [Pth,PthON,PthOFF,Ptm,PtmON,PtmOFF,Pnf,PnfON,PnfOFF,Pnc,PncON,PncOFF])
-%             xticks([1:6])
-%             xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
-%             xtickangle(-15)
-%             set(gca, 'Box', 'off')
-%             hold off
-%             figSave9 = fullfile(file_loc,animal{j},fig9{i});
-%             savefig(figSave9);
-%             set(gcf, 'WindowStyle', 'Docked')
-%             %plot passive-adjusted behavior post-onset DeltaF/F values%
-%             figure
-%             suptitle([animal{j},' ',Freqs{i},'AE ROI'])
-%             hold on
-%             b = bar(BARavgAdjAEROImu(:,:,i,j))
-%             title({'Passive-adjusted Behavior','Post-onset DeltaF/F'})
-%             nbars = size(BARavgAdjAEROImu,2);
-%             x = [];
-%             for n = 1:nbars
-%                 x = [x; b(n).XEndPoints];
-%             end
-%             err = errorbar(x',BARavgAdjAEROImu(:,:,i,j),2*barAdjAEROImuSEs(:,:,i,j))
-%             for n = 1:nbars
-%                 err(n).Color = [0 0 0];
-%                 err(n).LineStyle = 'None';
-%             end
-%             sigstar({[0.7778 1.7778],[1 2],[1.2222 2.2222],[2.7778 3.7778],[3 4],[3.2222 4.2222]},...
-%                 [Pahm,PahmON,PahmOFF,Pafc,PafcON,PafcOFF])
-%             xticks([1:4])
-%             xticklabels({'hit','miss','false alarm','correct reject'})
-%             xtickangle(-15)
-%             set(gca, 'Box', 'off')
-%             hold off
-%             figSave10 = fullfile(file_loc,animal{j},fig10{i});
-%             savefig(figSave10);
-%             set(gcf, 'WindowStyle', 'Docked')
-%         end
+
         clearvars -except numAnimals animal animalExps alpha Freqs dubFreqs file_loc figON... 
             fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9 fig10 fig11 fig12 fig13 j n... 
             distSigPoints passSigPoints behavSigPoints animalExps animalPass... 
-            mouseBehavior mousePassive winTraces winMu winMuON winMuOFF... 
-            adjWinMu adjWinMuON adjWinMuOFF BFROItraces BFROImu BFROImuON BFROImuOFF... 
+            mouseBehavior mousePassive BACfreqDist PACfreqDist totalACfreqDist...
+            winTraces winMu winMuON winMuOFF adjWinMu adjWinMuON adjWinMuOFF... 
+            BFROItraces BFROImu BFROImuON BFROImuOFF freqDistSig... 
             adjBFROImu adjBFROImuON adjBFROImuOFF BfreqDist PfreqDist PassWinTraces... 
             PassWinMu PassWinMuON PassWinMuOFF PassBFROItraces PassBFROImu... 
             PassBFROImuON PassBFROImuOFF totalFreqDist winTraceMax winTraceMin... 
             BARavgWinMu BARavgAdjWinMu statTable statTableON statTableOFF... 
             BARmuSEs BARadjMuSEs BFROItraceMax BFROItraceMin BARavgBFROImu BARavgAdjBFROImu... 
-            barBFROImuSEs barAdjBFROImuSEs ACregs onACregTraces onACregMu onACregMuON onACregMuOFF... 
-            onadjACregMu onadjACregMuON onadjACregMuOFF onPassACregTraces onPassACregMu... 
-            onPassACregMuON onPassACregMuOFF offACregTraces offACregMu offACregMuON offACregMuOFF... 
-            offadjACregMu offadjACregMuON offadjACregMuOFF offPassACregTraces offPassACregMu... 
-            offPassACregMuON offPassACregMuOFF AEstatTableON AEstatTableOFF...
+            barBFROImuSEs barAdjBFROImuSEs ACregs ACregTraces ACregMu ACregMuON ACregMuOFF... 
+            adjACregMu adjACregMuON adjACregMuOFF PassACregTraces PassACregMu... 
+            PassACregMuON PassACregMuOFF AEstatTable ACregTntDist...
             winTarTraces winHitTraces winMissTraces winNonTraces...
             winFalarmTraces winCorrejTraces tarPODF hitPODF missPODF...
             nonPODF falarmPODF correjPODF tarPODFon hitPODFon missPODFon...
@@ -2017,8 +1391,8 @@ for j = 1:numAnimals
     if numAnimals == 1
         saveName = 'mouseStats.mat';
         saveFile = fullfile(file_loc,animal{1},saveName);
-        save(saveFile,'statTable','statTableON','statTableOFF','AEstatTableON','AEstatTableOFF',...
-            'totalFreqDist','animalExps','BfreqDist', 'PfreqDist',...
+        save(saveFile,'statTable','statTableON','statTableOFF','AEstatTable','totalFreqDist','animalExps',...
+            'BfreqDist','PfreqDist','BACfreqDist','PACfreqDist','totalACfreqDist','freqDistSig',...
             'winTarTraces','winHitTraces','winMissTraces','winNonTraces',...
             'winFalarmTraces','winCorrejTraces','tarPODF','hitPODF','missPODF',...
             'nonPODF','falarmPODF','correjPODF','tarPODFon','hitPODFon','missPODFon',...
@@ -2047,24 +1421,25 @@ for j = 1:numAnimals
             'adjAEROIhitPODFoff','adjAEROImissPODFoff','adjAEROIfalarmPODFoff','adjAEROIcorrejPODFoff',...
             'PassWinTraces','PassWinMu','PassWinMuON','PassWinMuOFF',... 
             'PassBFROItraces','PassBFROImu','PassBFROImuON','PassBFROImuOFF',...
-            'onPassACregTraces','onPassACregMu','onPassACregMuON','onPassACregMuOFF',...
-            'offPassACregTraces','offPassACregMu','offPassACregMuON','offPassACregMuOFF');
+            'PassACregTraces','PassACregMu','PassACregMuON','PassACregMuOFF');
+        disp('Saved Data')
     end
-%     close all
+    if figON
+        close all
+    end
     clearvars -except numAnimals animal animalExps alpha Freqs dubFreqs file_loc figON... 
-        totalFreqDist fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9 fig10... 
+        totalFreqDist fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9 fig10 fig11... 
         winTraces winMu winMuON winMuOFF adjWinMu adjWinMuON adjWinMuOFF... 
         BFROItraces BFROImu BFROImuON BFROImuOFF adjBFROImu adjBFROImuON adjBFROImuOFF... 
         winTraceMax winTraceMin BARavgWinMu BARavgAdjWinMu statTable statTableON statTableOFF... 
         BARmuSEs BARadjMuSEs BFROItraceMax BFROItraceMin BARavgBFROImu... 
-        BARavgAdjBFROImu barBFROImuSEs barAdjBFROImuSEs AEstatTableON AEstatTableOFF... 
+        BARavgAdjBFROImu barBFROImuSEs barAdjBFROImuSEs AEstatTable... 
         BfreqDist PfreqDist PassWinTraces PassWinMu PassWinMuON PassWinMuOFF... 
         PassBFROItraces PassBFROImu PassBFROImuON PassBFROImuOFF... 
-        ACregs onACregTraces onACregMu onACregMuON onACregMuOFF... 
-        onadjACregMu onadjACregMuON onadjACregMuOFF onPassACregTraces... 
-        onPassACregMu onPassACregMuON onPassACregMuOFF offACregTraces... 
-        offACregMu offACregMuON offACregMuOFF offadjACregMu offadjACregMuON... 
-        offadjACregMuOFF offPassACregTraces offPassACregMu offPassACregMuON offPassACregMuOFF
+        ACregs ACregTraces ACregMu ACregMuON ACregMuOFF... 
+        adjACregMu adjACregMuON adjACregMuOFF PassACregTraces... 
+        PassACregMu PassACregMuON PassACregMuOFF totalACfreqDist ACregTntDist...
+        distSigPoints passSigPoints behavSigPoints freqDistSig
 end
 
 %% Whole Population Analysis %%
@@ -2116,30 +1491,108 @@ if numAnimals ~= 1
     popFreqErr = [nov4SE exp4SE nov5SE exp5SE nov8SE exp8SE nov11SE exp11SE nov16SE exp16SE nov22SE exp22SE nov32SE exp32SE nov45SE exp45SE];
     
     %plot population frequency distribution%
-    figure
     xTFreq = [0.85,1.15,1.85,2.15,2.85,3.15,3.85,4.15,4.85,5.15,5.85,6.15,6.85,7.15,7.85,8.15];
     popFreqDist = nanmean(totalFreqDist,3)';
     popFreqVals = [];
     for i = 1:length(popFreqDist)
         popFreqVals = [popFreqVals popFreqDist(i,1) popFreqDist(i,2)];
     end
+    figure
+    set(gcf, 'WindowStyle', 'Docked')
+    suptitle('Population: Whole Window')
     bar(popFreqDist)
     legend('Novice','Expert','AutoUpdate','off')
     hold on
-    title({'Population Novice vs. Expert', 'Best Frequency-Tuning Distribution'})
+    title('Novice vs. Expert : Average BF-Tuning Distribution')
     xticks([1:8])
     xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
     xlabel('Frequency (kHz)')
-    ylabel('Percent of Pixels')
+    ylabel('Percent of Tuned Pixels')
     err = errorbar(xTFreq,popFreqVals,2*popFreqErr);
     err.Color = [0 0 0];
     err.LineStyle = 'None';
-    sigstar({[0.85,1.15],[1.85,2.15],[2.85,3.15],[3.85,4.15],[4.85,5.15],[5.85,6.15],[6.85,7.15],[7.85,8.15]},...
-        [p4,p5,p8,p11,p16,p22,p32,p45]);
+    sigstar(distSigPoints,[p4,p5,p8,p11,p16,p22,p32,p45]);
     set(gca, 'Box', 'off')
-    set(gcf, 'WindowStyle', 'Docked')
     figSave1 = fullfile(file_loc,fig1);
     savefig(figSave1);
+    
+    %AC region-specific frequency distribution%
+    for i = 1:(length(ACregs)-1)
+        %combining average frequency distribution across animals%
+        %expert
+        bac4exp = squeeze(totalACfreqDist(2,1,i,:));
+        bac5exp = squeeze(totalACfreqDist(2,2,i,:));
+        bac8exp = squeeze(totalACfreqDist(2,3,i,:));
+        bac11exp = squeeze(totalACfreqDist(2,4,i,:));
+        bac16exp = squeeze(totalACfreqDist(2,5,i,:));
+        bac22exp = squeeze(totalACfreqDist(2,6,i,:));
+        bac32exp = squeeze(totalACfreqDist(2,7,i,:));
+        bac45exp = squeeze(totalACfreqDist(2,8,i,:));
+        %passive
+        pac4exp = squeeze(totalACfreqDist(1,1,i,:));
+        pac5exp = squeeze(totalACfreqDist(1,2,i,:));
+        pac8exp = squeeze(totalACfreqDist(1,3,i,:));
+        pac11exp = squeeze(totalACfreqDist(1,4,i,:));
+        pac16exp = squeeze(totalACfreqDist(1,5,i,:));
+        pac22exp = squeeze(totalACfreqDist(1,6,i,:));
+        pac32exp = squeeze(totalACfreqDist(1,7,i,:));
+        pac45exp = squeeze(totalACfreqDist(1,8,i,:));
+        %standard error%
+        %expert
+        bac4expSE = nanstd(bac4exp)/sqrt(numAnimals);
+        bac5expSE = nanstd(bac5exp)/sqrt(numAnimals);
+        bac8expSE = nanstd(bac8exp)/sqrt(numAnimals);
+        bac11expSE = nanstd(bac11exp)/sqrt(numAnimals);
+        bac16expSE = nanstd(bac16exp)/sqrt(numAnimals);
+        bac22expSE = nanstd(bac22exp)/sqrt(numAnimals);
+        bac32expSE = nanstd(bac32exp)/sqrt(numAnimals);
+        bac45expSE = nanstd(bac45exp)/sqrt(numAnimals);
+        %passive
+        pac4expSE = nanstd(pac4exp)/sqrt(numAnimals);
+        pac5expSE = nanstd(pac5exp)/sqrt(numAnimals);
+        pac8expSE = nanstd(pac8exp)/sqrt(numAnimals);
+        pac11expSE = nanstd(pac11exp)/sqrt(numAnimals);
+        pac16expSE = nanstd(pac16exp)/sqrt(numAnimals);
+        pac22expSE = nanstd(pac22exp)/sqrt(numAnimals);
+        pac32expSE = nanstd(pac32exp)/sqrt(numAnimals);
+        pac45expSE = nanstd(pac45exp)/sqrt(numAnimals);
+        %checking for statistically significant differences
+        [Hac4 Pac4] = kstest2(bac4exp,pac4exp,alpha);
+        [Hac5 Pac5] = kstest2(bac5exp,pac5exp,alpha);
+        [Hac8 Pac8] = kstest2(bac8exp,pac8exp,alpha);
+        [Hac11 Pac11] = kstest2(bac11exp,pac11exp,alpha);
+        [Hac16 Pac16] = kstest2(bac16exp,pac16exp,alpha);
+        [Hac22 Pac22] = kstest2(bac22exp,pac22exp,alpha);
+        [Hac32 Pac32] = kstest2(bac32exp,pac32exp,alpha);
+        [Hac45 Pac45] = kstest2(bac45exp,pac45exp,alpha);
+        %combining values for plotting
+        popACfreqDist = nanmean(totalACfreqDist(:,:,i,:),4)';
+        popACfreqDistSE = [pac4expSE bac4expSE pac5expSE bac5expSE...
+            pac8expSE bac8expSE pac11expSE bac11expSE pac16expSE bac16expSE...
+            pac22expSE bac22expSE pac32expSE bac32expSE pac45expSE bac45expSE];
+        popACfreqVals = [];
+        for n = 1:length(popACfreqDist)
+            popACfreqVals = [popACfreqVals popACfreqDist(n,1) popACfreqDist(n,2)];
+        end
+        figure
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle(['Population: ',ACregs{i}])
+        bar(popACfreqDist)
+        legend('Novice','Expert','AutoUpdate','off')
+        hold on
+        title(['Novice vs. Expert : Average BF-Tuning Distribution'])
+        xticks([1:8])
+        xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
+        xlabel('Frequency (kHz)')
+        ylabel('Percent of Tuned Pixels')
+        err = errorbar(xTFreq,popACfreqVals,2*popACfreqDistSE);
+        err.Color = [0 0 0];
+        err.LineStyle = 'None';
+        sigstar(distSigPoints,[Pac4,Pac5,Pac8,Pac11,Pac16,Pac22,Pac32,Pac45]);
+        set(gca, 'Box', 'off')
+        figSave2 = fullfile(file_loc,[ACregs{i},fig2]);
+        savefig(figSave2);
+    end
     
     %% Whole Window Analysis %%
     
@@ -2177,10 +1630,19 @@ if numAnimals ~= 1
     popNonTraceSE = nanstd(popNonTraces')/sqrt(sum(animalExps));
     
     %plot average population target tone traces with standard error%
+    onBar = repmat((min(winTraceMin)-0.05),1,5);
+    offBar = repmat((min(winTraceMin)-0.05),1,5);
+    onIdx = [4:8];
+    offIdx = [8:12];
     figure
+    set(gcf, 'WindowStyle', 'Docked')
+    suptitle('Population: Whole Window')
     subplot(1,2,1)
-    shadedErrorBar([1:18],popHitTrace,2*popHitTraceSE,'-b',1);
+    plot(onIdx,onBar,'k','LineWidth',3)
     hold on
+    plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+    legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+    shadedErrorBar([1:18],popHitTrace,2*popHitTraceSE,'-b',1);
     shadedErrorBar([1:18],popMissTrace,2*popMissTraceSE,'-r',1);
     shadedErrorBar([1:18],popTarTrace,2*popTarTraceSE,'-g',1);
     hold off
@@ -2189,13 +1651,16 @@ if numAnimals ~= 1
     xticks([4, 8, 12, 16])
     xticklabels({'1', '2', '3', '4'})
     xlabel('Time (s)')
-    ylabel('DeltaF/F')
-    ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.1])
+    ylabel('Normalized DeltaF/F')
+    ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.2])
     set(gca, 'Box', 'off')
     %plot average population nontarget tone traces with standard error%
     subplot(1,2,2)
-    shadedErrorBar([1:18],popFalarmTrace,2*popFalarmTraceSE,'-r',1);
+    plot(onIdx,onBar,'k','LineWidth',3)
     hold on
+    plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+    legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+    shadedErrorBar([1:18],popFalarmTrace,2*popFalarmTraceSE,'-r',1);
     shadedErrorBar([1:18],popCorrejTrace,2*popCorrejTraceSE,'-b',1);
     shadedErrorBar([1:18],popNonTrace,2*popNonTraceSE,'-g',1);
     hold off
@@ -2204,12 +1669,11 @@ if numAnimals ~= 1
     xticks([4, 8, 12, 16])
     xticklabels({'1', '2', '3', '4'})
     xlabel('Time (s)')
-    ylabel('DeltaF/F')
-    ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.1])
+    ylabel('Normalized DeltaF/F')
+    ylim([min(winTraceMin)-0.1 max(winTraceMax)+0.2])
     set(gca, 'Box', 'off')
-    set(gcf, 'WindowStyle', 'Docked')
-    figSave2 = fullfile(file_loc,fig2);
-    savefig(figSave2);
+    figSave3 = fullfile(file_loc,fig3);
+    savefig(figSave3);
     
     %calculate population whole-window post-onset DeltaF/F averages%
     %post-onset all
@@ -2369,9 +1833,11 @@ if numAnimals ~= 1
     
     %plot unadjusted population post-onset DeltaF/F with error bars and statistics%
     figure
+    set(gcf, 'WindowStyle', 'Docked')
+    suptitle('Population: Whole Window')
     hold on
     b = bar(BARavgPopMu,'grouped');
-    title({'Population Unadjusted Passive and Behavior','Post-onset DeltaF/F'})
+    title('Passive and Unadjusted Behavior : Post-onset DeltaF/F')
     nbars = size(BARavgPopMu,2);
     x = [];
     for n = 1:nbars
@@ -2389,16 +1855,18 @@ if numAnimals ~= 1
     xticks([1:6])
     xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
     xtickangle(-15)
+    ylabel('Normalized DeltaF/F')
     set(gca, 'Box', 'off')
     hold off
-    set(gcf, 'WindowStyle', 'Docked')
-    figSave3 = fullfile(file_loc,fig3);
-    savefig(figSave3);
+    figSave4 = fullfile(file_loc,fig4);
+    savefig(figSave4);
     %plot adjusted population post-onset DeltaF/F with error bars and statistics%
     figure
+    set(gcf, 'WindowStyle', 'Docked')
+    suptitle('Population: Whole Window')
     hold on
     b = bar(BARavgAdjPopMu,'grouped');
-    title({'Population Passive-adjusted Behavior','Post-onset DeltaF/F'})
+    title('Passive-adjusted Behavior : Post-onset DeltaF/F')
     nbars = size(BARavgPopMu,2);
     x = [];
     for n = 1:nbars
@@ -2415,11 +1883,11 @@ if numAnimals ~= 1
     xticks([1:4])
     xticklabels({'hit','miss','false alarm','correct reject'})
     xtickangle(-15)
+    ylabel('Normalized DeltaF/F')
     set(gca, 'Box', 'off')
     hold off
-    figSave4 = fullfile(file_loc,fig4);
-    savefig(figSave4);
-    set(gcf, 'WindowStyle', 'Docked')
+    figSave5 = fullfile(file_loc,fig5);
+    savefig(figSave5);
 
     %% Tonotopy-based BF ROI Analysis %%
     
@@ -2531,11 +1999,24 @@ if numAnimals ~= 1
         popBFROIcorrejTraceSE = nanstd(popBFROIcorrejTraces{j}')/sqrt(sum(animalExps));
         
         %plot average population target tone traces with standard error%
+        if isnan(nanmean(popBFROItraceMin))
+            onBar = repmat([-0.1],1,5);
+            offBar = repmat([-0.1],1,5);
+        else
+            onBar = repmat((min(popBFROItraceMin)-0.05),1,5);
+            offBar = repmat((min(popBFROItraceMin)-0.05),1,5);
+        end
+        onIdx = [4:8];
+        offIdx = [8:12];
         figure
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle(['Population: ',Freqs{j},' ROI'])
         subplot(1,2,1)
-        suptitle(['Population ',Freqs{j},' ROI'])
-        shadedErrorBar([1:18],popBFROItarTrace,2*popBFROItarTraceSE,'-g',1);
+        plot(onIdx,onBar,'k','LineWidth',3)
         hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+        shadedErrorBar([1:18],popBFROItarTrace,2*popBFROItarTraceSE,'-g',1);
         shadedErrorBar([1:18],popBFROIhitTrace,2*popBFROIhitTraceSE,'-b',1);
         shadedErrorBar([1:18],popBFROImissTrace,2*popBFROImissTraceSE,'-r',1);
         set(gca, 'Box', 'off')
@@ -2545,7 +2026,7 @@ if numAnimals ~= 1
         xticks([4, 8, 12, 16])
         xticklabels({'1', '2', '3', '4'})
         xlabel('Time (s)')
-        ylabel('DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         if isnan(nanmean(popBFROItraceMin)) || isnan(nanmean(popBFROItraceMax))
             ylim([-1 1])
         else
@@ -2553,8 +2034,11 @@ if numAnimals ~= 1
         end
         %plot nontarget tone w/ behavior%
         subplot(1,2,2)
-        shadedErrorBar([1:18],popBFROInonTrace,2*popBFROInonTraceSE,'-g',1);
+        plot(onIdx,onBar,'k','LineWidth',3)
         hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+        shadedErrorBar([1:18],popBFROInonTrace,2*popBFROInonTraceSE,'-g',1);
         shadedErrorBar([1:18],popBFROIfalarmTrace,2*popBFROIfalarmTraceSE,'-r',1);
         shadedErrorBar([1:18],popBFROIcorrejTrace,2*popBFROIcorrejTraceSE,'-b',1);
         set(gca, 'Box', 'off')
@@ -2564,15 +2048,14 @@ if numAnimals ~= 1
         xticks([4, 8, 12, 16])
         xticklabels({'1', '2', '3', '4'})
         xlabel('Time (s)')
-        ylabel('DeltaF/F')
+        ylabel('Normalized DeltaF/F')
         if isnan(nanmean(popBFROItraceMin)) || isnan(nanmean(popBFROItraceMax))
             ylim([-1 1])
         else
             ylim([min(popBFROItraceMin)-0.1 max(popBFROItraceMax)+0.1])
         end
-        set(gcf, 'WindowStyle', 'Docked')
-        figSave5 = fullfile(file_loc,fig5{j});
-        savefig(figSave5);
+        figSave6 = fullfile(file_loc,fig6{j});
+        savefig(figSave6);
         
         %average population post-onset DeltaF values%
         %passive and unadjusted-behavior post-onset all
@@ -2697,10 +2180,11 @@ if numAnimals ~= 1
         
         %plot unadjusted post-onset BF ROI DeltaF/F with significance%
         figure
-        suptitle(['Population ',Freqs{j},' ROI'])
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle(['Population: ',Freqs{j},' ROI'])
         hold on
         b = bar(BARpopBFROImu,'grouped');
-        title({'Unadjusted Passive and Behavior','Post-onset DeltaF/F'})
+        title('Passive and Unadjusted Behavior : Post-onset DeltaF/F')
         nbars = size(BARpopBFROImu,2);
         x = [];
         for n = 1:nbars
@@ -2718,17 +2202,18 @@ if numAnimals ~= 1
         xticks([1:6])
         xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
         xtickangle(-15)
+        ylabel('Normalized DeltaF/F')
         set(gca, 'Box', 'off')
         hold off
-        set(gcf, 'WindowStyle', 'Docked')
-        figSave6 = fullfile(file_loc,fig6{j});
-        savefig(figSave6);
+        figSave7 = fullfile(file_loc,fig7{j});
+        savefig(figSave7);
         %plot adjusted post-onset BF ROI DeltaF/F with significance%
         figure
-        suptitle(['Population ',Freqs{j},' ROI'])
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle(['Population: ',Freqs{j},' ROI'])
         hold on
         b = bar(BARpopAdjBFROImu,'grouped');
-        title({'Passive-adjusted Behavior','Post-onset DeltaF/F'})
+        title('Passive-adjusted Behavior : Post-onset DeltaF/F')
         nbars = size(BARpopAdjBFROImu,2);
         x = [];
         for n = 1:nbars
@@ -2745,473 +2230,443 @@ if numAnimals ~= 1
         xticks([1:4])
         xticklabels({'hit','miss','false alarm','correct reject'})
         xtickangle(-15)
+        ylabel('Normalized DeltaF/F')
         set(gca, 'Box', 'off')
         hold off
-        figSave7 = fullfile(file_loc,fig7{j});
-        savefig(figSave7);
-        set(gcf, 'WindowStyle', 'Docked')
+        figSave8 = fullfile(file_loc,fig8{j});
+        savefig(figSave8);
     end
     
     %% Autoencoder-based AE ROI Analysis %%
     
     %initialize output matrices%
-    popAEROItarTraces = cell(length(ACregs),2);
-    popAEROIhitTraces = cell(length(ACregs),2);
-    popAEROImissTraces = cell(length(ACregs),2);
-    popAEROInonTraces = cell(length(ACregs),2);
-    popAEROIfalarmTraces = cell(length(ACregs),2);
-    popAEROIcorrejTraces = cell(length(ACregs),2);
-    popAEROItarMus = cell(length(ACregs),2);
-    popAEROIhitMus = cell(length(ACregs),2);
-    popAEROImissMus = cell(length(ACregs),2);
-    popAEROInonMus = cell(length(ACregs),2);
-    popAEROIfalarmMus = cell(length(ACregs),2);
-    popAEROIcorrejMus = cell(length(ACregs),2);
-    popAEROItarMusON = cell(length(ACregs),2);
-    popAEROIhitMusON = cell(length(ACregs),2);
-    popAEROImissMusON = cell(length(ACregs),2);
-    popAEROInonMusON = cell(length(ACregs),2);
-    popAEROIfalarmMusON = cell(length(ACregs),2);
-    popAEROIcorrejMusON = cell(length(ACregs),2);
-    popAEROItarMusOFF = cell(length(ACregs),2);
-    popAEROIhitMusOFF = cell(length(ACregs),2);
-    popAEROImissMusOFF = cell(length(ACregs),2);
-    popAEROInonMusOFF = cell(length(ACregs),2);
-    popAEROIfalarmMusOFF = cell(length(ACregs),2);
-    popAEROIcorrejMusOFF = cell(length(ACregs),2);
-    popAdjAEROIhitMus = cell(length(ACregs),2);
-    popAdjAEROImissMus = cell(length(ACregs),2);
-    popAdjAEROIfalarmMus = cell(length(ACregs),2);
-    popAdjAEROIcorrejMus = cell(length(ACregs),2);
-    popAdjAEROIhitMusON = cell(length(ACregs),2);
-    popAdjAEROImissMusON = cell(length(ACregs),2);
-    popAdjAEROIfalarmMusON = cell(length(ACregs),2);
-    popAdjAEROIcorrejMusON = cell(length(ACregs),2);
-    popAdjAEROIhitMusOFF = cell(length(ACregs),2);
-    popAdjAEROImissMusOFF = cell(length(ACregs),2);
-    popAdjAEROIfalarmMusOFF = cell(length(ACregs),2);
-    popAdjAEROIcorrejMusOFF = cell(length(ACregs),2);
+    popAEROItarTraces = cell(length(ACregs),1);
+    popAEROIhitTraces = cell(length(ACregs),1);
+    popAEROImissTraces = cell(length(ACregs),1);
+    popAEROInonTraces = cell(length(ACregs),1);
+    popAEROIfalarmTraces = cell(length(ACregs),1);
+    popAEROIcorrejTraces = cell(length(ACregs),1);
+    popAEROItarMus = cell(length(ACregs),1);
+    popAEROIhitMus = cell(length(ACregs),1);
+    popAEROImissMus = cell(length(ACregs),1);
+    popAEROInonMus = cell(length(ACregs),1);
+    popAEROIfalarmMus = cell(length(ACregs),1);
+    popAEROIcorrejMus = cell(length(ACregs),1);
+    popAEROItarMusON = cell(length(ACregs),1);
+    popAEROIhitMusON = cell(length(ACregs),1);
+    popAEROImissMusON = cell(length(ACregs),1);
+    popAEROInonMusON = cell(length(ACregs),1);
+    popAEROIfalarmMusON = cell(length(ACregs),1);
+    popAEROIcorrejMusON = cell(length(ACregs),1);
+    popAEROItarMusOFF = cell(length(ACregs),1);
+    popAEROIhitMusOFF = cell(length(ACregs),1);
+    popAEROImissMusOFF = cell(length(ACregs),1);
+    popAEROInonMusOFF = cell(length(ACregs),1);
+    popAEROIfalarmMusOFF = cell(length(ACregs),1);
+    popAEROIcorrejMusOFF = cell(length(ACregs),1);
+    popAdjAEROIhitMus = cell(length(ACregs),1);
+    popAdjAEROImissMus = cell(length(ACregs),1);
+    popAdjAEROIfalarmMus = cell(length(ACregs),1);
+    popAdjAEROIcorrejMus = cell(length(ACregs),1);
+    popAdjAEROIhitMusON = cell(length(ACregs),1);
+    popAdjAEROImissMusON = cell(length(ACregs),1);
+    popAdjAEROIfalarmMusON = cell(length(ACregs),1);
+    popAdjAEROIcorrejMusON = cell(length(ACregs),1);
+    popAdjAEROIhitMusOFF = cell(length(ACregs),1);
+    popAdjAEROImissMusOFF = cell(length(ACregs),1);
+    popAdjAEROIfalarmMusOFF = cell(length(ACregs),1);
+    popAdjAEROIcorrejMusOFF = cell(length(ACregs),1);
     for j = 1:length(ACregs)
         %combine AE ROI specific traces and PODF values into single matrices%
         for i = 1:numAnimals
-            onCheck = ~isempty(onACregTraces{j,i});
-            if onCheck
+            check = ~isempty(ACregTraces{j,i});
+            if check
                 %passive and unadjusted-behavior traces
-                popAEROItarTraces{j,1} = [popAEROItarTraces{j,1} squeeze(onACregTraces{j,i}(:,1,:))];
-                popAEROIhitTraces{j,1} = [popAEROIhitTraces{j,1} squeeze(onACregTraces{j,i}(:,2,:))];
-                popAEROImissTraces{j,1} = [popAEROImissTraces{j,1} squeeze(onACregTraces{j,i}(:,3,:))];
-                popAEROInonTraces{j,1} = [popAEROInonTraces{j,1} squeeze(onACregTraces{j,i}(:,4,:))];
-                popAEROIfalarmTraces{j,1} = [popAEROIfalarmTraces{j,1} squeeze(onACregTraces{j,i}(:,5,:))];
-                popAEROIcorrejTraces{j,1} = [popAEROIcorrejTraces{j,1} squeeze(onACregTraces{j,i}(:,6,:))];
+                popAEROItarTraces{j,1} = [popAEROItarTraces{j,1} squeeze(ACregTraces{j,i}(:,1,:))];
+                popAEROIhitTraces{j,1} = [popAEROIhitTraces{j,1} squeeze(ACregTraces{j,i}(:,2,:))];
+                popAEROImissTraces{j,1} = [popAEROImissTraces{j,1} squeeze(ACregTraces{j,i}(:,3,:))];
+                popAEROInonTraces{j,1} = [popAEROInonTraces{j,1} squeeze(ACregTraces{j,i}(:,4,:))];
+                popAEROIfalarmTraces{j,1} = [popAEROIfalarmTraces{j,1} squeeze(ACregTraces{j,i}(:,5,:))];
+                popAEROIcorrejTraces{j,1} = [popAEROIcorrejTraces{j,1} squeeze(ACregTraces{j,i}(:,6,:))];
                 %passive and unadjusted-behavior post-onset all DeltaF values
-                popAEROItarMus{j,1} = [popAEROItarMus{j,1}; squeeze(onACregMu{j,i}(:,1))];
-                popAEROIhitMus{j,1} = [popAEROIhitMus{j,1}; squeeze(onACregMu{j,i}(:,2))];
-                popAEROImissMus{j,1} = [popAEROImissMus{j,1}; squeeze(onACregMu{j,i}(:,3))];
-                popAEROInonMus{j,1} = [popAEROInonMus{j,1}; squeeze(onACregMu{j,i}(:,4))];
-                popAEROIfalarmMus{j,1} = [popAEROIfalarmMus{j,1}; squeeze(onACregMu{j,i}(:,5))];
-                popAEROIcorrejMus{j,1} = [popAEROIcorrejMus{j,1}; squeeze(onACregMu{j,i}(:,6))];
+                popAEROItarMus{j,1} = [popAEROItarMus{j,1}; squeeze(ACregMu{j,i}(:,1))];
+                popAEROIhitMus{j,1} = [popAEROIhitMus{j,1}; squeeze(ACregMu{j,i}(:,2))];
+                popAEROImissMus{j,1} = [popAEROImissMus{j,1}; squeeze(ACregMu{j,i}(:,3))];
+                popAEROInonMus{j,1} = [popAEROInonMus{j,1}; squeeze(ACregMu{j,i}(:,4))];
+                popAEROIfalarmMus{j,1} = [popAEROIfalarmMus{j,1}; squeeze(ACregMu{j,i}(:,5))];
+                popAEROIcorrejMus{j,1} = [popAEROIcorrejMus{j,1}; squeeze(ACregMu{j,i}(:,6))];
                 %passive and unadjusted-behavior tone-onset DeltaF values
-                popAEROItarMusON{j,1} = [popAEROItarMusON{j,1}; squeeze(onACregMuON{j,i}(:,1))];
-                popAEROIhitMusON{j,1} = [popAEROIhitMusON{j,1}; squeeze(onACregMuON{j,i}(:,2))];
-                popAEROImissMusON{j,1} = [popAEROImissMusON{j,1}; squeeze(onACregMuON{j,i}(:,3))];
-                popAEROInonMusON{j,1} = [popAEROInonMusON{j,1}; squeeze(onACregMuON{j,i}(:,4))];
-                popAEROIfalarmMusON{j,1} = [popAEROIfalarmMusON{j,1}; squeeze(onACregMuON{j,i}(:,5))];
-                popAEROIcorrejMusON{j,1} = [popAEROIcorrejMusON{j,1}; squeeze(onACregMuON{j,i}(:,6))];
+                popAEROItarMusON{j,1} = [popAEROItarMusON{j,1}; squeeze(ACregMuON{j,i}(:,1))];
+                popAEROIhitMusON{j,1} = [popAEROIhitMusON{j,1}; squeeze(ACregMuON{j,i}(:,2))];
+                popAEROImissMusON{j,1} = [popAEROImissMusON{j,1}; squeeze(ACregMuON{j,i}(:,3))];
+                popAEROInonMusON{j,1} = [popAEROInonMusON{j,1}; squeeze(ACregMuON{j,i}(:,4))];
+                popAEROIfalarmMusON{j,1} = [popAEROIfalarmMusON{j,1}; squeeze(ACregMuON{j,i}(:,5))];
+                popAEROIcorrejMusON{j,1} = [popAEROIcorrejMusON{j,1}; squeeze(ACregMuON{j,i}(:,6))];
                 %passive and unadjusted-behavior tone-offset DeltaF values
-                popAEROItarMusOFF{j,1} = [popAEROItarMusOFF{j,1}; squeeze(onACregMuOFF{j,i}(:,1))];
-                popAEROIhitMusOFF{j,1} = [popAEROIhitMusOFF{j,1}; squeeze(onACregMuOFF{j,i}(:,2))];
-                popAEROImissMusOFF{j,1} = [popAEROImissMusOFF{j,1}; squeeze(onACregMuOFF{j,i}(:,3))];
-                popAEROInonMusOFF{j,1} = [popAEROInonMusOFF{j,1}; squeeze(onACregMuOFF{j,i}(:,4))];
-                popAEROIfalarmMusOFF{j,1} = [popAEROIfalarmMusOFF{j,1}; squeeze(onACregMuOFF{j,i}(:,5))];
-                popAEROIcorrejMusOFF{j,1} = [popAEROIcorrejMusOFF{j,1}; squeeze(onACregMuOFF{j,i}(:,6))];
+                popAEROItarMusOFF{j,1} = [popAEROItarMusOFF{j,1}; squeeze(ACregMuOFF{j,i}(:,1))];
+                popAEROIhitMusOFF{j,1} = [popAEROIhitMusOFF{j,1}; squeeze(ACregMuOFF{j,i}(:,2))];
+                popAEROImissMusOFF{j,1} = [popAEROImissMusOFF{j,1}; squeeze(ACregMuOFF{j,i}(:,3))];
+                popAEROInonMusOFF{j,1} = [popAEROInonMusOFF{j,1}; squeeze(ACregMuOFF{j,i}(:,4))];
+                popAEROIfalarmMusOFF{j,1} = [popAEROIfalarmMusOFF{j,1}; squeeze(ACregMuOFF{j,i}(:,5))];
+                popAEROIcorrejMusOFF{j,1} = [popAEROIcorrejMusOFF{j,1}; squeeze(ACregMuOFF{j,i}(:,6))];
                 %passive-adjusted behavior post-onset all DeltaF values
-                popAdjAEROIhitMus{j,1} = [popAdjAEROIhitMus{j,1}; squeeze(onadjACregMu{j,i}(:,1))];
-                popAdjAEROImissMus{j,1} = [popAdjAEROImissMus{j,1}; squeeze(onadjACregMu{j,i}(:,2))];
-                popAdjAEROIfalarmMus{j,1} = [popAdjAEROIfalarmMus{j,1}; squeeze(onadjACregMu{j,i}(:,3))];
-                popAdjAEROIcorrejMus{j,1} = [popAdjAEROIcorrejMus{j,1}; squeeze(onadjACregMu{j,i}(:,4))];
+                popAdjAEROIhitMus{j,1} = [popAdjAEROIhitMus{j,1}; squeeze(adjACregMu{j,i}(:,1))];
+                popAdjAEROImissMus{j,1} = [popAdjAEROImissMus{j,1}; squeeze(adjACregMu{j,i}(:,2))];
+                popAdjAEROIfalarmMus{j,1} = [popAdjAEROIfalarmMus{j,1}; squeeze(adjACregMu{j,i}(:,3))];
+                popAdjAEROIcorrejMus{j,1} = [popAdjAEROIcorrejMus{j,1}; squeeze(adjACregMu{j,i}(:,4))];
                 %passive-adjusted behavior tone-onset DeltaF values
-                popAdjAEROIhitMusON{j,1} = [popAdjAEROIhitMusON{j,1}; squeeze(onadjACregMuON{j,i}(:,1))];
-                popAdjAEROImissMusON{j,1} = [popAdjAEROImissMusON{j,1}; squeeze(onadjACregMuON{j,i}(:,2))];
-                popAdjAEROIfalarmMusON{j,1} = [popAdjAEROIfalarmMusON{j,1}; squeeze(onadjACregMuON{j,i}(:,3))];
-                popAdjAEROIcorrejMusON{j,1} = [popAdjAEROIcorrejMusON{j,1}; squeeze(onadjACregMuON{j,i}(:,4))];
+                popAdjAEROIhitMusON{j,1} = [popAdjAEROIhitMusON{j,1}; squeeze(adjACregMuON{j,i}(:,1))];
+                popAdjAEROImissMusON{j,1} = [popAdjAEROImissMusON{j,1}; squeeze(adjACregMuON{j,i}(:,2))];
+                popAdjAEROIfalarmMusON{j,1} = [popAdjAEROIfalarmMusON{j,1}; squeeze(adjACregMuON{j,i}(:,3))];
+                popAdjAEROIcorrejMusON{j,1} = [popAdjAEROIcorrejMusON{j,1}; squeeze(adjACregMuON{j,i}(:,4))];
                 %passive-adjusted behavior tone-offset DeltaF values
-                popAdjAEROIhitMusOFF{j,1} = [popAdjAEROIhitMusOFF{j,1}; squeeze(onadjACregMuOFF{j,i}(:,1))];
-                popAdjAEROImissMusOFF{j,1} = [popAdjAEROImissMusOFF{j,1}; squeeze(onadjACregMuOFF{j,i}(:,2))];
-                popAdjAEROIfalarmMusOFF{j,1} = [popAdjAEROIfalarmMusOFF{j,1}; squeeze(onadjACregMuOFF{j,i}(:,3))];
-                popAdjAEROIcorrejMusOFF{j,1} = [popAdjAEROIcorrejMusOFF{j,1}; squeeze(onadjACregMuOFF{j,i}(:,4))];
-            end
-            offCheck = ~isempty(offACregTraces{j,i});
-            if offCheck
-                %passive and unadjusted-behavior traces
-                popAEROItarTraces{j,2} = [popAEROItarTraces{j,2} squeeze(offACregTraces{j,i}(:,1,:))];
-                popAEROIhitTraces{j,2} = [popAEROIhitTraces{j,2} squeeze(offACregTraces{j,i}(:,2,:))];
-                popAEROImissTraces{j,2} = [popAEROImissTraces{j,2} squeeze(offACregTraces{j,i}(:,3,:))];
-                popAEROInonTraces{j,2} = [popAEROInonTraces{j,2} squeeze(offACregTraces{j,i}(:,4,:))];
-                popAEROIfalarmTraces{j,2} = [popAEROIfalarmTraces{j,2} squeeze(offACregTraces{j,i}(:,5,:))];
-                popAEROIcorrejTraces{j,2} = [popAEROIcorrejTraces{j,2} squeeze(offACregTraces{j,i}(:,6,:))];
-                %passive and unadjusted-behavior post-onset all DeltaF values
-                popAEROItarMus{j,2} = [popAEROItarMus{j,2}; squeeze(offACregMu{j,i}(:,1))];
-                popAEROIhitMus{j,2} = [popAEROIhitMus{j,2}; squeeze(offACregMu{j,i}(:,2))];
-                popAEROImissMus{j,2} = [popAEROImissMus{j,2}; squeeze(offACregMu{j,i}(:,3))];
-                popAEROInonMus{j,2} = [popAEROInonMus{j,2}; squeeze(offACregMu{j,i}(:,4))];
-                popAEROIfalarmMus{j,2} = [popAEROIfalarmMus{j,2}; squeeze(offACregMu{j,i}(:,5))];
-                popAEROIcorrejMus{j,2} = [popAEROIcorrejMus{j,2}; squeeze(offACregMu{j,i}(:,6))];
-                %passive and unadjusted-behavior tone-onset DeltaF values
-                popAEROItarMusON{j,2} = [popAEROItarMusON{j,1}; squeeze(offACregMuON{j,i}(:,1))];
-                popAEROIhitMusON{j,2} = [popAEROIhitMusON{j,2}; squeeze(offACregMuON{j,i}(:,2))];
-                popAEROImissMusON{j,2} = [popAEROImissMusON{j,2}; squeeze(offACregMuON{j,i}(:,3))];
-                popAEROInonMusON{j,2} = [popAEROInonMusON{j,2}; squeeze(offACregMuON{j,i}(:,4))];
-                popAEROIfalarmMusON{j,2} = [popAEROIfalarmMusON{j,2}; squeeze(offACregMuON{j,i}(:,5))];
-                popAEROIcorrejMusON{j,2} = [popAEROIcorrejMusON{j,2}; squeeze(offACregMuON{j,i}(:,6))];
-                %passive and unadjusted-behavior tone-offset DeltaF values
-                popAEROItarMusOFF{j,2} = [popAEROItarMusOFF{j,2}; squeeze(offACregMuOFF{j,i}(:,1))];
-                popAEROIhitMusOFF{j,2} = [popAEROIhitMusOFF{j,2}; squeeze(offACregMuOFF{j,i}(:,2))];
-                popAEROImissMusOFF{j,2} = [popAEROImissMusOFF{j,2}; squeeze(offACregMuOFF{j,i}(:,3))];
-                popAEROInonMusOFF{j,2} = [popAEROInonMusOFF{j,2}; squeeze(offACregMuOFF{j,i}(:,4))];
-                popAEROIfalarmMusOFF{j,2} = [popAEROIfalarmMusOFF{j,2}; squeeze(offACregMuOFF{j,i}(:,5))];
-                popAEROIcorrejMusOFF{j,2} = [popAEROIcorrejMusOFF{j,2}; squeeze(offACregMuOFF{j,i}(:,6))];
-                %passive-adjusted behavior post-onset all DeltaF values
-                popAdjAEROIhitMus{j,2} = [popAdjAEROIhitMus{j,2}; squeeze(offadjACregMu{j,i}(:,1))];
-                popAdjAEROImissMus{j,2} = [popAdjAEROImissMus{j,2}; squeeze(offadjACregMu{j,i}(:,2))];
-                popAdjAEROIfalarmMus{j,2} = [popAdjAEROIfalarmMus{j,2}; squeeze(offadjACregMu{j,i}(:,3))];
-                popAdjAEROIcorrejMus{j,2} = [popAdjAEROIcorrejMus{j,2}; squeeze(offadjACregMu{j,i}(:,4))];
-                %passive-adjusted behavior tone-onset DeltaF values
-                popAdjAEROIhitMusON{j,2} = [popAdjAEROIhitMusON{j,2}; squeeze(offadjACregMuON{j,i}(:,1))];
-                popAdjAEROImissMusON{j,2} = [popAdjAEROImissMusON{j,2}; squeeze(offadjACregMuON{j,i}(:,2))];
-                popAdjAEROIfalarmMusON{j,2} = [popAdjAEROIfalarmMusON{j,2}; squeeze(offadjACregMuON{j,i}(:,3))];
-                popAdjAEROIcorrejMusON{j,2} = [popAdjAEROIcorrejMusON{j,2}; squeeze(offadjACregMuON{j,i}(:,4))];
-                %passive-adjusted behavior tone-offset DeltaF values
-                popAdjAEROIhitMusOFF{j,2} = [popAdjAEROIhitMusOFF{j,2}; squeeze(offadjACregMuOFF{j,i}(:,1))];
-                popAdjAEROImissMusOFF{j,2} = [popAdjAEROImissMusOFF{j,2}; squeeze(offadjACregMuOFF{j,i}(:,2))];
-                popAdjAEROIfalarmMusOFF{j,2} = [popAdjAEROIfalarmMusOFF{j,2}; squeeze(offadjACregMuOFF{j,i}(:,3))];
-                popAdjAEROIcorrejMusOFF{j,2} = [popAdjAEROIcorrejMusOFF{j,2}; squeeze(offadjACregMuOFF{j,i}(:,4))];
+                popAdjAEROIhitMusOFF{j,1} = [popAdjAEROIhitMusOFF{j,1}; squeeze(adjACregMuOFF{j,i}(:,1))];
+                popAdjAEROImissMusOFF{j,1} = [popAdjAEROImissMusOFF{j,1}; squeeze(adjACregMuOFF{j,i}(:,2))];
+                popAdjAEROIfalarmMusOFF{j,1} = [popAdjAEROIfalarmMusOFF{j,1}; squeeze(adjACregMuOFF{j,i}(:,3))];
+                popAdjAEROIcorrejMusOFF{j,1} = [popAdjAEROIcorrejMusOFF{j,1}; squeeze(adjACregMuOFF{j,i}(:,4))];
             end
         end
         
-        tempTune = {'onset','offset'};
-        for i = 1:2
-            numAEROIs = size(popAEROItarTraces{j,i},2);
-            %average population passive and unadjusted-behavior traces%
-            popAEROItarTrace = nanmean(popAEROItarTraces{j,i},2);
-            popAEROIhitTrace = nanmean(popAEROIhitTraces{j,i},2);
-            popAEROImissTrace = nanmean(popAEROImissTraces{j,i},2);
-            popAEROInonTrace = nanmean(popAEROInonTraces{j,i},2);
-            popAEROIfalarmTrace = nanmean(popAEROIfalarmTraces{j,i},2);
-            popAEROIcorrejTrace = nanmean(popAEROIcorrejTraces{j,i},2);
-            %calculate max and min values%
-            popAEROItraceMaxs = [max(max(popAEROItarTraces{j,i})) max(max(popAEROIhitTraces{j,i})) max(max(popAEROImissTraces{j,i}))...
-                max(max(popAEROInonTraces{j,i})) max(max(popAEROIfalarmTraces{j,i})) max(max(popAEROIcorrejTraces{j,i}))];
-            popAEROItraceMax = max(popAEROItraceMaxs);
-            popAEROItraceMins = [min(min(popAEROItarTraces{j,i})) min(min(popAEROIhitTraces{j,i})) min(min(popAEROImissTraces{j,i}))...
-                min(min(popAEROInonTraces{j,i})) min(min(popAEROIfalarmTraces{j,i})) min(min(popAEROIcorrejTraces{j,i}))];
-            popAEROItraceMin = min(popAEROItraceMins);
-            %calculate standard error for average population traces%
-            popAEROItarTraceSE = nanstd(popAEROItarTraces{j,i}')/sqrt(numAEROIs);
-            popAEROIhitTraceSE = nanstd(popAEROIhitTraces{j,i}')/sqrt(numAEROIs);
-            popAEROImissTraceSE = nanstd(popAEROImissTraces{j,i}')/sqrt(numAEROIs);
-            popAEROInonTraceSE = nanstd(popAEROInonTraces{j,i}')/sqrt(numAEROIs);
-            popAEROIfalarmTraceSE = nanstd(popAEROIfalarmTraces{j,i}')/sqrt(numAEROIs);
-            popAEROIcorrejTraceSE = nanstd(popAEROIcorrejTraces{j,i}')/sqrt(numAEROIs);
+%         tempTune = {'onset','offset'};
+%         for i = 1:2
+        numExps = size(popAEROItarTraces{j,1},2);
+        %average population passive and unadjusted-behavior traces%
+        popAEROItarTrace = nanmean(popAEROItarTraces{j,1},2);
+        popAEROIhitTrace = nanmean(popAEROIhitTraces{j,1},2);
+        popAEROImissTrace = nanmean(popAEROImissTraces{j,1},2);
+        popAEROInonTrace = nanmean(popAEROInonTraces{j,1},2);
+        popAEROIfalarmTrace = nanmean(popAEROIfalarmTraces{j,1},2);
+        popAEROIcorrejTrace = nanmean(popAEROIcorrejTraces{j,1},2);
+        %calculate max and min values%
+        popAEROItraceMaxs = [max(max(popAEROItarTraces{j,1})) max(max(popAEROIhitTraces{j,1})) max(max(popAEROImissTraces{j,1}))...
+            max(max(popAEROInonTraces{j,1})) max(max(popAEROIfalarmTraces{j,1})) max(max(popAEROIcorrejTraces{j,1}))];
+        popAEROItraceMax = max(popAEROItraceMaxs);
+        popAEROItraceMins = [min(min(popAEROItarTraces{j,1})) min(min(popAEROIhitTraces{j,1})) min(min(popAEROImissTraces{j,1}))...
+            min(min(popAEROInonTraces{j,1})) min(min(popAEROIfalarmTraces{j,1})) min(min(popAEROIcorrejTraces{j,1}))];
+        popAEROItraceMin = min(popAEROItraceMins);
+        %calculate standard error for average population traces%
+        popAEROItarTraceSE = nanstd(popAEROItarTraces{j,1}')/sqrt(numExps);
+        popAEROIhitTraceSE = nanstd(popAEROIhitTraces{j,1}')/sqrt(numExps);
+        popAEROImissTraceSE = nanstd(popAEROImissTraces{j,1}')/sqrt(numExps);
+        popAEROInonTraceSE = nanstd(popAEROInonTraces{j,1}')/sqrt(numExps);
+        popAEROIfalarmTraceSE = nanstd(popAEROIfalarmTraces{j,1}')/sqrt(numExps);
+        popAEROIcorrejTraceSE = nanstd(popAEROIcorrejTraces{j,1}')/sqrt(numExps);
 
-            %plot average population traces with standard error%
-            figure
-            subplot(1,2,1)
-            suptitle(['Population ',ACregs{j},': ',tempTune{i},'-tuned AE ROI'])
-            shadedErrorBar([1:18],popAEROItarTrace,2*popAEROItarTraceSE,'-g',1);
-            hold on
-            shadedErrorBar([1:18],popAEROIhitTrace,2*popAEROIhitTraceSE,'-b',1);
-            shadedErrorBar([1:18],popAEROImissTrace,2*popAEROImissTraceSE,'-r',1);
-            set(gca, 'Box', 'off')
-            hold off
-            title({'{\color{blue}Hit} vs. {\color{red}Miss} vs. {\color{green}Passive} ',...
-                '{\color{green}Target} Fluorescence Traces'})
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            xlabel('Time (s)')
-            ylabel('DeltaF/F')
-            if isnan(nanmean(popAEROItraceMin)) || isnan(nanmean(popAEROItraceMax))
-                ylim([-1 1])
-            else
-                ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
-            end
-            %plot nontarget tone w/ behavior%
-            subplot(1,2,2)
-            shadedErrorBar([1:18],popAEROInonTrace,2*popAEROInonTraceSE,'-g',1);
-            hold on
-            shadedErrorBar([1:18],popAEROIfalarmTrace,2*popAEROIfalarmTraceSE,'-r',1);
-            shadedErrorBar([1:18],popAEROIcorrejTrace,2*popAEROIcorrejTraceSE,'-b',1);
-            set(gca, 'Box', 'off')
-            hold off
-            title({'{\color{red}False \color{red}Alarm} vs. {\color{blue}Correct} '... 
-                '{\color{blue}Reject} vs. {\color{green}Passive}', '{\color{green}Nontarget} Fluorescence Traces'})
-            xticks([4, 8, 12, 16])
-            xticklabels({'1', '2', '3', '4'})
-            xlabel('Time (s)')
-            ylabel('DeltaF/F')
-            if isnan(nanmean(popAEROItraceMin)) || isnan(nanmean(popAEROItraceMax))
-                ylim([-1 1])
-            else
-                ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
-            end
-            set(gcf, 'WindowStyle', 'Docked')
-            figName = strcat(ACregs{j},'_',tempTune{i},'_AEROI_passive_behavior_traces.fig');
-            figSave1 = fullfile(file_loc,figName);
-            savefig(figSave1);
-
-            %average population post-onset DeltaF values%
-            %passive and unadjusted-behavior post-onset all
-            popAEROItarMu = nanmean(popAEROItarMus{j,i});
-            popAEROIhitMu = nanmean(popAEROIhitMus{j,i});
-            popAEROImissMu = nanmean(popAEROImissMus{j,i});
-            popAEROInonMu = nanmean(popAEROInonMus{j,i});
-            popAEROIfalarmMu = nanmean(popAEROIfalarmMus{j,i});
-            popAEROIcorrejMu = nanmean(popAEROIcorrejMus{j,i});
-            %passive and unadjusted-behavior tone-onset
-            popAEROItarMuON = nanmean(popAEROItarMusON{j,i});
-            popAEROIhitMuON = nanmean(popAEROIhitMusON{j,i});
-            popAEROImissMuON = nanmean(popAEROImissMusON{j,i});
-            popAEROInonMuON = nanmean(popAEROInonMusON{j,i});
-            popAEROIfalarmMuON = nanmean(popAEROIfalarmMusON{j,i});
-            popAEROIcorrejMuON = nanmean(popAEROIcorrejMusON{j,i});
-            %passive and unadjusted-behavior tone-offset
-            popAEROItarMuOFF = nanmean(popAEROItarMusOFF{j,i});
-            popAEROIhitMuOFF = nanmean(popAEROIhitMusOFF{j,i});
-            popAEROImissMuOFF = nanmean(popAEROImissMusOFF{j,i});
-            popAEROInonMuOFF = nanmean(popAEROInonMusOFF{j,i});
-            popAEROIfalarmMuOFF = nanmean(popAEROIfalarmMusOFF{j,i});
-            popAEROIcorrejMuOFF = nanmean(popAEROIcorrejMusOFF{j,i});
-            %passive-adjusted behavior post-onset all
-            popAdjAEROIhitMu = nanmean(popAdjAEROIhitMus{j,i});
-            popAdjAEROImissMu = nanmean(popAdjAEROImissMus{j,i});
-            popAdjAEROIfalarmMu = nanmean(popAdjAEROIfalarmMus{j,i});
-            popAdjAEROIcorrejMu = nanmean(popAdjAEROIcorrejMus{j,i});
-            %passive-adjusted behavior tone-onset
-            popAdjAEROIhitMuON = nanmean(popAdjAEROIhitMusON{j,i});
-            popAdjAEROImissMuON = nanmean(popAdjAEROImissMusON{j,i});
-            popAdjAEROIfalarmMuON = nanmean(popAdjAEROIfalarmMusON{j,i});
-            popAdjAEROIcorrejMuON = nanmean(popAdjAEROIcorrejMusON{j,i});
-            %passive-adjusted behavior tone-offset
-            popAdjAEROIhitMuOFF = nanmean(popAdjAEROIhitMusOFF{j,i});
-            popAdjAEROImissMuOFF = nanmean(popAdjAEROImissMusOFF{j,i});
-            popAdjAEROIfalarmMuOFF = nanmean(popAdjAEROIfalarmMusOFF{j,i});
-            popAdjAEROIcorrejMuOFF = nanmean(popAdjAEROIcorrejMusOFF{j,i});
-
-            BARpopAEROImu(1,:) = [popAEROItarMu popAEROItarMuON popAEROItarMuOFF];
-            BARpopAEROImu(2,:) = [popAEROIhitMu popAEROIhitMuON popAEROIhitMuOFF];
-            BARpopAEROImu(3,:) = [popAEROImissMu popAEROImissMuON popAEROImissMuOFF];
-            BARpopAEROImu(4,:) = [popAEROInonMu popAEROInonMuON popAEROInonMuOFF];
-            BARpopAEROImu(5,:) = [popAEROIfalarmMu popAEROIfalarmMuON popAEROIfalarmMuOFF];
-            BARpopAEROImu(6,:) = [popAEROIcorrejMu popAEROIcorrejMuON popAEROIcorrejMuOFF];
-            BARpopAdjAEROImu(1,:) = [popAdjAEROIhitMu popAdjAEROIhitMuON popAdjAEROIhitMuOFF];
-            BARpopAdjAEROImu(2,:) = [popAdjAEROImissMu popAdjAEROImissMuON popAdjAEROImissMuOFF];
-            BARpopAdjAEROImu(3,:) = [popAdjAEROIfalarmMu popAdjAEROIfalarmMuON popAdjAEROIfalarmMuOFF];
-            BARpopAdjAEROImu(4,:) = [popAdjAEROIcorrejMu popAdjAEROIcorrejMuON popAdjAEROIcorrejMuOFF];
-
-            %calculate population post-onset DeltaF standard error%
-            %passive and unadjusted-behavior post-onset all
-            popAEROItarMuSE = nanstd(popAEROItarMus{j,i})/sqrt(numAEROIs);
-            popAEROIhitMuSE = nanstd(popAEROIhitMus{j,i})/sqrt(numAEROIs);
-            popAEROImissMuSE = nanstd(popAEROImissMus{j,i})/sqrt(numAEROIs);
-            popAEROInonMuSE = nanstd(popAEROInonMus{j,i})/sqrt(numAEROIs);
-            popAEROIfalarmMuSE = nanstd(popAEROIfalarmMus{j,i})/sqrt(numAEROIs);
-            popAEROIcorrejMuSE = nanstd(popAEROIcorrejMus{j,i})/sqrt(numAEROIs);
-            %passive and unadjusted-behavior tone-onset
-            popAEROItarMuSEon = nanstd(popAEROItarMusON{j,i})/sqrt(numAEROIs);
-            popAEROIhitMuSEon = nanstd(popAEROIhitMusON{j,i})/sqrt(numAEROIs);
-            popAEROImissMuSEon = nanstd(popAEROImissMusON{j,i})/sqrt(numAEROIs);
-            popAEROInonMuSEon = nanstd(popAEROInonMusON{j,i})/sqrt(numAEROIs);
-            popAEROIfalarmMuSEon = nanstd(popAEROIfalarmMusON{j,i})/sqrt(numAEROIs);
-            popAEROIcorrejMuSEon = nanstd(popAEROIcorrejMusON{j,i})/sqrt(numAEROIs);
-            %passive and unadjusted-behavior tone-offset
-            popAEROItarMuSEoff = nanstd(popAEROItarMusOFF{j,i})/sqrt(numAEROIs);
-            popAEROIhitMuSEoff = nanstd(popAEROIhitMusOFF{j,i})/sqrt(numAEROIs);
-            popAEROImissMuSEoff = nanstd(popAEROImissMusOFF{j,i})/sqrt(numAEROIs);
-            popAEROInonMuSEoff = nanstd(popAEROInonMusOFF{j,i})/sqrt(numAEROIs);
-            popAEROIfalarmMuSEoff = nanstd(popAEROIfalarmMusOFF{j,i})/sqrt(numAEROIs);
-            popAEROIcorrejMuSEoff = nanstd(popAEROIcorrejMusOFF{j,i})/sqrt(numAEROIs);
-            %passive-adjusted behavior post-onset all
-            popAdjAEROIhitMuSE = nanstd(popAdjAEROIhitMus{j,i})/sqrt(numAEROIs);
-            popAdjAEROImissMuSE = nanstd(popAdjAEROImissMus{j,i})/sqrt(numAEROIs);
-            popAdjAEROIfalarmMuSE = nanstd(popAdjAEROIfalarmMus{j,i})/sqrt(numAEROIs);
-            popAdjAEROIcorrejMuSE = nanstd(popAdjAEROIcorrejMus{j,i})/sqrt(numAEROIs);
-            %passive-adjusted behavior tone-onset
-            popAdjAEROIhitMuSEon = nanstd(popAdjAEROIhitMusON{j,i})/sqrt(numAEROIs);
-            popAdjAEROImissMuSEon = nanstd(popAdjAEROImissMusON{j,i})/sqrt(numAEROIs);
-            popAdjAEROIfalarmMuSEon = nanstd(popAdjAEROIfalarmMusON{j,i})/sqrt(numAEROIs);
-            popAdjAEROIcorrejMuSEon = nanstd(popAdjAEROIcorrejMusON{j,i})/sqrt(numAEROIs);
-            %passive-adjusted behavior tone-offset
-            popAdjAEROIhitMuSEoff = nanstd(popAdjAEROIhitMusOFF{j,i})/sqrt(numAEROIs);
-            popAdjAEROImissMuSEoff = nanstd(popAdjAEROImissMusOFF{j,i})/sqrt(numAEROIs);
-            popAdjAEROIfalarmMuSEoff = nanstd(popAdjAEROIfalarmMusOFF{j,i})/sqrt(numAEROIs);
-            popAdjAEROIcorrejMuSEoff = nanstd(popAdjAEROIcorrejMusOFF{j,i})/sqrt(numAEROIs);
-
-            BARpopAEROImuSEs(1,:) = [popAEROItarMuSE popAEROItarMuSEon popAEROItarMuSEoff];
-            BARpopAEROImuSEs(2,:) = [popAEROIhitMuSE popAEROIhitMuSEon popAEROIhitMuSEoff];
-            BARpopAEROImuSEs(3,:) = [popAEROImissMuSE popAEROImissMuSEon popAEROImissMuSEoff];
-            BARpopAEROImuSEs(4,:) = [popAEROInonMuSE popAEROInonMuSEon popAEROInonMuSEoff];
-            BARpopAEROImuSEs(5,:) = [popAEROIfalarmMuSE popAEROIfalarmMuSEon popAEROIfalarmMuSEoff];
-            BARpopAEROImuSEs(6,:) = [popAEROIcorrejMuSE popAEROIcorrejMuSEon popAEROIcorrejMuSEoff];
-            BARpopAdjAEROImuSEs(1,:) = [popAdjAEROIhitMuSE popAdjAEROIhitMuSEon popAdjAEROIhitMuSEoff];
-            BARpopAdjAEROImuSEs(2,:) = [popAdjAEROImissMuSE popAdjAEROImissMuSEon popAdjAEROImissMuSEoff];
-            BARpopAdjAEROImuSEs(3,:) = [popAdjAEROIfalarmMuSE popAdjAEROIfalarmMuSEon popAdjAEROIfalarmMuSEoff];
-            BARpopAdjAEROImuSEs(4,:) = [popAdjAEROIcorrejMuSE popAdjAEROIcorrejMuSEon popAdjAEROIcorrejMuSEoff];
-
-            %calculate statistically significant differences between population post-onset DeltaF/F%
-            %post-onset all
-            if isnan(popAEROItarMu) || isnan(popAEROIhitMu)
-                Pth = nan;
-            else
-                [Hth Pth] = kstest2(popAEROItarMus{j,i},popAEROIhitMus{j,i},alpha);
-            end
-            if isnan(popAEROItarMu) || isnan(popAEROImissMu)
-                Ptm = nan;
-            else
-                [Htm Ptm] = kstest2(popAEROItarMus{j,i},popAEROImissMus{j,i},alpha);
-            end
-            if isnan(popAEROInonMu) || isnan(popAEROIfalarmMu)
-                Pnf = nan;
-            else
-                [Hnf Pnf] = kstest2(popAEROInonMus{j,i},popAEROIfalarmMus{j,i},alpha);
-            end
-            if isnan(popAEROInonMu) || isnan(popAEROIcorrejMu)
-                Pnc = nan;
-            else
-                [Hnc Pnc] = kstest2(popAEROInonMus{j,i},popAEROIcorrejMus{j,i},alpha);
-            end
-            if isnan(popAdjAEROIhitMu) || isnan(popAdjAEROImissMu)
-                Pahm = nan;
-            else
-                [Hahm Pahm] = kstest2(popAdjAEROIhitMus{j,i},popAdjAEROImissMus{j,i},alpha);
-            end
-            if isnan(popAdjAEROIfalarmMu) || isnan(popAdjAEROIcorrejMu)
-                Pafc = nan;
-            else
-                [Hafc Pafc] = kstest2(popAdjAEROIfalarmMus{j,i},popAdjAEROIcorrejMus{j,i},alpha);
-            end
-            popAEStatTable(:,j,i) = [Pth; Ptm; Pnf; Pnc; Pahm; Pafc];
-            %tone-onset
-            if isnan(popAEROItarMuON) || isnan(popAEROIhitMuON)
-                PthON = nan;
-            else
-                [HthON PthON] = kstest2(popAEROItarMusON{j,i},popAEROIhitMusON{j,i},alpha);
-            end
-            if isnan(popAEROItarMuON) || isnan(popAEROImissMuON)
-                PtmON = nan;
-            else
-                [HtmON PtmON] = kstest2(popAEROItarMusON{j,i},popAEROImissMusON{j,i},alpha);
-            end
-            if isnan(popAEROInonMuON) || isnan(popAEROIfalarmMuON)
-                PnfON = nan;
-            else
-                [HnfON PnfON] = kstest2(popAEROInonMusON{j,i},popAEROIfalarmMusON{j,i},alpha);
-            end
-            if isnan(popAEROInonMuON) || isnan(popAEROIcorrejMuON)
-                PncON = nan;
-            else
-                [HncON PncON] = kstest2(popAEROInonMusON{j,i},popAEROIcorrejMusON{j,i},alpha);
-            end
-            if isnan(popAdjAEROIhitMuON) || isnan(popAdjAEROImissMuON)
-                PahmON = nan;
-            else
-                [HahmON PahmON] = kstest2(popAdjAEROIhitMusON{j,i},popAdjAEROImissMusON{j,i},alpha);
-            end
-            if isnan(popAdjAEROIfalarmMuON) || isnan(popAdjAEROIcorrejMuON)
-                PafcON = nan;
-            else
-                [HafcON PafcON] = kstest2(popAdjAEROIfalarmMusON{j,i},popAdjAEROIcorrejMusON{j,i},alpha);
-            end
-            popAEStatTableON(:,j,i) = [PthON; PtmON; PnfON; PncON; PahmON; PafcON];
-            %tone-offset
-            if isnan(popAEROItarMuOFF) || isnan(popAEROIhitMuOFF)
-                PthOFF = nan;
-            else
-                [HthOFF PthOFF] = kstest2(popAEROItarMusOFF{j,i},popAEROIhitMusOFF{j,i},alpha);
-            end
-            if isnan(popAEROItarMuOFF) || isnan(popAEROImissMuOFF)
-                PtmOFF = nan;
-            else
-                [HtmOFF PtmOFF] = kstest2(popAEROItarMusOFF{j,i},popAEROImissMusOFF{j,i},alpha);
-            end
-            if isnan(popAEROInonMuOFF) || isnan(popAEROIfalarmMuOFF)
-                PnfOFF = nan;
-            else
-                [HnfOFF PnfOFF] = kstest2(popAEROInonMusOFF{j,i},popAEROIfalarmMusOFF{j,i},alpha);
-            end
-            if isnan(popAEROInonMuOFF) || isnan(popAEROIcorrejMuOFF)
-                PncOFF = nan;
-            else
-                [HncOFF PncOFF] = kstest2(popAEROInonMusOFF{j,i},popAEROIcorrejMusOFF{j,i},alpha);
-            end
-            if isnan(popAdjAEROIhitMuOFF) || isnan(popAdjAEROImissMuOFF)
-                PahmOFF = nan;
-            else
-                [HahmOFF PahmOFF] = kstest2(popAdjAEROIhitMusOFF{j,i},popAdjAEROImissMusOFF{j,i},alpha);
-            end
-            if isnan(popAdjAEROIfalarmMuOFF) || isnan(popAdjAEROIcorrejMuOFF)
-                PafcOFF = nan;
-            else
-                [HafcOFF PafcOFF] = kstest2(popAdjAEROIfalarmMusOFF{j,i},popAdjAEROIcorrejMusOFF{j,i},alpha);
-            end
-            popAEStatTableOFF(:,j,i) = [PthOFF; PtmOFF; PnfOFF; PncOFF; PahmOFF; PafcOFF];
-
-            %plot unadjusted post-onset AE ROI DeltaF/F with significance%
-            figure
-            suptitle(['Population ',ACregs{j},': ',tempTune{i},'-tuned AE ROI'])
-            hold on
-            b = bar(BARpopAEROImu,'grouped');
-            title({'Unadjusted Passive and Behavior','Post-onset DeltaF/F'})
-            nbars = size(BARpopAEROImu,2);
-            x = [];
-            for n = 1:nbars
-                x = [x; b(n).XEndPoints];
-            end
-            err = errorbar(x',BARpopAEROImu,2*BARpopAEROImuSEs);
-            for n = 1:nbars
-                err(n).Color = [0 0 0];
-                err(n).LineStyle = 'None';
-            end
-            legend('post-onset all','tone onset','tone offset','AutoUpdate','Off')
-            sigstar({[.7778 1.7778],[1 2],[1.2222 2.2222],[.7778 2.7778],[1 3],[1.2222 3.2222],...
-                    [3.7778 4.7778],[4 5],[4.2222 5.2222],[3.7778 5.7778],[4 6],[4.2222 6.2222]},...
-                    [Pth,PthON,PthOFF,Ptm,PtmON,PtmOFF,Pnf,PnfON,PnfOFF,Pnc,PncON,PncOFF])
-            xticks([1:6])
-            xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
-            xtickangle(-15)
-            set(gca, 'Box', 'off')
-            hold off
-            set(gcf, 'WindowStyle', 'Docked')
-            figName = strcat(ACregs{j},'_',tempTune{i},'_AEROI_passive_behavior_PODF.fig');
-            figSave2 = fullfile(file_loc,figName);
-            savefig(figSave2);
-            %plot adjusted post-onset AE ROI DeltaF/F with significance%
-            figure
-            suptitle(['Population ',ACregs{j},': ',tempTune{i},'-tuned AE ROI'])
-            hold on
-            b = bar(BARpopAdjAEROImu,'grouped');
-            title({'Passive-adjusted Behavior','Post-onset DeltaF/F'})
-            nbars = size(BARpopAdjAEROImu,2);
-            x = [];
-            for n = 1:nbars
-                x = [x; b(n).XEndPoints];
-            end
-            err = errorbar(x',BARpopAdjAEROImu,2*BARpopAdjAEROImuSEs);
-            for n = 1:nbars
-                err(n).Color = [0 0 0];
-                err(n).LineStyle = 'None';
-            end
-            legend('post-onset all','tone onset','tone offset','AutoUpdate','Off')
-            sigstar({[0.7778 1.7778],[1 2],[1.2222 2.2222],[2.7778 3.7778],[3 4],[3.2222 4.2222]},...
-                [Pahm,PahmON,PahmOFF,Pafc,PafcON,PafcOFF])
-            xticks([1:4])
-            xticklabels({'hit','miss','false alarm','correct reject'})
-            xtickangle(-15)
-            set(gca, 'Box', 'off')
-            hold off
-            set(gcf, 'WindowStyle', 'Docked')
-            figName = strcat(ACregs{j},'_',tempTune{i},'_AEROI_adjusted_behavior_PODF.fig');
-            figSave3 = fullfile(file_loc,figName);
-            savefig(figSave3);
+        %plot average population traces with standard error%
+        if isnan(nanmean(popAEROItraceMin))
+            onBar = repmat([-0.1],1,5);
+            onBar = repmat([-0.1],1,5);
+        else
+            onBar = repmat((min(popAEROItraceMin)-0.05),1,5);
+            offBar = repmat((min(popAEROItraceMin)-0.05),1,5);
         end
+        onIdx = [4:8];
+        offIdx = [8:12];
+        figure
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle(['Population: ',ACregs{j},' AE ROI'])
+        subplot(1,2,1)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+        shadedErrorBar([1:18],popAEROItarTrace,2*popAEROItarTraceSE,'-g',1);
+        shadedErrorBar([1:18],popAEROIhitTrace,2*popAEROIhitTraceSE,'-b',1);
+        shadedErrorBar([1:18],popAEROImissTrace,2*popAEROImissTraceSE,'-r',1);
+        set(gca, 'Box', 'off')
+        hold off
+        title({'{\color{blue}Hit} vs. {\color{red}Miss} vs. {\color{green}Passive} ',...
+            '{\color{green}Target} Fluorescence Traces'})
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        xlabel('Time (s)')
+        ylabel('Normalized DeltaF/F')
+        if isnan(nanmean(popAEROItraceMin)) || isnan(nanmean(popAEROItraceMax))
+            ylim([-1 1])
+        else
+            ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
+        end
+        %plot nontarget tone w/ behavior%
+        subplot(1,2,2)
+        plot(onIdx,onBar,'k','LineWidth',3)
+        hold on
+        plot(offIdx,offBar,'Color',[0.65 0.65 0.65],'LineWidth',3)
+        legend('Tone Onset','Tone Offset','AutoUpdate','off','Box','off')
+        shadedErrorBar([1:18],popAEROInonTrace,2*popAEROInonTraceSE,'-g',1);
+        shadedErrorBar([1:18],popAEROIfalarmTrace,2*popAEROIfalarmTraceSE,'-r',1);
+        shadedErrorBar([1:18],popAEROIcorrejTrace,2*popAEROIcorrejTraceSE,'-b',1);
+        set(gca, 'Box', 'off')
+        hold off
+        title({'{\color{red}False \color{red}Alarm} vs. {\color{blue}Correct} '... 
+            '{\color{blue}Reject} vs. {\color{green}Passive}', '{\color{green}Nontarget} Fluorescence Traces'})
+        xticks([4, 8, 12, 16])
+        xticklabels({'1', '2', '3', '4'})
+        xlabel('Time (s)')
+        ylabel('Normalized DeltaF/F')
+        if isnan(nanmean(popAEROItraceMin)) || isnan(nanmean(popAEROItraceMax))
+            ylim([-1 1])
+        else
+            ylim([min(popAEROItraceMin)-0.1 max(popAEROItraceMax)+0.1])
+        end
+        figName = [ACregs{j},fig9];
+        figSave9 = fullfile(file_loc,figName);
+        savefig(figSave9);
+
+        %average population post-onset DeltaF values%
+        %passive and unadjusted-behavior post-onset all
+        popAEROItarMu = nanmean(popAEROItarMus{j,1});
+        popAEROIhitMu = nanmean(popAEROIhitMus{j,1});
+        popAEROImissMu = nanmean(popAEROImissMus{j,1});
+        popAEROInonMu = nanmean(popAEROInonMus{j,1});
+        popAEROIfalarmMu = nanmean(popAEROIfalarmMus{j,1});
+        popAEROIcorrejMu = nanmean(popAEROIcorrejMus{j,1});
+        %passive and unadjusted-behavior tone-onset
+        popAEROItarMuON = nanmean(popAEROItarMusON{j,1});
+        popAEROIhitMuON = nanmean(popAEROIhitMusON{j,1});
+        popAEROImissMuON = nanmean(popAEROImissMusON{j,1});
+        popAEROInonMuON = nanmean(popAEROInonMusON{j,1});
+        popAEROIfalarmMuON = nanmean(popAEROIfalarmMusON{j,1});
+        popAEROIcorrejMuON = nanmean(popAEROIcorrejMusON{j,1});
+        %passive and unadjusted-behavior tone-offset
+        popAEROItarMuOFF = nanmean(popAEROItarMusOFF{j,1});
+        popAEROIhitMuOFF = nanmean(popAEROIhitMusOFF{j,1});
+        popAEROImissMuOFF = nanmean(popAEROImissMusOFF{j,1});
+        popAEROInonMuOFF = nanmean(popAEROInonMusOFF{j,1});
+        popAEROIfalarmMuOFF = nanmean(popAEROIfalarmMusOFF{j,1});
+        popAEROIcorrejMuOFF = nanmean(popAEROIcorrejMusOFF{j,1});
+        %passive-adjusted behavior post-onset all
+        popAdjAEROIhitMu = nanmean(popAdjAEROIhitMus{j,1});
+        popAdjAEROImissMu = nanmean(popAdjAEROImissMus{j,1});
+        popAdjAEROIfalarmMu = nanmean(popAdjAEROIfalarmMus{j,1});
+        popAdjAEROIcorrejMu = nanmean(popAdjAEROIcorrejMus{j,1});
+        %passive-adjusted behavior tone-onset
+        popAdjAEROIhitMuON = nanmean(popAdjAEROIhitMusON{j,1});
+        popAdjAEROImissMuON = nanmean(popAdjAEROImissMusON{j,1});
+        popAdjAEROIfalarmMuON = nanmean(popAdjAEROIfalarmMusON{j,1});
+        popAdjAEROIcorrejMuON = nanmean(popAdjAEROIcorrejMusON{j,1});
+        %passive-adjusted behavior tone-offset
+        popAdjAEROIhitMuOFF = nanmean(popAdjAEROIhitMusOFF{j,1});
+        popAdjAEROImissMuOFF = nanmean(popAdjAEROImissMusOFF{j,1});
+        popAdjAEROIfalarmMuOFF = nanmean(popAdjAEROIfalarmMusOFF{j,1});
+        popAdjAEROIcorrejMuOFF = nanmean(popAdjAEROIcorrejMusOFF{j,1});
+
+        BARpopAEROImu(1,:) = [popAEROItarMu popAEROItarMuON popAEROItarMuOFF];
+        BARpopAEROImu(2,:) = [popAEROIhitMu popAEROIhitMuON popAEROIhitMuOFF];
+        BARpopAEROImu(3,:) = [popAEROImissMu popAEROImissMuON popAEROImissMuOFF];
+        BARpopAEROImu(4,:) = [popAEROInonMu popAEROInonMuON popAEROInonMuOFF];
+        BARpopAEROImu(5,:) = [popAEROIfalarmMu popAEROIfalarmMuON popAEROIfalarmMuOFF];
+        BARpopAEROImu(6,:) = [popAEROIcorrejMu popAEROIcorrejMuON popAEROIcorrejMuOFF];
+        BARpopAdjAEROImu(1,:) = [popAdjAEROIhitMu popAdjAEROIhitMuON popAdjAEROIhitMuOFF];
+        BARpopAdjAEROImu(2,:) = [popAdjAEROImissMu popAdjAEROImissMuON popAdjAEROImissMuOFF];
+        BARpopAdjAEROImu(3,:) = [popAdjAEROIfalarmMu popAdjAEROIfalarmMuON popAdjAEROIfalarmMuOFF];
+        BARpopAdjAEROImu(4,:) = [popAdjAEROIcorrejMu popAdjAEROIcorrejMuON popAdjAEROIcorrejMuOFF];
+
+        %calculate population post-onset DeltaF standard error%
+        %passive and unadjusted-behavior post-onset all
+        popAEROItarMuSE = nanstd(popAEROItarMus{j,1})/sqrt(numExps);
+        popAEROIhitMuSE = nanstd(popAEROIhitMus{j,1})/sqrt(numExps);
+        popAEROImissMuSE = nanstd(popAEROImissMus{j,1})/sqrt(numExps);
+        popAEROInonMuSE = nanstd(popAEROInonMus{j,1})/sqrt(numExps);
+        popAEROIfalarmMuSE = nanstd(popAEROIfalarmMus{j,1})/sqrt(numExps);
+        popAEROIcorrejMuSE = nanstd(popAEROIcorrejMus{j,1})/sqrt(numExps);
+        %passive and unadjusted-behavior tone-onset
+        popAEROItarMuSEon = nanstd(popAEROItarMusON{j,1})/sqrt(numExps);
+        popAEROIhitMuSEon = nanstd(popAEROIhitMusON{j,1})/sqrt(numExps);
+        popAEROImissMuSEon = nanstd(popAEROImissMusON{j,1})/sqrt(numExps);
+        popAEROInonMuSEon = nanstd(popAEROInonMusON{j,1})/sqrt(numExps);
+        popAEROIfalarmMuSEon = nanstd(popAEROIfalarmMusON{j,1})/sqrt(numExps);
+        popAEROIcorrejMuSEon = nanstd(popAEROIcorrejMusON{j,1})/sqrt(numExps);
+        %passive and unadjusted-behavior tone-offset
+        popAEROItarMuSEoff = nanstd(popAEROItarMusOFF{j,1})/sqrt(numExps);
+        popAEROIhitMuSEoff = nanstd(popAEROIhitMusOFF{j,1})/sqrt(numExps);
+        popAEROImissMuSEoff = nanstd(popAEROImissMusOFF{j,1})/sqrt(numExps);
+        popAEROInonMuSEoff = nanstd(popAEROInonMusOFF{j,1})/sqrt(numExps);
+        popAEROIfalarmMuSEoff = nanstd(popAEROIfalarmMusOFF{j,1})/sqrt(numExps);
+        popAEROIcorrejMuSEoff = nanstd(popAEROIcorrejMusOFF{j,1})/sqrt(numExps);
+        %passive-adjusted behavior post-onset all
+        popAdjAEROIhitMuSE = nanstd(popAdjAEROIhitMus{j,1})/sqrt(numExps);
+        popAdjAEROImissMuSE = nanstd(popAdjAEROImissMus{j,1})/sqrt(numExps);
+        popAdjAEROIfalarmMuSE = nanstd(popAdjAEROIfalarmMus{j,1})/sqrt(numExps);
+        popAdjAEROIcorrejMuSE = nanstd(popAdjAEROIcorrejMus{j,1})/sqrt(numExps);
+        %passive-adjusted behavior tone-onset
+        popAdjAEROIhitMuSEon = nanstd(popAdjAEROIhitMusON{j,1})/sqrt(numExps);
+        popAdjAEROImissMuSEon = nanstd(popAdjAEROImissMusON{j,1})/sqrt(numExps);
+        popAdjAEROIfalarmMuSEon = nanstd(popAdjAEROIfalarmMusON{j,1})/sqrt(numExps);
+        popAdjAEROIcorrejMuSEon = nanstd(popAdjAEROIcorrejMusON{j,1})/sqrt(numExps);
+        %passive-adjusted behavior tone-offset
+        popAdjAEROIhitMuSEoff = nanstd(popAdjAEROIhitMusOFF{j,1})/sqrt(numExps);
+        popAdjAEROImissMuSEoff = nanstd(popAdjAEROImissMusOFF{j,1})/sqrt(numExps);
+        popAdjAEROIfalarmMuSEoff = nanstd(popAdjAEROIfalarmMusOFF{j,1})/sqrt(numExps);
+        popAdjAEROIcorrejMuSEoff = nanstd(popAdjAEROIcorrejMusOFF{j,1})/sqrt(numExps);
+
+        BARpopAEROImuSEs(1,:) = [popAEROItarMuSE popAEROItarMuSEon popAEROItarMuSEoff];
+        BARpopAEROImuSEs(2,:) = [popAEROIhitMuSE popAEROIhitMuSEon popAEROIhitMuSEoff];
+        BARpopAEROImuSEs(3,:) = [popAEROImissMuSE popAEROImissMuSEon popAEROImissMuSEoff];
+        BARpopAEROImuSEs(4,:) = [popAEROInonMuSE popAEROInonMuSEon popAEROInonMuSEoff];
+        BARpopAEROImuSEs(5,:) = [popAEROIfalarmMuSE popAEROIfalarmMuSEon popAEROIfalarmMuSEoff];
+        BARpopAEROImuSEs(6,:) = [popAEROIcorrejMuSE popAEROIcorrejMuSEon popAEROIcorrejMuSEoff];
+        BARpopAdjAEROImuSEs(1,:) = [popAdjAEROIhitMuSE popAdjAEROIhitMuSEon popAdjAEROIhitMuSEoff];
+        BARpopAdjAEROImuSEs(2,:) = [popAdjAEROImissMuSE popAdjAEROImissMuSEon popAdjAEROImissMuSEoff];
+        BARpopAdjAEROImuSEs(3,:) = [popAdjAEROIfalarmMuSE popAdjAEROIfalarmMuSEon popAdjAEROIfalarmMuSEoff];
+        BARpopAdjAEROImuSEs(4,:) = [popAdjAEROIcorrejMuSE popAdjAEROIcorrejMuSEon popAdjAEROIcorrejMuSEoff];
+
+        %calculate statistically significant differences between population post-onset DeltaF/F%
+        %post-onset all
+        if isnan(popAEROItarMu) || isnan(popAEROIhitMu)
+            Pth = nan;
+        else
+            [Hth Pth] = kstest2(popAEROItarMus{j,1},popAEROIhitMus{j,1},alpha);
+        end
+        if isnan(popAEROItarMu) || isnan(popAEROImissMu)
+            Ptm = nan;
+        else
+            [Htm Ptm] = kstest2(popAEROItarMus{j,1},popAEROImissMus{j,1},alpha);
+        end
+        if isnan(popAEROInonMu) || isnan(popAEROIfalarmMu)
+            Pnf = nan;
+        else
+            [Hnf Pnf] = kstest2(popAEROInonMus{j,1},popAEROIfalarmMus{j,1},alpha);
+        end
+        if isnan(popAEROInonMu) || isnan(popAEROIcorrejMu)
+            Pnc = nan;
+        else
+            [Hnc Pnc] = kstest2(popAEROInonMus{j,1},popAEROIcorrejMus{j,1},alpha);
+        end
+        if isnan(popAdjAEROIhitMu) || isnan(popAdjAEROImissMu)
+            Pahm = nan;
+        else
+            [Hahm Pahm] = kstest2(popAdjAEROIhitMus{j,1},popAdjAEROImissMus{j,1},alpha);
+        end
+        if isnan(popAdjAEROIfalarmMu) || isnan(popAdjAEROIcorrejMu)
+            Pafc = nan;
+        else
+            [Hafc Pafc] = kstest2(popAdjAEROIfalarmMus{j,1},popAdjAEROIcorrejMus{j,1},alpha);
+        end
+        popAEStatTable(:,j,1) = [Pth; Ptm; Pnf; Pnc; Pahm; Pafc];
+        %tone-onset
+        if isnan(popAEROItarMuON) || isnan(popAEROIhitMuON)
+            PthON = nan;
+        else
+            [HthON PthON] = kstest2(popAEROItarMusON{j,1},popAEROIhitMusON{j,1},alpha);
+        end
+        if isnan(popAEROItarMuON) || isnan(popAEROImissMuON)
+            PtmON = nan;
+        else
+            [HtmON PtmON] = kstest2(popAEROItarMusON{j,1},popAEROImissMusON{j,1},alpha);
+        end
+        if isnan(popAEROInonMuON) || isnan(popAEROIfalarmMuON)
+            PnfON = nan;
+        else
+            [HnfON PnfON] = kstest2(popAEROInonMusON{j,1},popAEROIfalarmMusON{j,1},alpha);
+        end
+        if isnan(popAEROInonMuON) || isnan(popAEROIcorrejMuON)
+            PncON = nan;
+        else
+            [HncON PncON] = kstest2(popAEROInonMusON{j,1},popAEROIcorrejMusON{j,1},alpha);
+        end
+        if isnan(popAdjAEROIhitMuON) || isnan(popAdjAEROImissMuON)
+            PahmON = nan;
+        else
+            [HahmON PahmON] = kstest2(popAdjAEROIhitMusON{j,1},popAdjAEROImissMusON{j,1},alpha);
+        end
+        if isnan(popAdjAEROIfalarmMuON) || isnan(popAdjAEROIcorrejMuON)
+            PafcON = nan;
+        else
+            [HafcON PafcON] = kstest2(popAdjAEROIfalarmMusON{j,1},popAdjAEROIcorrejMusON{j,1},alpha);
+        end
+        popAEStatTableON(:,j,1) = [PthON; PtmON; PnfON; PncON; PahmON; PafcON];
+        %tone-offset
+        if isnan(popAEROItarMuOFF) || isnan(popAEROIhitMuOFF)
+            PthOFF = nan;
+        else
+            [HthOFF PthOFF] = kstest2(popAEROItarMusOFF{j,1},popAEROIhitMusOFF{j,1},alpha);
+        end
+        if isnan(popAEROItarMuOFF) || isnan(popAEROImissMuOFF)
+            PtmOFF = nan;
+        else
+            [HtmOFF PtmOFF] = kstest2(popAEROItarMusOFF{j,1},popAEROImissMusOFF{j,1},alpha);
+        end
+        if isnan(popAEROInonMuOFF) || isnan(popAEROIfalarmMuOFF)
+            PnfOFF = nan;
+        else
+            [HnfOFF PnfOFF] = kstest2(popAEROInonMusOFF{j,1},popAEROIfalarmMusOFF{j,1},alpha);
+        end
+        if isnan(popAEROInonMuOFF) || isnan(popAEROIcorrejMuOFF)
+            PncOFF = nan;
+        else
+            [HncOFF PncOFF] = kstest2(popAEROInonMusOFF{j,1},popAEROIcorrejMusOFF{j,1},alpha);
+        end
+        if isnan(popAdjAEROIhitMuOFF) || isnan(popAdjAEROImissMuOFF)
+            PahmOFF = nan;
+        else
+            [HahmOFF PahmOFF] = kstest2(popAdjAEROIhitMusOFF{j,1},popAdjAEROImissMusOFF{j,1},alpha);
+        end
+        if isnan(popAdjAEROIfalarmMuOFF) || isnan(popAdjAEROIcorrejMuOFF)
+            PafcOFF = nan;
+        else
+            [HafcOFF PafcOFF] = kstest2(popAdjAEROIfalarmMusOFF{j,1},popAdjAEROIcorrejMusOFF{j,1},alpha);
+        end
+        popAEStatTableOFF(:,j,1) = [PthOFF; PtmOFF; PnfOFF; PncOFF; PahmOFF; PafcOFF];
+
+        %plot unadjusted post-onset AE ROI DeltaF/F with significance%
+        figure
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle(['Population: ',ACregs{j},' AE ROI'])
+        hold on
+        b = bar(BARpopAEROImu,'grouped');
+        title({'Passive and Unadjusted Behavior','Post-onset DeltaF/F'})
+        nbars = size(BARpopAEROImu,2);
+        x = [];
+        for n = 1:nbars
+            x = [x; b(n).XEndPoints];
+        end
+        err = errorbar(x',BARpopAEROImu,2*BARpopAEROImuSEs);
+        for n = 1:nbars
+            err(n).Color = [0 0 0];
+            err(n).LineStyle = 'None';
+        end
+        legend('post-onset all','tone onset','tone offset','AutoUpdate','Off')
+        sigstar({[.7778 1.7778],[1 2],[1.2222 2.2222],[.7778 2.7778],[1 3],[1.2222 3.2222],...
+                [3.7778 4.7778],[4 5],[4.2222 5.2222],[3.7778 5.7778],[4 6],[4.2222 6.2222]},...
+                [Pth,PthON,PthOFF,Ptm,PtmON,PtmOFF,Pnf,PnfON,PnfOFF,Pnc,PncON,PncOFF])
+        xticks([1:6])
+        xticklabels({'target','hit','miss','nontarget','false alarm','correct reject'})
+        xtickangle(-15)
+        ylabel('Normalized DeltaF/F')
+        set(gca, 'Box', 'off')
+        hold off
+        figName = [ACregs{j},fig10];
+        figSave10 = fullfile(file_loc,figName);
+        savefig(figSave10);
+        %plot adjusted post-onset AE ROI DeltaF/F with significance%
+        figure
+        set(gcf, 'WindowStyle', 'Docked')
+        suptitle(['Population: ',ACregs{j},' AE ROI'])
+        hold on
+        b = bar(BARpopAdjAEROImu,'grouped');
+        title({'Passive-adjusted Behavior','Post-onset DeltaF/F'})
+        nbars = size(BARpopAdjAEROImu,2);
+        x = [];
+        for n = 1:nbars
+            x = [x; b(n).XEndPoints];
+        end
+        err = errorbar(x',BARpopAdjAEROImu,2*BARpopAdjAEROImuSEs);
+        for n = 1:nbars
+            err(n).Color = [0 0 0];
+            err(n).LineStyle = 'None';
+        end
+        legend('post-onset all','tone onset','tone offset','AutoUpdate','Off')
+        sigstar({[0.7778 1.7778],[1 2],[1.2222 2.2222],[2.7778 3.7778],[3 4],[3.2222 4.2222]},...
+            [Pahm,PahmON,PahmOFF,Pafc,PafcON,PafcOFF])
+        xticks([1:4])
+        xticklabels({'hit','miss','false alarm','correct reject'})
+        xtickangle(-15)
+        ylabel('Normalized DeltaF/F')
+        set(gca, 'Box', 'off')
+        hold off
+        figName = [ACregs{j},fig11];
+        figSave11 = fullfile(file_loc,figName);
+        savefig(figSave11);
     end
 
     %% Saving Results (for whole population) %%
@@ -3219,8 +2674,8 @@ if numAnimals ~= 1
     saveFile = fullfile(file_loc,saveName);
     save(saveFile,'popStatTable','popStatTableON','popStatTableOFF',...
         'popAEStatTable','popAEStatTableON','popAEStatTableOFF',...
-        'statTable','statTableON','statTableOFF','AEstatTableON','AEstatTableOFF',...
-        'totalFreqDist','animalExps',...
+        'statTable','statTableON','statTableOFF','AEstatTable',...
+        'totalFreqDist','totalACfreqDist','animalExps','freqDistSig',...
         'popTarTraces','popHitTraces','popMissTraces','popNonTraces',... 
         'popFalarmTraces','popCorrejTraces','popTarPODF','popHitPODF','popMissPODF',...
         'popNonPODF','popFalarmPODF','popCorrejPODF','adjPopHitPODF','adjPopMissPODF',...
@@ -3252,10 +2707,6 @@ if numAnimals ~= 1
         'popAdjAEROIhitMusOFF','popAdjAEROImissMusOFF','popAdjAEROIfalarmMusOFF','popAdjAEROIcorrejMusOFF',...
         'BfreqDist', 'PfreqDist', 'PassWinTraces', 'PassWinMu','PassWinMuON',... 
         'PassWinMuOFF', 'PassBFROItraces', 'PassBFROImu','PassBFROImuON', 'PassBFROImuOFF',...
-        'onPassACregTraces','onPassACregMu','onPassACregMuON','onPassACregMuOFF',...
-        'offPassACregTraces','offPassACregMu','offPassACregMuON','offPassACregMuOFF');
+        'PassACregTraces','PassACregMu','PassACregMuON','PassACregMuOFF','ACregTntDist');
+        disp('Saved Data')
 end
-
-%popTarTraces popHitTraces popMissTraces popNonTraces popFalarmTraces popCorrejTraces popTarPODF popHitPODF popMissPODF popNonPODF popFalarmPODF popCorrejPODF adjPopHitPODF adjPopMissPODF adjPopFalarmPODF adjPopCorrejPODF popTarPODFon popHitPODFon popMissPODFon popNonPODFon popFalarmPODFon popCorrejPODFon adjPopHitPODFon adjPopMissPODFon adjPopFalarmPODFon adjPopCorrejPODFon popTarPODFoff popHitPODFoff popMissPODFoff popNonPODFoff popFalarmPODFoff popCorrejPODFoff adjPopHitPODFoff adjPopMissPODFoff adjPopFalarmPODFoff adjPopCorrejPODFoff
-%popBFROItarTraces popBFROIhitTraces popBFROImissTraces popBFROInonTraces popBFROIfalarmTraces popBFROIcorrejTraces popBFROItarMus popBFROIhitMus popBFROImissMus popBFROInonMus popBFROIfalarmMus popBFROIcorrejMus popBFROItarMusON popBFROIhitMusON popBFROImissMusON popBFROInonMusON popBFROIfalarmMusON popBFROIcorrejMusON popBFROItarMusOFF popBFROIhitMusOFF popBFROImissMusOFF popBFROInonMusOFF popBFROIfalarmMusOFF popBFROIcorrejMusOFF popAdjBFROIhitMus popAdjBFROImissMus popAdjBFROIfalarmMus popAdjBFROIcorrejMus popAdjBFROIhitMusON popAdjBFROImissMusON popAdjBFROIfalarmMusON popAdjBFROIcorrejMusON popAdjBFROIhitMusOFF popAdjBFROImissMusOFF popAdjBFROIfalarmMusOFF popAdjBFROIcorrejMusOFF
-%popAEROItarTraces popAEROIhitTraces popAEROImissTraces popAEROInonTraces popAEROIfalarmTraces popAEROIcorrejTraces popAEROItarMus popAEROIhitMus popAEROImissMus popAEROInonMus popAEROIfalarmMus popAEROIcorrejMus popAEROItarMusON popAEROIhitMusON popAEROImissMusON popAEROInonMusON popAEROIfalarmMusON popAEROIcorrejMusON popAEROItarMusOFFpopAEROIhitMusOFF popAEROImissMusOFF popAEROInonMusOFF popAEROIfalarmMusOFF popAEROIcorrejMusOFF popAdjAEROIhitMus popAdjAEROImissMus popAdjAEROIfalarmMus popAdjAEROIcorrejMus popAdjAEROIhitMusON popAdjAEROImissMusON popAdjAEROIfalarmMusON popAdjAEROIcorrejMusON popAdjAEROIhitMusOFF popAdjAEROImissMusOFF popAdjAEROIfalarmMusOFF popAdjAEROIcorrejMusOFF

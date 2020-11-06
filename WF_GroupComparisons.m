@@ -2,7 +2,7 @@
 addpath(genpath('C:\Ilan_Psignal\WidefieldAnalysis'))
 alpha = 0.05;
 Freqs = {'4 kHz','5.6 kHz','8 kHz','11.3 kHz','16 kHz','22.6 kHz','32 kHz','45.2 kHz'};
-ACregs = {'A1','A2','AAF','ACnon'};                                        %AC regions defined in "AC_parcellation"
+ACregs = {'A1','A2','AAF','ACnon'};%,'VP','DAF','UF','DP'};                                        %AC regions defined in "AC_parcellation"
 dubFreqs = [4000;5657;8000;11314;16000;22627;32000;45255];
 sigPoints3 = {[1 3],[2 3],[1 2]};
 sigPoints4 = {[0.8 1.2],[1.8 2.2],[2.8 3.2],[3.8 4.2]};
@@ -12,6 +12,7 @@ LFT = struct([]);
 CG = struct([]);
 %load group data into respective structures%
 file_loc = 'C:\Users\Aging Toneboxes\Desktop\WF_data\WF_Behavior';
+saveRoot = 'C:\Users\Aging Toneboxes\Desktop\WF_data\WF_Behavior\group_comparison';
 [HFThandle HFTpath] = uigetfile(file_loc,'Load High Frequency Target stat data');
 HFT = load(fullfile(HFTpath,HFThandle));
 [LFThandle LFTpath] = uigetfile(file_loc,'Load Low Frequency Target stat data');
@@ -22,49 +23,11 @@ CG = load(fullfile(CGpath,CGhandle));
 LFTexps = sum(LFT.animalExps);
 HFTexps = sum(HFT.animalExps);
 CGexps = sum(CG.animalExps);
+LFTanimals = length(LFT.animalExps);
+HFTanimals = length(HFT.animalExps);
+CGanimals = length(CG.animalExps);
 
-%frequency distribution correlation%
-for ii = 1:8
-    Lnov(:,ii) = squeeze(LFT.totalFreqDist(1,ii,:));
-    Lexp(:,ii) = squeeze(LFT.totalFreqDist(2,ii,:));
-    Hnov(:,ii) = squeeze(HFT.totalFreqDist(1,ii,:));
-    Hexp(:,ii) = squeeze(HFT.totalFreqDist(2,ii,:));
-    Cnov(:,ii) = squeeze(CG.totalFreqDist(1,ii,:));
-    Cexp(:,ii) = squeeze(CG.totalFreqDist(2,ii,:));
-end
-x = [0:0.1:1];
-for i = 1:8
-    figure
-    title(Freqs{i})
-    hold on
-    LnovFreq = Lnov(:,i);
-    LexpFreq = Lexp(:,i);
-    scatter(LnovFreq,LexpFreq,[],'b')
-    HnovFreq = Hnov(:,i);
-    HexpFreq = Hexp(:,i);
-    scatter(HnovFreq,HexpFreq,[],'r')
-    TRnov = [LnovFreq;HnovFreq];
-    TRexp = [LexpFreq;HexpFreq];
-    [Rtr(:,:,i) Ptr(:,:,i)] = corrcoef(TRnov,TRexp);
-    CnovFreq = Cnov(:,i);
-    CexpFreq = Cexp(:,i);
-    [Rc(:,:,i) Pc(:,:,i)] = corrcoef(CnovFreq,CexpFreq);
-    scatter(CnovFreq,CexpFreq,[],'g')
-    legend('HFT','LFT','CG','AutoUpdate','off')
-    plot(x,x)
-    hold off
-    xlim([0 1])
-    ylim([0 1])
-    xlabel('novice % pixels')
-    ylabel('expert % pixels')
-    set(gcf, 'WindowStyle', 'Docked')
-    figSave = fullfile(file_loc,'group_comparison',[Freqs{i},'_distribution_correlation.fig']);
-    savefig(figSave)
-end
-Rtreat = squeeze(Rtr(1,2,:));
-Ptreat = squeeze(Ptr(1,2,:));
-Rctl = squeeze(Rc(1,2,:));
-Pctl = squeeze(Pc(1,2,:));
+
 %% Frequency Distribution %% 
 
 %novice frequency distributions%
@@ -271,10 +234,10 @@ expHCdist = [HFTexp CGnov];
 expHCdistSE = [HFTexpSE CGnovSE];
 distSigPoints = {[0.85,1.15],[1.85,2.15],[2.85,3.15],[3.85,4.15],...
     [4.85,5.15],[5.85,6.15],[6.85,7.15],[7.85,8.15]};
-figure
-suptitle('Tonotopic BF Distributions')
 %novice low vs high
-subplot(2,3,1)
+figure
+set(gcf, 'WindowStyle', 'Docked')
+% subplot(2,3,1)
 b = bar(novDist);
 hold on
 nbars = size(novDist,2);
@@ -291,15 +254,19 @@ sigstar(distSigPoints,[Pnlh4,Pnlh5,Pnlh8,Pnlh11,Pnlh16,Pnlh22,Pnlh32,Pnlh45])
 hold off
 b(1).FaceColor = [0 0 1];
 b(2).FaceColor = [1 0 0];
-title('Novice: LFT vs HFT')
-ylabel('Percent of Pixels')
+title('Novice: LFT vs HFT BF-Tuning Distribution')
+ylabel('Percent of Tuned Pixels')
 ylim([-0.2 0.8])
 xlabel('Frequency (kHz)')
 xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
 legend('LFT','HFT','AutoUpdate','off')
 set(gca, 'Box', 'off')
+figSave = fullfile(saveRoot,'novLH_tonotopic_distribution.fig');
+savefig(figSave);
 %novice low vs control
-subplot(2,3,2)
+figure
+set(gcf, 'WindowStyle', 'Docked')
+% subplot(2,3,2)
 b = bar(novLCdist);
 hold on
 nbars = size(novLCdist,2);
@@ -316,15 +283,19 @@ sigstar(distSigPoints,[Pnlc4,Pnlc5,Pnlc8,Pnlc11,Pnlc16,Pnlc22,Pnlc32,Pnlc45])
 hold off
 b(1).FaceColor = [0 0 1];
 b(2).FaceColor = [0 1 0];
-title('Novice: LFT vs CG')
-ylabel('Percent of Pixels')
+title('Novice: LFT vs CG BF-Tuning Distribution')
+ylabel('Percent of Tuned Pixels')
 ylim([-0.2 0.8])
 xlabel('Frequency (kHz)')
 xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
 legend('LFT','CG','AutoUpdate','off')
 set(gca, 'Box', 'off')
+figSave = fullfile(saveRoot,'novLC_tonotopic_distribution.fig');
+savefig(figSave);
 %novice high vs control
-subplot(2,3,3)
+figure
+set(gcf, 'WindowStyle', 'Docked')
+% subplot(2,3,3)
 b = bar(novHCdist);
 hold on
 nbars = size(novHCdist,2);
@@ -341,15 +312,19 @@ sigstar(distSigPoints,[Pnhc4,Pnhc5,Pnhc8,Pnhc11,Pnhc16,Pnhc22,Pnhc32,Pnhc45])
 hold off
 b(1).FaceColor = [1 0 0];
 b(2).FaceColor = [0 1 0];
-title('Novice: HFT vs CG')
-ylabel('Percent of Pixels')
+title('Novice: HFT vs CG BF-Tuning Distribution')
+ylabel('Percent of Tuned Pixels')
 ylim([-0.2 0.8])
 xlabel('Frequency (kHz)')
 xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
 legend('HFT','CG','AutoUpdate','off')
 set(gca, 'Box', 'off')
+figSave = fullfile(saveRoot,'novHC_tonotopic_distribution.fig');
+savefig(figSave);
 %expert low vs high
-subplot(2,3,4)
+figure
+set(gcf, 'WindowStyle', 'Docked')
+% subplot(2,3,4)
 b = bar(expDist);
 hold on
 nbars = size(expDist,2);
@@ -366,15 +341,19 @@ sigstar(distSigPoints,[Pelh4,Pelh5,Pelh8,Pelh11,Pelh16,Pelh22,Pelh32,Pelh45])
 hold off
 b(1).FaceColor = [0 0 1];
 b(2).FaceColor = [1 0 0];
-title('Expert: LFT vs HFT')
-ylabel('Percent of Pixels')
+title('Expert: LFT vs HFT BF-Tuning Distribution')
+ylabel('Percent of Tuned Pixels')
 ylim([-0.2 0.8])
 xlabel('Frequency (kHz)')
 xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
 legend('LFT','HFT','AutoUpdate','off')
 set(gca, 'Box', 'off')
+figSave = fullfile(saveRoot,'expLF_tonotopic_distribution.fig');
+savefig(figSave);
 %expert low vs control
-subplot(2,3,5)
+figure
+set(gcf, 'WindowStyle', 'Docked')
+% subplot(2,3,5)
 b = bar(expLCdist);
 hold on
 nbars = size(expLCdist,2);
@@ -391,15 +370,19 @@ sigstar(distSigPoints,[Pelc4,Pelc5,Pelc8,Pelc11,Pelc16,Pelc22,Pelc32,Pelc45])
 hold off
 b(1).FaceColor = [0 0 1];
 b(2).FaceColor = [0 1 0];
-title('Expert: LFT vs CG')
-ylabel('Percent of Pixels')
+title('Expert: LFT vs CG BF-Tuning Distribution')
+ylabel('Percent of Tuned Pixels')
 ylim([-0.2 0.8])
 xlabel('Frequency (kHz)')
 xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
 legend('LFT','CG','AutoUpdate','off')
 set(gca, 'Box', 'off')
+figSave = fullfile(saveRoot,'expLC_tonotopic_distribution.fig');
+savefig(figSave);
 %expert high vs control
-subplot(2,3,6)
+figure
+set(gcf, 'WindowStyle', 'Docked')
+% subplot(2,3,6)
 b = bar(expHCdist);
 hold on
 nbars = size(expHCdist,2);
@@ -416,18 +399,177 @@ sigstar(distSigPoints,[Pehc4,Pehc5,Pehc8,Pehc11,Pehc16,Pehc22,Pehc32,Pehc45])
 hold off
 b(1).FaceColor = [1 0 0];
 b(2).FaceColor = [0 1 0];
-title('Expert: HFT vs CG')
-ylabel('Percent of Pixels')
+title('Expert: HFT vs CG BF-Tuning Distribution')
+ylabel('Percent of Tuned Pixels')
 ylim([-0.2 0.8])
 xlabel('Frequency (kHz)')
 xticklabels({'4','5.6','8','11.3','16','22.6','32','45.2'})
 legend('HFT','CG','AutoUpdate','off')
 set(gca, 'Box', 'off')
-set(gcf, 'WindowStyle', 'Docked')
-figSave = fullfile(file_loc,'group_comparison','tonotopic_distribution.fig');
+figSave = fullfile(saveRoot,'expHC_tonotopic_distribution.fig');
 savefig(figSave);
-clearvars -except file_loc alpha ACregs Freqs dubFreqs HFT LFT CG... 
+clearvars -except file_loc LFTanimals HFTanimals CGanimals saveRoot alpha ACregs Freqs dubFreqs HFT LFT CG... 
     sigPoints3 sigPoints4 LFTexps HFTexps CGexps
+
+%frequency distribution correlation%
+%index significant change in frequency distribution from novice to expert in individual mice
+for n = 1:length(ACregs)
+    for f = 1:length(dubFreqs)
+        Lsig = squeeze(LFT.freqDistSig(f,n,:));
+        Hsig = squeeze(HFT.freqDistSig(f,n,:));
+        Csig = squeeze(CG.freqDistSig(f,n,:));
+        LSidx{n,f} = find(Lsig < alpha);
+        HSidx{n,f} = find(Hsig < alpha);
+        CSidx{n,f} = find(Csig < alpha);
+        LNidx{n,f} = find(Lsig >= alpha);
+        HNidx{n,f} = find(Hsig >= alpha);
+        CNidx{n,f} = find(Csig >= alpha);
+    end
+end
+
+x = [0:0.1:1];
+for i = 1:length(dubFreqs)
+    LSnov = squeeze(LFT.totalFreqDist(1,i,LSidx{1,i}));
+    LNnov = squeeze(LFT.totalFreqDist(1,i,LNidx{1,i}));
+    LSexp = squeeze(LFT.totalFreqDist(2,i,LSidx{1,i}));
+    LNexp = squeeze(LFT.totalFreqDist(2,i,LNidx{1,i}));
+    HSnov = squeeze(HFT.totalFreqDist(1,i,HSidx{1,i}));
+    HNnov = squeeze(HFT.totalFreqDist(1,i,HNidx{1,i}));
+    HSexp = squeeze(HFT.totalFreqDist(2,i,HSidx{1,i}));
+    HNexp = squeeze(HFT.totalFreqDist(2,i,HNidx{1,i}));
+    CSnov = squeeze(CG.totalFreqDist(1,i,CSidx{1,i}));
+    CNnov = squeeze(CG.totalFreqDist(1,i,CNidx{1,i}));
+    CSexp = squeeze(CG.totalFreqDist(2,i,CSidx{1,i}));
+    CNexp = squeeze(CG.totalFreqDist(2,i,CNidx{1,i}));
+    TRnovS = [LSnov;HSnov];
+    TRnovN = [LNnov;HNnov];
+    TRexpS = [LSexp;HSexp];
+    TRexpN = [LNexp;HNexp];
+    CMBnovN = [LNnov;HNnov;CNnov];
+    CMBexpN = [LNexp;HNexp;CNexp];
+    [RtrS(:,:,i) PtrS(:,:,i)] = corrcoef(TRnovS,TRexpS);
+    [RtrN(:,:,i) PtrN(:,:,i)] = corrcoef(TRnovN,TRexpN);
+    [RcS(:,:,i) PcS(:,:,i)] = corrcoef(CSnov,CSexp);
+    [RcN(:,:,i) PcN(:,:,i)] = corrcoef(CNnov,CNexp);
+    [RcmbN(:,:,i) PcmbN(:,:,i)] = corrcoef(CMBnovN,CMBexpN);
+    figure
+    set(gcf, 'WindowStyle', 'Docked')
+    title([Freqs{i},' Whole Window Frequency Distribution Correlation'])
+    hold on
+    s1s = scatter(LSnov,LSexp,'filled','b');
+    s1n = scatter(LNnov,LNexp,[],'b');
+    s2s = scatter(HSnov,HSexp,'filled','r');
+    s2n = scatter(HNnov,HNexp,[],'r');
+    s3s = scatter(CSnov,CSexp,'filled','g');
+    s3n = scatter(CNnov,CNexp,[],'g');
+    legend('LFT sig','LFT non','HFT sig','HFT non','CG sig','CG non','AutoUpdate','off')
+    plot(x,x)
+    hold off
+    xlim([0 1])
+    ylim([0 1])
+    xlabel('Novice % Tuned Pixels')
+    ylabel('Expert % Tuned Pixels')
+    figSave = fullfile(saveRoot,[Freqs{i},'_distribution_correlation.fig']);
+    savefig(figSave)
+end
+RStreat = squeeze(RtrS(1,2,:));
+RNtreat = squeeze(RtrN(1,2,:));
+PStreat = squeeze(PtrS(1,2,:));
+PNtreat = squeeze(PtrN(1,2,:));
+RSctl = squeeze(RcS(1,2,:));
+RNctl = squeeze(RcN(1,2,:));
+PSctl = squeeze(PcS(1,2,:));
+PNctl = squeeze(PcN(1,2,:));
+RNcmb = squeeze(RcmbN(1,2,:));
+PNcmb = squeeze(PcmbN(1,2,:));
+
+for n = 1:(length(ACregs)-1)
+    for i = 1:LFTanimals
+        if isnan(nanmean(LFT.totalACfreqDist(1,:,n,i)))
+            LFT.totalACfreqDist(2,:,n,i) = nan;
+        elseif isnan(nanmean(LFT.totalACfreqDist(2,:,n,i)))
+            LFT.totalACfreqDist(1,:,n,i) = nan;
+        end
+    end
+    for i = 1:HFTanimals
+        if isnan(nanmean(HFT.totalACfreqDist(1,:,n,i)))
+            HFT.totalACfreqDist(2,:,n,i) = nan;
+        elseif isnan(nanmean(HFT.totalACfreqDist(2,:,n,i)))
+            HFT.totalACfreqDist(1,:,n,i) = nan;
+        end
+    end
+    for i = 1:CGanimals
+        if isnan(nanmean(CG.totalACfreqDist(1,:,n,i)))
+            CG.totalACfreqDist(2,:,n,i) = nan;
+        elseif isnan(nanmean(CG.totalACfreqDist(2,:,n,i)))
+            CG.totalACfreqDist(1,:,n,i) = nan;
+        end
+    end
+    for ii = 1:length(dubFreqs)
+        LSnovAC = squeeze(LFT.totalACfreqDist(1,ii,n,LSidx{n+1,ii}));
+        LNnovAC = squeeze(LFT.totalACfreqDist(1,ii,n,LNidx{n+1,ii}));
+        LSexpAC = squeeze(LFT.totalACfreqDist(2,ii,n,LSidx{n+1,ii}));
+        LNexpAC = squeeze(LFT.totalACfreqDist(2,ii,n,LNidx{n+1,ii}));
+        HSnovAC = squeeze(HFT.totalACfreqDist(1,ii,n,HSidx{n+1,ii}));
+        HNnovAC = squeeze(HFT.totalACfreqDist(1,ii,n,HNidx{n+1,ii}));
+        HSexpAC = squeeze(HFT.totalACfreqDist(2,ii,n,HSidx{n+1,ii}));
+        HNexpAC = squeeze(HFT.totalACfreqDist(2,ii,n,HNidx{n+1,ii}));
+        CSnovAC = squeeze(CG.totalACfreqDist(1,ii,n,CSidx{n+1,ii}));
+        CNnovAC = squeeze(CG.totalACfreqDist(1,ii,n,CNidx{n+1,ii}));
+        CSexpAC = squeeze(CG.totalACfreqDist(2,ii,n,CSidx{n+1,ii}));
+        CNexpAC = squeeze(CG.totalACfreqDist(2,ii,n,CNidx{n+1,ii}));
+        TRnovACS = [LSnovAC;HSnovAC];
+        TRnovACN = [LNnovAC;HNnovAC];
+        TRexpACS = [LSexpAC;HSexpAC];
+        TRexpACN = [LNexpAC;HNexpAC];
+        CMBnovACN = [LNnovAC;HNnovAC;CNnovAC];
+        CMBexpACN = [LNexpAC;HNexpAC;CNexpAC];
+        TRnovACS(isnan(TRnovACS)) = [];
+        TRexpACS(isnan(TRexpACS)) = [];
+        TRnovACN(isnan(TRnovACN)) = [];
+        TRexpACN(isnan(TRexpACN)) = [];
+        CSnovAC(isnan(CSnovAC)) = [];
+        CSexpAC(isnan(CSexpAC)) = [];
+        CNnovAC(isnan(CNnovAC)) = [];
+        CNexpAC(isnan(CNexpAC)) = [];
+        CMBnovACN(isnan(CMBnovACN)) = [];
+        CMBexpACN(isnan(CMBexpACN)) = [];
+        [RtrACS(:,:,ii,n) PtrACS(:,:,ii,n)] = corrcoef(TRnovACS,TRexpACS);
+        [RtrACN(:,:,ii,n) PtrACN(:,:,ii,n)] = corrcoef(TRnovACN,TRexpACN);
+        [RcACS(:,:,ii,n) PcACS(:,:,ii,n)] = corrcoef(CSnovAC,CSexpAC);
+        [RcACN(:,:,ii,n) PcACN(:,:,ii,n)] = corrcoef(CNnovAC,CNexpAC);
+        [RcmbACN(:,:,ii,n) PcmbACN(:,:,ii,n)] = corrcoef(CMBnovACN,CMBexpACN);
+        figure
+        set(gcf, 'WindowStyle', 'Docked')
+        title([Freqs{ii},' ',ACregs{n},' Frequency Distribution Correlation'])
+        hold on
+        s1s = scatter(LSnovAC,LSexpAC,'filled','b');
+        s1n = scatter(LNnovAC,LNexpAC,[],'b');
+        s2s = scatter(HSnovAC,HSexpAC,'filled','r');
+        s2n = scatter(HNnovAC,HNexpAC,[],'r');
+        s3s = scatter(CSnovAC,CSexpAC,'filled','g');
+        s3n = scatter(CNnovAC,CNexpAC,[],'g');
+        legend('LFT sig','LFT non','HFT sig','HFT non','CG sig','CG non','AutoUpdate','off')
+        plot(x,x)
+        hold off
+        xlim([0 1])
+        ylim([0 1])
+        xlabel('Novice % Tuned Pixels')
+        ylabel('Expert % Tuned Pixels')
+        figSave = fullfile(saveRoot,[ACregs{n},'_',Freqs{ii},'_distribution_correlation.fig']);
+        savefig(figSave)
+    end
+end
+RStreatAC = squeeze(RtrACS(1,2,:,:));
+RNtreatAC = squeeze(RtrACN(1,2,:,:));
+PStreatAC = squeeze(PtrACS(1,2,:,:));
+PNtreatAC = squeeze(PtrACN(1,2,:,:));
+RSctlAC = squeeze(RcACS(1,2,:,:));
+RNctlAC = squeeze(RcACN(1,2,:,:));
+PSctlAC = squeeze(PcACS(1,2,:,:));
+PNctlAC = squeeze(PcACN(1,2,:,:));
+RNcmbAC = squeeze(RcmbACN(1,2,:,:));
+PNcmbAC = squeeze(PcmbACN(1,2,:,:));
 
 %% Whole Window Analysis %%
 
@@ -480,8 +622,12 @@ HFTcorrejTrace = nanmean(HFTcorrejTraces,2);
 HFTcorrejTraceSE = nanstd(HFTcorrejTraces')/sqrt(HFTexps);
 %compare expert passive whole-window treatement traces to corresponding
 %frequency whole-window control traces%
+onBar = repmat([-0.05],1,5);
+offBar = repmat([-0.05],1,5);
+onIdx = [4:8];
+offIdx = [8:12];
 figure
-suptitle('Expert passive response vs control passive whole-window traces')
+suptitle('Expert Passive Response vs Control Passive Whole Window Traces')
 subplot(1,2,1)
 plot(LFTtarTrace,'-b')
 title('8 kHz traces')
@@ -493,7 +639,7 @@ shadedErrorBar([1:18],LFTtarTrace,2*LFTtarTraceSE,'-b',1)
 shadedErrorBar([1:18],HFTnonTrace,2*HFTnonTraceSE,'-r',1)
 shadedErrorBar([1:18],CG8trace,2*CG8traceSE,'-g',1)
 hold off
-ylabel('Relative DeltaF/F')
+ylabel('Normalized DeltaF/F')
 ylim([-0.1 0.5])
 xlabel('Time(s)')
 xticks([4 8 12 16])
@@ -510,18 +656,18 @@ shadedErrorBar([1:18],LFTnonTrace,2*LFTnonTraceSE,'-b',1)
 shadedErrorBar([1:18],HFTtarTrace,2*HFTtarTraceSE,'-r',1)
 shadedErrorBar([1:18],CG22trace,2*CG22traceSE,'-g',1)
 hold off
-ylabel('Relative DeltaF/F')
+ylabel('Normalized DeltaF/F')
 ylim([-0.1 0.5])
 xlabel('Time(s)')
 xticks([4 8 12 16])
 xticklabels({'1','2','3','4'})
 set(gca, 'Box', 'off')
 set(gcf, 'WindowStyle', 'Docked')
-figSave = fullfile(file_loc,'group_comparison','expertPassive_control_window_traces.fig');
+figSave = fullfile(saveRoot,'expertPassive_control_window_traces.fig');
 savefig(figSave);
 %compare expert behavior whole-window treament response categories%
 figure
-suptitle('Expert behavior HFT vs LFT whole-window traces')
+suptitle('Expert Behavior HFT vs LFT Whole Window Traces')
 subplot(1,2,1)
 plot(LFThitTrace,'-b')
 title('8 kHz traces')
@@ -535,7 +681,7 @@ shadedErrorBar([1:18],LFTmissTrace,2*LFTmissTraceSE,'-y',1)
 shadedErrorBar([1:18],HFTfalarmTrace,2*HFTfalarmTraceSE,'-r',1)
 shadedErrorBar([1:18],HFTcorrejTrace,2*HFTcorrejTraceSE,'-g',1)
 hold off
-ylabel('Relative DeltaF/F')
+ylabel('Normalized DeltaF/F')
 ylim([-0.1 0.5])
 xlabel('Time(s)')
 xticks([4 8 12 16])
@@ -554,14 +700,14 @@ shadedErrorBar([1:18],HFTmissTrace,2*HFTmissTraceSE,'-y',1)
 shadedErrorBar([1:18],LFTfalarmTrace,2*LFTfalarmTraceSE,'-r',1)
 shadedErrorBar([1:18],LFTcorrejTrace,2*LFTcorrejTraceSE,'-g',1)
 hold off
-ylabel('Relative DeltaF/F')
+ylabel('Normalized DeltaF/F')
 ylim([-0.1 0.5])
 xlabel('Time(s)')
 xticks([4 8 12 16])
 xticklabels({'1','2','3','4'})
 set(gca, 'Box', 'off')
 set(gcf, 'WindowStyle', 'Docked')
-figSave = fullfile(file_loc,'group_comparison','expertBehavior_window_traces.fig');
+figSave = fullfile(saveRoot,'expertBehavior_window_traces.fig');
 savefig(figSave);
 
 %%% Whole Window PODF %%%
@@ -904,7 +1050,7 @@ ylabel('Relative DeltaF/F')
 ylim([-0.1 0.5])
 set(gca, 'Box', 'off')
 set(gcf, 'WindowStyle', 'Docked')
-figSave = fullfile(file_loc,'group_comparison','expertPassive_control_window_PODFonset.fig');
+figSave = fullfile(saveRoot,'expertPassive_control_window_PODFonset.fig');
 savefig(figSave);
 %
 bar8podfOFF = [LFTtarPODFoff HFTnonPODFoff CG8podfOFF];
@@ -952,7 +1098,7 @@ ylabel('Relative DeltaF/F')
 ylim([-0.1 0.5])
 set(gca, 'Box', 'off')
 set(gcf, 'WindowStyle', 'Docked')
-figSave = fullfile(file_loc,'group_comparison','expertPassive_control_window_PODFoffset.fig');
+figSave = fullfile(saveRoot,'expertPassive_control_window_PODFoffset.fig');
 savefig(figSave);
 %compare expert behavior whole-window treament response categories%
 barPODF = [LFThitPODF HFThitPODF; LFTmissPODF HFTmissPODF;... 
@@ -999,7 +1145,7 @@ xtickangle(-15)
 ylim([-0.1 0.5])
 set(gca, 'Box', 'off')
 set(gcf, 'WindowStyle', 'Docked')
-figSave = fullfile(file_loc,'group_comparison','expertBehavior_window_PODFonset.fig');
+figSave = fullfile(saveRoot,'expertBehavior_window_PODFonset.fig');
 savefig(figSave);
 %
 barPODFoff = [LFThitPODFoff HFThitPODFoff; LFTmissPODFoff HFTmissPODFoff;... 
@@ -1030,7 +1176,7 @@ xtickangle(-15)
 ylim([-0.1 0.5])
 set(gca, 'Box', 'off')
 set(gcf, 'WindowStyle', 'Docked')
-figSave = fullfile(file_loc,'group_comparison','expertBehavior_window_PODFoffset.fig');
+figSave = fullfile(saveRoot,'expertBehavior_window_PODFoffset.fig');
 savefig(figSave);
 
 %compare expert adjusted behavior whole-window treament response categories%
@@ -1077,7 +1223,7 @@ xtickangle(-15)
 ylim([-0.3 0.3])
 set(gca, 'Box', 'off')
 set(gcf, 'WindowStyle', 'Docked')
-figSave = fullfile(file_loc,'group_comparison','expert_AdjustedBehavior_window_PODFonset.fig');
+figSave = fullfile(saveRoot,'expert_AdjustedBehavior_window_PODFonset.fig');
 savefig(figSave);
 %
 barAdjPODFoff = [LFTadjHitPODFoff HFTadjHitPODFoff; LFTadjMissPODFoff HFTadjMissPODFoff;... 
@@ -1108,9 +1254,9 @@ xtickangle(-15)
 ylim([-0.3 0.3])
 set(gca, 'Box', 'off')
 set(gcf, 'WindowStyle', 'Docked')
-figSave = fullfile(file_loc,'group_comparison','expert_AdjustedBehavior_window_PODFoffset.fig');
+figSave = fullfile(saveRoot,'expert_AdjustedBehavior_window_PODFoffset.fig');
 savefig(figSave);
-clearvars -except file_loc alpha ACregs Freqs dubFreqs HFT LFT CG... 
+clearvars -except file_loc LFTanimals HFTanimals CGanimals saveRoot alpha ACregs Freqs dubFreqs HFT LFT CG... 
     LFTexps HFTexps CGexps sigPoints3 sigPoints4
 
 % ROI Analysis %%
@@ -1220,7 +1366,7 @@ for f = 1:length(Freqs)
     set(gca, 'Box', 'off')
     set(gcf, 'WindowStyle', 'Docked')
     figName = strcat(Freqs{f},'_expertPassive_control_BFROI_traces.fig');
-    figSave = fullfile(file_loc,'group_comparison',figName);
+    figSave = fullfile(saveRoot,figName);
     savefig(figSave);
     %compare expert behavior BF ROI treament response categories%
     figure
@@ -1265,7 +1411,7 @@ for f = 1:length(Freqs)
     set(gca, 'Box', 'off')
     set(gcf, 'WindowStyle', 'Docked')
     figName = strcat(Freqs{f},'_expertBehavior_BFROI_traces.fig');
-    figSave = fullfile(file_loc,'group_comparison',figName);
+    figSave = fullfile(saveRoot,figName);
     savefig(figSave);
     
     %%% BF ROI PODF %%%
@@ -1612,7 +1758,7 @@ for f = 1:length(Freqs)
     set(gca, 'Box', 'off')
     set(gcf, 'WindowStyle', 'Docked')
     figName = strcat(Freqs{f},'_expertPassive_control_BFROI_PODFonset.fig');
-    figSave = fullfile(file_loc,'group_comparison',figName);
+    figSave = fullfile(saveRoot,figName);
     savefig(figSave);
     %
     bar8BFpodfOFF = [LFTtarBFpodfOFF HFTnonBFpodfOFF CG8BFpodfOFF];
@@ -1662,7 +1808,7 @@ for f = 1:length(Freqs)
     set(gca, 'Box', 'off')
     set(gcf, 'WindowStyle', 'Docked')
     figName = strcat(Freqs{f},'_expertPassive_control_BFROI_PODFoffset.fig');
-    figSave = fullfile(file_loc,'group_comparison',figName);
+    figSave = fullfile(saveRoot,figName);
     savefig(figSave);
     %compare expert behavior Tonotopic ROI treament response categories%
     %
@@ -1713,7 +1859,7 @@ for f = 1:length(Freqs)
     set(gca, 'Box', 'off')
     set(gcf, 'WindowStyle', 'Docked')
     figName = strcat(Freqs{f},'_expertBehavior_BFROI_PODFonset.fig');
-    figSave = fullfile(file_loc,'group_comparison',figName);
+    figSave = fullfile(saveRoot,figName);
     savefig(figSave);
     %
     barBFpodfOFF = [LFThitBFpodfOFF HFThitBFpodfOFF; LFTmissBFpodfOFF HFTmissBFpodfOFF;... 
@@ -1746,7 +1892,7 @@ for f = 1:length(Freqs)
     set(gca, 'Box', 'off')
     set(gcf, 'WindowStyle', 'Docked')
     figName = strcat(Freqs{f},'_expertBehavior_BFROI_PODFoffset.fig');
-    figSave = fullfile(file_loc,'group_comparison',figName);
+    figSave = fullfile(saveRoot,figName);
     savefig(figSave);
     %compare expert adjusted behavior BF ROI treament response categories%
     %
@@ -1797,7 +1943,7 @@ for f = 1:length(Freqs)
     set(gca, 'Box', 'off')
     set(gcf, 'WindowStyle', 'Docked')
     figName = strcat(Freqs{f},'_expert_AdjustedBehavior_BFROI_PODFonset.fig');
-    figSave = fullfile(file_loc,'group_comparison',figName);
+    figSave = fullfile(saveRoot,figName);
     savefig(figSave);
     %
     barAdjBFpodfOFF = [LFTadjHitBFpodfOFF HFTadjHitBFpodfOFF; LFTadjMissBFpodfOFF HFTadjMissBFpodfOFF;... 
@@ -1830,9 +1976,10 @@ for f = 1:length(Freqs)
     set(gca, 'Box', 'off')
     set(gcf, 'WindowStyle', 'Docked')
     figName = strcat(Freqs{f},'_expert_AdjustedBehavior_BFROI_PODFoffset.fig');
-    figSave = fullfile(file_loc,'group_comparison',figName);
+    figSave = fullfile(saveRoot,figName);
     savefig(figSave);
-    clearvars -except file_loc alpha ACregs Freqs dubFreqs HFT LFT CG LFTexps HFTexps CGexps f sigPoints3 sigPoints4
+    clearvars -except file_loc LFTanimals HFTanimals CGanimals saveRoot alpha ACregs Freqs dubFreqs HFT LFT CG... 
+        LFTexps HFTexps CGexps f sigPoints3 sigPoints4
 end
 
 %% Autoencoder ROI Analysis %%
@@ -1966,7 +2113,7 @@ for f = 1:length(ACregs)
         set(gca, 'Box', 'off')
         set(gcf, 'WindowStyle', 'Docked')
         figName = strcat(ACregs{f},'_',tempTune{i},'-tuned_expertPassive_control_AEROI_traces.fig');
-        figSave = fullfile(file_loc,'group_comparison',figName);
+        figSave = fullfile(saveRoot,figName);
         savefig(figSave);
         %compare expert behavior AE ROI treament response categories%
         figure
@@ -2011,7 +2158,7 @@ for f = 1:length(ACregs)
         set(gca, 'Box', 'off')
         set(gcf, 'WindowStyle', 'Docked')
         figName = strcat(ACregs{f},'_',tempTune{i},'-tuned_expertBehavior_AEROI_traces.fig');
-        figSave = fullfile(file_loc,'group_comparison',figName);
+        figSave = fullfile(saveRoot,figName);
         savefig(figSave);
 
         %%% AE ROI PODF %%%
@@ -2493,7 +2640,7 @@ for f = 1:length(ACregs)
         set(gca, 'Box', 'off')
         set(gcf, 'WindowStyle', 'Docked')
         figName = strcat(ACregs{f},'_',tempTune{i},'-tuned_expertPassive_control_AEROI_PODFonset.fig');
-        figSave = fullfile(file_loc,'group_comparison',figName);
+        figSave = fullfile(saveRoot,figName);
         savefig(figSave);
         %
         bar8AEpodfOFF = [LFTtarAEpodfOFF HFTnonAEpodfOFF CG8AEpodfOFF];
@@ -2543,7 +2690,7 @@ for f = 1:length(ACregs)
         set(gca, 'Box', 'off')
         set(gcf, 'WindowStyle', 'Docked')
         figName = strcat(ACregs{f},'_',tempTune{i},'-tuned_expertPassive_control_AEROI_PODFoffset.fig');
-        figSave = fullfile(file_loc,'group_comparison',figName);
+        figSave = fullfile(saveRoot,figName);
         savefig(figSave);
         %compare expert behavior Auotoencoder ROI treament response categories%
         %
@@ -2594,7 +2741,7 @@ for f = 1:length(ACregs)
         set(gca, 'Box', 'off')
         set(gcf, 'WindowStyle', 'Docked')
         figName = strcat(ACregs{f},'_',tempTune{i},'-tuned_expertBehavior_AEROI_PODFonset.fig');
-        figSave = fullfile(file_loc,'group_comparison',figName);
+        figSave = fullfile(saveRoot,figName);
         savefig(figSave);
         %
         barAEpodfOFF = [LFThitAEpodfOFF HFThitAEpodfOFF; LFTmissAEpodfOFF HFTmissAEpodfOFF;... 
@@ -2627,7 +2774,7 @@ for f = 1:length(ACregs)
         set(gca, 'Box', 'off')
         set(gcf, 'WindowStyle', 'Docked')
         figName = strcat(ACregs{f},'_',tempTune{i},'-tuned_expertBehavior_AEROI_PODFoffset.fig');
-        figSave = fullfile(file_loc,'group_comparison',figName);
+        figSave = fullfile(saveRoot,figName);
         savefig(figSave);
         %compare expert adjusted behavior AE ROI treament response categories%
         %
@@ -2678,7 +2825,7 @@ for f = 1:length(ACregs)
         set(gca, 'Box', 'off')
         set(gcf, 'WindowStyle', 'Docked')
         figName = strcat(ACregs{f},'_',tempTune{i},'-tuned_expert_AdjustedBehavior_AEROI_PODFonset.fig');
-        figSave = fullfile(file_loc,'group_comparison',figName);
+        figSave = fullfile(saveRoot,figName);
         savefig(figSave);
         %
         barAdjAEpodfOFF = [LFTadjHitAEpodfOFF HFTadjHitAEpodfOFF; LFTadjMissAEpodfOFF HFTadjMissAEpodfOFF;... 
@@ -2711,9 +2858,9 @@ for f = 1:length(ACregs)
         set(gca, 'Box', 'off')
         set(gcf, 'WindowStyle', 'Docked')
         figName = strcat(ACregs{f},'_',tempTune{i},'-tuned_expert_AdjustedBehavior_AEROI_PODFoffset.fig');
-        figSave = fullfile(file_loc,'group_comparison',figName);
+        figSave = fullfile(saveRoot,figName);
         savefig(figSave);
-        clearvars -except file_loc alpha ACregs Freqs dubFreqs HFT LFT CG... 
+        clearvars -except file_loc LFTanimals HFTanimals CGanimals saveRoot alpha ACregs Freqs dubFreqs HFT LFT CG... 
             LFTexps HFTexps CGexps f sigPoints3 sigPoints4 i tempTune
     end
 end
